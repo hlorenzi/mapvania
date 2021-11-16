@@ -72,6 +72,7 @@ export function List(props: {
         { props.items.map(item =>
             <StyledListItem
                 key={ item.id }
+                onMouseDown={ () => onChange(item.id) }
                 onClick={ () => onChange(item.id) }
                 selected={ props.value === item.id }
             >

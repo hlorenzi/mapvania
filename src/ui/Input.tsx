@@ -24,7 +24,7 @@ const StyledInput = styled.input<{
 
     &:hover
     {
-        border: 1px solid var(--dockable-panelInactiveBorder);
+        border: 1px solid var(--dockable-panelActiveBorder);
     }
 
     &:focus

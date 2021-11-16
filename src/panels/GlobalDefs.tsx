@@ -1,12 +1,13 @@
 import * as React from "react"
 import * as Dockable from "@hlorenzi/react-dockable"
 import { PanelPadding } from "../ui/PanelPadding"
+import { Button } from "../ui/Button"
 import { Input } from "../ui/Input"
 import { TabGroup } from "../ui/TabGroup"
 import { Grid, Cell } from "../ui/Grid"
 import { List } from "../ui/List"
 import { global, deepAssignProject } from "../global"
-import { deepAssign } from "../util/deepAssign"
+import { deepAssign, DeepAssignable } from "../util/deepAssign"
 import styled from "styled-components"
 import * as Project from "project"
 
@@ -48,12 +49,8 @@ export function GeneralDefs()
 {
     return <Grid template="auto auto">
 
-        <Cell span={ 2 } justifyCenter>
-            Stage
-        </Cell>
-
         <Cell justifyEnd>
-            Default Size
+            Default Stage Size
         </Cell>
 
         <Cell>
@@ -65,7 +62,7 @@ export function GeneralDefs()
                         onChangeNumber={ (value) => deepAssignProject({ defs: { stageDefaultWidth: value } }) }
                     />
                 </Cell>
-                <Cell>px × </Cell>
+                <Cell> × </Cell>
                 <Cell>
                     <Input
                         value={ global.project.defs.stageDefaultHeight }
@@ -82,12 +79,27 @@ export function GeneralDefs()
 
 export function LayerDefs()
 {
-    const [curLayer, setCurLayer] = React.useState("")
+    const [curLayerId, setCurLayerId] = React.useState<Project.ID>(-1)
+    const curLayerIndex = global.project.defs.layerDefs.findIndex(l => l.id === curLayerId)
+    const curLayer = global.project.defs.layerDefs.find(l => l.id === curLayerId)
+
+
+    const deepAssignLayer = (layerDef: DeepAssignable<Project.DefLayer>) =>
+    {
+        if (curLayerIndex < 0)
+            return
+
+        deepAssignProject({ defs: { layerDefs: { [curLayerIndex]: layerDef }}})
+    }
 
 
     const createLayer = (layerDef: Project.DefLayer) =>
     {
-        deepAssignProject({ defs: { layerDefs: { [global.project.defs.layerDefs.length]: layerDef }}})
+        deepAssignProject(
+        {
+            nextId: layerDef.id + 1,
+            defs: { layerDefs: { [global.project.defs.layerDefs.length]: layerDef }},
+        })
     }
 
 
@@ -96,13 +108,14 @@ export function LayerDefs()
         const layerDef: Project.DefLayerTile =
         {
             type: "tile",
-            id: "layer_" + global.project.defs.layerDefs.length,
+            id: global.project.nextId,
+            name: "layer_" + (global.project.defs.layerDefs.length + 1),
             gridCellWidth: 16,
             gridCellHeight: 16,
         }
 
         createLayer(layerDef)
-        setCurLayer(layerDef.id)
+        setCurLayerId(layerDef.id)
     }
 
 
@@ -111,53 +124,120 @@ export function LayerDefs()
         const layerDef: Project.DefLayerObject =
         {
             type: "object",
-            id: "layer_" + global.project.defs.layerDefs.length,
+            id: global.project.nextId,
+            name: "layer_" + (global.project.defs.layerDefs.length + 1),
             gridCellWidth: 16,
             gridCellHeight: 16,
         }
 
         createLayer(layerDef)
-        setCurLayer(layerDef.id)
+        setCurLayerId(layerDef.id)
     }
 
 
-    const getLayerLabel = (layerDef: Project.DefLayer) =>
+    const deleteCurLayer = () =>
     {
-        const icon =
-            layerDef.type == "tile" ? "🧱 " :
-            layerDef.type == "object" ? "🍎 " :
-            ""
-        
-        return icon + layerDef.id
+        deepAssignProject(
+        {
+            defs: { layerDefs: global.project.defs.layerDefs.filter(l => l.id !== curLayerId) },
+        })
     }
 
 
-    return <Grid template="1fr 1fr" templateRows="auto 1fr" fullHeight>
+    const getLayerIcon = (layerDef: Project.DefLayer) =>
+    {
+        return layerDef.type == "tile" ? "🧱" :
+            layerDef.type == "object" ? "🍎" :
+            ""
+    }
+
+
+    const getLayerType = (layerDef: Project.DefLayer) =>
+    {
+        return layerDef.type == "tile" ? "Tile Layer" :
+            layerDef.type == "object" ? "Object Layer" :
+            ""
+    }
+
+
+    return <Grid template="1fr 2fr" templateRows="auto 1fr" maxWidth="45em" fullHeight>
 
         <Cell>
-            <button
+            <Button
+                label="+ Tile Layer"
                 onClick={ createTileLayer }
-            >
-                + Tile Layer
-            </button>
+            />
 
-            <button
+            <Button
+                label="+ Object Layer"
                 onClick={ createObjectLayer }
-            >
-                + Object Layer
-            </button>
+            />
         </Cell>
 
         <Cell/>
 
         <List
-            value={ curLayer }
-            onChange={ setCurLayer }
+            value={ curLayerId }
+            onChange={ setCurLayerId }
             items={ global.project.defs.layerDefs.map(layerDef => ({
                 id: layerDef.id,
-                label: getLayerLabel(layerDef),
+                label: getLayerIcon(layerDef) + " " + layerDef.name,
             }))}
         />
+
+        { curLayer && <Grid template="auto auto" key={ curLayer.id }>
+
+            <Cell span={ 2 } justifyEnd>
+                <Button
+                    label="Delete"
+                    onClick={ deleteCurLayer }
+                />
+            </Cell>
+
+            <Cell span={ 2 } justifyCenter>
+                { getLayerIcon(curLayer) + " " + getLayerType(curLayer) }
+            </Cell>
+
+            <Cell span={ 2 } divider/>
+
+            <Cell justifyEnd>
+                Unique Name
+            </Cell>
+
+            <Cell justifyStretch>
+                <Input
+                    value={ curLayer.name }
+                    onChange={ (value) => deepAssignLayer({ name: value }) }
+                    fullWidth
+                />
+            </Cell>
+            
+            <Cell justifyEnd>
+                Grid Size
+            </Cell>
+
+            <Cell>
+                <Grid template="1fr auto 1fr auto">
+                    <Cell>
+                        <Input
+                            number
+                            value={ curLayer.gridCellWidth }
+                            onChangeNumber={ (value) => deepAssignLayer({ gridCellWidth: value }) }
+                        />
+                    </Cell>
+                    <Cell> × </Cell>
+                    <Cell>
+                        <Input
+                            number
+                            value={ curLayer.gridCellHeight }
+                            onChangeNumber={ (value) => deepAssignLayer({ gridCellHeight: value }) }
+                        />
+                    </Cell>
+                    <Cell>px</Cell>
+                </Grid>
+            </Cell>
+
+        </Grid> }
 
     </Grid>
 }

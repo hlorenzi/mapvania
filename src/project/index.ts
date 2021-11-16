@@ -1,5 +1,11 @@
+export type ID = number
+
+
 export interface Project
 {
+    // The next id to be assigned to a newly-created object
+    nextId: ID
+
     // The global definitions
     defs: Defs
 
@@ -26,8 +32,8 @@ export type DefLayer =
 
 export interface DefLayerCommon
 {
-    id: string
-    name?: string
+    id: ID
+    name: string
 
     gridCellWidth: number
     gridCellHeight: number
@@ -48,7 +54,8 @@ export interface DefLayerObject extends DefLayerCommon
 
 export interface World
 {
-    id: string
+    id: ID
+    name: string
     
     stages: Stage[]
 }
@@ -56,7 +63,8 @@ export interface World
 
 export interface Stage
 {
-    id: string
+    id: ID
+    name: string
 
     // The top-left position within a world, in pixels
     x: number
@@ -71,18 +79,28 @@ export interface Stage
 export function projectCreate(): Project
 {
     return {
+        nextId: 3,
+
         defs: {
-            layerDefs: [],
+            layerDefs: [{
+                id: 2,
+                name: "layer_1",
+                type: "tile",
+                gridCellWidth: 16,
+                gridCellHeight: 16,
+            }],
 
             stageDefaultWidth: 16 * 27,
             stageDefaultHeight: 16 * 15,
         },
 
         worlds: [{
-            id: "world_1",
+            id: 0,
+            name: "world_1",
 
             stages: [{
-                id: "stage_1",
+                id: 1,
+                name: "stage_1",
 
                 x: 0,
                 y: 0,

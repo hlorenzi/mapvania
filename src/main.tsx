@@ -1,8 +1,10 @@
 import * as React from "react"
 import * as ReactDOM from "react-dom"
 import * as Dockable from "@hlorenzi/react-dockable"
-import { WorldPicker } from "./panels/WorldPicker"
 import { GlobalDefs } from "./panels/GlobalDefs"
+import { WorldPicker } from "./panels/WorldPicker"
+import { LayerPicker } from "./panels/LayerPicker"
+import { WorldEditor } from "./panels/WorldEditor"
 import { global } from "./global"
 import * as Project from "./project"
 import { useUpdateToken } from "./util/updateToken"
@@ -11,6 +13,7 @@ import { useUpdateToken } from "./util/updateToken"
 function App()
 {
     const projectToken = useUpdateToken()
+    const editingToken = useUpdateToken()
 
 
     const initialized = React.useRef(false)
@@ -20,6 +23,8 @@ function App()
 
         global.project = Project.projectCreate()
         global.projectToken = projectToken
+
+        global.editingToken = editingToken
     }
 
 
@@ -30,7 +35,15 @@ function App()
             <GlobalDefs/>)
 
         Dockable.createDockedPanel(
-            state, state.rootPanel, Dockable.DockMode.Bottom,
+            state, state.rootPanel, Dockable.DockMode.Full,
+            <WorldEditor worldId={ global.project.worlds[0].id }/>)
+
+        const layerPicker = Dockable.createDockedPanel(
+            state, state.rootPanel, Dockable.DockMode.Left,
+            <LayerPicker/>)
+
+        Dockable.createDockedPanel(
+            state, layerPicker, Dockable.DockMode.Bottom,
             <WorldPicker/>)
     })
 
