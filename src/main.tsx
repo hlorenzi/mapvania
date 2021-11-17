@@ -4,6 +4,7 @@ import * as Dockable from "@hlorenzi/react-dockable"
 import { GlobalDefs } from "./panels/GlobalDefs"
 import { WorldPicker } from "./panels/WorldPicker"
 import { LayerPicker } from "./panels/LayerPicker"
+import { InputPicker } from "./panels/InputPicker"
 import { WorldEditor } from "./panels/WorldEditor"
 import { global } from "./global"
 import * as Project from "./project"
@@ -45,6 +46,10 @@ function App()
         Dockable.createDockedPanel(
             state, layerPicker, Dockable.DockMode.Bottom,
             <WorldPicker/>)
+
+        Dockable.createDockedPanel(
+            state, state.rootPanel, Dockable.DockMode.Right,
+            <InputPicker/>)
     })
 
 

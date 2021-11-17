@@ -15,6 +15,7 @@ export interface State
     onRender: null | ((state: State) => void)
 
     worldId: Project.ID
+    stageId: Project.ID
 
     camera:
     {
@@ -26,23 +27,26 @@ export interface State
     {
         posRaw: { x: number, y: number }
         pos: { x: number, y: number }
+        tile: { x: number, y: number }
     }
 
     mouseDownOrigin:
     {
         posRaw: { x: number, y: number }
         pos: { x: number, y: number }
+        tile: { x: number, y: number }
     }
 
     mouseDownDelta:
     {
         posRaw: { x: number, y: number }
         pos: { x: number, y: number }
+        tile: { x: number, y: number }
     }
 }
 
 
-export function createState(worldId: Project.ID): State
+export function createState(worldId: Project.ID, stageId: Project.ID): State
 {
     return {
         canvas: null!,
@@ -55,6 +59,7 @@ export function createState(worldId: Project.ID): State
         onRender: null,
 
         worldId,
+        stageId,
 
         camera:
         {
@@ -66,18 +71,21 @@ export function createState(worldId: Project.ID): State
         {
             posRaw: { x: 0, y: 0 },
             pos: { x: 0, y: 0 },
+            tile: { x: 0, y: 0 },
         },
         
         mouseDownOrigin:
         {
             posRaw: { x: 0, y: 0 },
             pos: { x: 0, y: 0 },
+            tile: { x: 0, y: 0 },
         },
 
         mouseDownDelta:
         {
             posRaw: { x: 0, y: 0 },
             pos: { x: 0, y: 0 },
+            tile: { x: 0, y: 0 },
         },
     }
 }
@@ -107,6 +115,7 @@ export function onMouseDown(state: State, ev: MouseEvent)
     {
         posRaw: state.mouse.posRaw,
         pos: state.mouse.pos,
+        tile: state.mouse.tile,
     }
 
     if (ev.button != 0)
@@ -130,8 +139,24 @@ export function onMouseMove(state: State, ev: MouseEvent)
         y: (state.mouse.posRaw.y - state.canvasHeight / 2 + state.camera.pos.y) / state.camera.zoom,
     }
 
-    console.log(state.mouse.pos)
-
+    const layer = global.project.defs.layerDefs.find(l => l.id === global.editingLayerId)
+    const world = global.project.worlds.find(w => w.id === state.worldId)!
+    const stage = world.stages.find(s => s.id === state.stageId)
+    if (layer && stage)
+    {
+        state.mouse.tile = {
+            x: Math.floor((state.mouse.pos.x - stage.x) / layer.gridCellWidth),
+            y: Math.floor((state.mouse.pos.y - stage.y) / layer.gridCellHeight),
+        }
+    }
+    else
+    {
+        state.mouse.tile = {
+            x: 0,
+            y: 0,
+        }
+    }
+    
     state.mouseDownDelta.posRaw = {
         x: state.mouse.posRaw.x - state.mouseDownOrigin.posRaw.x,
         y: state.mouse.posRaw.y - state.mouseDownOrigin.posRaw.y,
@@ -142,8 +167,15 @@ export function onMouseMove(state: State, ev: MouseEvent)
         y: state.mouse.pos.y - state.mouseDownOrigin.pos.y,
     }
 
+    state.mouseDownDelta.tile = {
+        x: state.mouse.tile.x - state.mouseDownOrigin.tile.x,
+        y: state.mouse.tile.y - state.mouseDownOrigin.tile.y,
+    }
+
     if (state.onMouseMove)
         state.onMouseMove(state)
+    
+    Editor.render(state, {})
 }
 
 
@@ -173,6 +205,8 @@ export function onMouseWheel(state: State, ev: WheelEvent)
         x: state.camera.pos.x + (mousePrevious.x - state.mouse.pos.x) * state.camera.zoom,
         y: state.camera.pos.y + (mousePrevious.y - state.mouse.pos.y) * state.camera.zoom,
     }
+    
+    onMouseMove(state, ev)
     
     Editor.render(state, {})
 }

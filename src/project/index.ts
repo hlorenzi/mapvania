@@ -16,12 +16,15 @@ export interface Project
 
 export interface Defs
 {
-    // The list of layer definitions
-    layerDefs: DefLayer[]
-
     // The default dimensions of a new stage, in pixels
     stageDefaultWidth: number
     stageDefaultHeight: number
+    
+    // The list of layer definitions
+    layerDefs: DefLayer[]
+
+    // The list of tileset definitions
+    tilesetDefs: DefTileset[]
 }
 
 
@@ -52,6 +55,24 @@ export interface DefLayerObject extends DefLayerCommon
 }
 
 
+export interface DefTileset
+{
+    id: ID
+    name: string
+
+    imageId: ID
+
+    gridCellWidth: number
+    gridCellHeight: number
+
+    gridGapX: number
+    gridGapY: number
+
+    gridOffsetX: number
+    gridOffsetY: number
+}
+
+
 export interface World
 {
     id: ID
@@ -73,6 +94,47 @@ export interface Stage
     // The dimensions of the stage, in pixels
     width: number
     height: number
+
+    layers: Layer[]
+}
+
+
+export type Layer =
+    LayerTile |
+    LayerObject
+
+
+export interface LayerCommon
+{
+    layerId: ID
+}
+
+
+export interface LayerTile extends LayerCommon
+{
+    type: "tile"
+    tiles: TileField
+}
+
+
+export interface LayerObject extends LayerCommon
+{
+    type: "object"
+}
+
+
+export interface TileField
+{
+    tiles: Tile[]
+    width: number
+    height: number
+}
+
+
+export interface Tile
+{
+    tilesetId: ID
+    tileId: number
 }
 
 
@@ -90,6 +152,8 @@ export function projectCreate(): Project
                 gridCellHeight: 16,
             }],
 
+            tilesetDefs: [],
+
             stageDefaultWidth: 16 * 27,
             stageDefaultHeight: 16 * 15,
         },
@@ -106,6 +170,8 @@ export function projectCreate(): Project
                 y: 0,
                 width: 16 * 27,
                 height: 16 * 15,
+
+                layers: [],
             }]
         }],
     }

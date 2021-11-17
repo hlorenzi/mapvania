@@ -19,8 +19,8 @@ export function render(state: Editor.State, options: RenderOptions = {})
     state.ctx.lineWidth = 1 / state.camera.zoom
 
     state.ctx.translate(
-        state.canvasWidth  / 2 - state.camera.pos.x,
-        state.canvasHeight / 2 - state.camera.pos.y)
+        Math.floor(state.canvasWidth  / 2 - state.camera.pos.x) + 0.5,
+        Math.floor(state.canvasHeight / 2 - state.camera.pos.y) + 0.5)
         
     state.ctx.scale(state.camera.zoom, state.camera.zoom)
 
@@ -49,25 +49,40 @@ export function renderStage(
     state.ctx.strokeStyle = "#fff"
     state.ctx.strokeRect(0, 0, stage.width, stage.height)
 
-    const editingLayer = global.project.defs.layerDefs.find(l => l.id === global.editingLayerId)
-    if (editingLayer)
+    const layer = global.project.defs.layerDefs.find(l => l.id === global.editingLayerId)
+    if (layer)
     {
+        state.ctx.save()
+
         state.ctx.strokeStyle = "#888"
+        state.ctx.lineDashOffset = 1.5
         state.ctx.setLineDash([3, 1])
 
         state.ctx.beginPath()
-        for (let x = 0; x < stage.width; x += editingLayer.gridCellWidth)
+        for (let x = layer.gridCellWidth; x < stage.width; x += layer.gridCellWidth)
         {
             state.ctx.moveTo(x, 0)
             state.ctx.lineTo(x, stage.height)
         }
 
-        for (let y = 0; y < stage.height; y += editingLayer.gridCellHeight)
+        for (let y = layer.gridCellHeight; y < stage.height; y += layer.gridCellHeight)
         {
             state.ctx.moveTo(0, y)
             state.ctx.lineTo(stage.width, y)
         }
         state.ctx.stroke()
+
+        state.ctx.restore()
+
+        if (!state.onMouseMove)
+        {
+            state.ctx.strokeStyle = "#0af"
+            state.ctx.strokeRect(
+                state.mouse.tile.x * layer.gridCellWidth,
+                state.mouse.tile.y * layer.gridCellHeight,
+                layer.gridCellWidth,
+                layer.gridCellHeight)
+        }
     }
 
     state.ctx.restore()

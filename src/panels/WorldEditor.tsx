@@ -34,7 +34,7 @@ export function WorldEditor(props: {
             return
 
         if (!stateRef.current)
-            stateRef.current = Editor.createState(props.worldId)
+            stateRef.current = Editor.createState(props.worldId, world?.stages[0].id ?? -1)
 
         const canvas = canvasRef.current
         stateRef.current.canvas = canvas
@@ -54,6 +54,13 @@ export function WorldEditor(props: {
         window.addEventListener("mouseup", onMouseUp)
         canvas.addEventListener("wheel", onMouseWheel)
 
+        const resizeObserver = new ResizeObserver(entries =>
+        {
+            window.dispatchEvent(new Event("resize"))
+        })
+
+        resizeObserver.observe(canvas)
+    
         return () =>
         {
             window.removeEventListener("resize", onResize)
@@ -61,6 +68,8 @@ export function WorldEditor(props: {
             window.removeEventListener("mousemove", onMouseMove)
             window.removeEventListener("mouseup", onMouseUp)
             canvas.removeEventListener("wheel", onMouseWheel)
+            
+            resizeObserver.unobserve(canvas)
         }
 
     }, [canvasRef.current])
