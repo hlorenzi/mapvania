@@ -34,6 +34,8 @@ export function TilesetDefs()
             id: global.project.nextId,
             name: "tileset_" + (global.project.defs.tilesetDefs.length + 1),
             imageId: -1,
+            width: 0,
+            height: 0,
             gridCellWidth: 16,
             gridCellHeight: 16,
             gridGapX: 0,
@@ -65,9 +67,17 @@ export function TilesetDefs()
     {
         const imageId = await openTilesetImage()
 
+        const image = global.images[imageId]
+        if (!image)
+            return
+
         deepAssignProject(
         {
-            defs: { tilesetDefs: { [curTilesetIndex]: { imageId } }},
+            defs: { tilesetDefs: { [curTilesetIndex]: {
+                imageId,
+                width: image.width,
+                height: image.height,
+            } }},
         })
 
         global.editingToken.commit()

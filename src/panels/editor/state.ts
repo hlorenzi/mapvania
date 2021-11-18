@@ -120,6 +120,8 @@ export function onMouseDown(state: State, ev: MouseEvent)
 
     if (ev.button != 0)
         Editor.setupPan(state)
+    else
+        Editor.setupDrawTiles(state)
 
     onMouseMove(state, ev)
 }
