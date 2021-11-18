@@ -7,6 +7,8 @@ export function setupDrawTiles(state: Editor.State)
 {
     let lastPlacedTile = { x: -100000, y: -100000 }
 
+    state.selection = null
+
     state.onMouseMove = () =>
     {
         global.project = Project.ensureStageLayer(
@@ -62,6 +64,5 @@ export function setupDrawTiles(state: Editor.State)
             layer)
 
         global.projectToken.commit()
-        Editor.render(state)
     }
 }

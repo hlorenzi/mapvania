@@ -6,15 +6,15 @@ import { WorldPicker } from "./panels/WorldPicker"
 import { LayerPicker } from "./panels/LayerPicker"
 import { InputPicker } from "./panels/InputPicker"
 import { WorldEditor } from "./panels/WorldEditor"
-import { global } from "./global"
+import { global, addHistory, useKeyboardShortcuts } from "./global"
 import * as Project from "./project"
 import { useUpdateToken } from "./util/updateToken"
 
 
 function App()
 {
-    const projectToken = useUpdateToken()
-    const editingToken = useUpdateToken()
+    const projectToken = useUpdateToken("refreshProject")
+    const editingToken = useUpdateToken("refreshEditing")
 
 
     const initialized = React.useRef(false)
@@ -26,7 +26,12 @@ function App()
         global.projectToken = projectToken
 
         global.editingToken = editingToken
+
+        addHistory()
     }
+
+
+    useKeyboardShortcuts()
 
 
     const dockableState = Dockable.useDockable((state) =>

@@ -32,9 +32,21 @@ export function InputPicker()
 
 function TilesetPicker()
 {
+    const [refresh, setRefresh] = React.useState(0)
+
     const curTilesetIndex = global.project.defs.tilesetDefs.findIndex(t => t.id === global.editingTilesetId)
     const curTileset = global.project.defs.tilesetDefs.find(t => t.id === global.editingTilesetId)
     const curTilesetImg = global.images[curTileset?.imageId ?? -1]
+
+    
+    React.useEffect(() =>
+    {
+        const onRefresh = () => setRefresh(r => r + 1)
+
+        window.addEventListener("refreshEditing", onRefresh)
+        return () => window.removeEventListener("refreshEditing", onRefresh)
+
+    }, [])
 
 
     React.useEffect(() =>
@@ -45,7 +57,7 @@ function TilesetPicker()
             global.editingToken.commit()
         }
 
-    }, [curTileset, global.editingToken.updateToken])
+    }, [refresh])
 
 
     const chooseTilesetId = (tilesetId: Project.ID) =>
@@ -100,6 +112,7 @@ function TilesetPicker()
                     }
                 }
                 
+                global.editingTileTool = "draw"
                 global.editingToken.commit()
             }
         }
@@ -120,7 +133,7 @@ function TilesetPicker()
             onRender,
         }
 
-    }, [curTileset, curTilesetImg, global.editingToken.updateToken])
+    }, [refresh])
 
 
     return <Grid template="1fr" templateRows="auto 1fr" fullHeight>

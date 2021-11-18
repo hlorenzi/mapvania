@@ -9,8 +9,16 @@ export interface Global
     projectToken: UpdateToken
     project: Project.Project
 
+    history: HistoryStep[]
+    historyPointer: number
+
     editingToken: UpdateToken
     editingLayerId: Project.ID
+
+    editingTileTool: TileTool
+    editingTileToolBeforeKeyToggle: TileTool
+    editingTileToolKeyToggled: boolean
+
     editingTilesetId: Project.ID
     editingTilesetStampSet: Set<number>
     editingTileStamp: Project.TileField
@@ -19,13 +27,31 @@ export interface Global
 }
 
 
+export interface HistoryStep
+{
+    project: Project.Project
+    marker: string | undefined
+}
+
+
+export type TileTool = "draw" | "erase" | "select"
+
+
 export const global: Global =
 {
     projectToken: null!,
     project: null!,
 
+    history: [],
+    historyPointer: 0,
+
     editingToken: null!,
     editingLayerId: -1,
+
+    editingTileTool: "draw",
+    editingTileToolBeforeKeyToggle: "draw",
+    editingTileToolKeyToggled: false,
+
     editingTilesetId: -1,
     editingTilesetStampSet: new Set(),
     editingTileStamp: { tiles: [], width: 0, height: 0 },
@@ -38,6 +64,126 @@ export function deepAssignProject(value: DeepAssignable<Project.Project>)
 {
     global.project = deepAssign(global.project, value)
     global.projectToken.commit()
+}
+
+
+export function addHistory(marker?: string)
+{
+    if (global.history.length > 0 &&
+        global.history[global.history.length - 1].project === global.project)
+        return
+    
+    global.history = global.history.slice(0, global.historyPointer + 1)
+
+    global.history.push({
+        project: global.project,
+        marker: marker,
+    })
+
+    global.historyPointer = global.history.length - 1
+}
+
+
+export function undo()
+{
+    if (global.historyPointer - 1 < 0)
+        return
+    
+    global.historyPointer -= 1
+    global.project = global.history[global.historyPointer].project
+    global.projectToken.commit()
+}
+
+
+export function redo()
+{
+    if (global.historyPointer + 1 >= global.history.length)
+        return
+    
+    global.historyPointer += 1
+    global.project = global.history[global.historyPointer].project
+    global.projectToken.commit()
+}
+
+
+export function useKeyboardShortcuts()
+{
+    React.useEffect(() =>
+    {
+        const onKeyDown = (ev: KeyboardEvent) =>
+        {
+            const key = ev.key.toLowerCase()
+
+            switch (key)
+            {
+                case "b":
+                    global.editingTileTool = "draw"
+                    global.editingToken.commit()
+                    break
+                    
+                case "e":
+                    global.editingTileTool = "erase"
+                    global.editingToken.commit()
+                    break
+                    
+                case "shift":
+                    if (!global.editingTileToolKeyToggled)
+                    {
+                        global.editingTileToolBeforeKeyToggle = global.editingTileTool
+                        global.editingTileToolKeyToggled = true
+                    }
+                    global.editingTileTool = "select"
+                    global.editingToken.commit()
+                    break
+                    
+                case "z":
+                    if (ev.ctrlKey)
+                    {
+                        if (ev.shiftKey)
+                            redo()
+                        else
+                            undo()
+                    }
+                    break
+                    
+                case "y":
+                    if (ev.ctrlKey)
+                        redo()
+                    break
+            }
+        }
+
+
+        const onKeyUp = (ev: KeyboardEvent) =>
+        {
+            const key = ev.key.toLowerCase()
+
+            switch (key)
+            {
+                case "shift":
+                    if (global.editingTileTool === "select" &&
+                        global.editingTileToolKeyToggled)
+                    {
+                        global.editingTileTool = global.editingTileToolBeforeKeyToggle
+                        global.editingToken.commit()
+                    }
+                    break
+            }
+
+            global.editingTileToolKeyToggled = false
+        }
+
+
+        window.addEventListener("keydown", onKeyDown)
+        window.addEventListener("keyup", onKeyUp)
+
+        return () =>
+        {
+            window.removeEventListener("keydown", onKeyDown)
+            window.removeEventListener("keyup", onKeyUp)
+        }
+
+    }, [])
 }
 
 

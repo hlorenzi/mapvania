@@ -59,6 +59,9 @@ export function renderStage(
 
             for (const cell of Project.enumerateTileFieldCells(layer.tileField))
             {
+                if (!cell.tile)
+                    continue
+
                 const tileset = Project.getTileset(global.project, cell.tile.tilesetId)
                 if (!tileset)
                     continue
@@ -80,12 +83,15 @@ export function renderStage(
         }
     }
 
+    state.ctx.strokeStyle = "#fff"
+    state.ctx.strokeRect(0, 0, stage.width, stage.height)
+
     const editingLayerDef = Project.getLayerDef(global.project, global.editingLayerId)
     if (editingLayerDef)
     {
         state.ctx.save()
 
-        state.ctx.strokeStyle = "#888"
+        state.ctx.strokeStyle = "#444"
         state.ctx.lineDashOffset = 1
         state.ctx.setLineDash([2, 2])
 
@@ -105,22 +111,19 @@ export function renderStage(
 
         state.ctx.restore()
 
-        if (!state.onMouseMove)
+        if (editingLayerDef.type === "tile")
         {
-            /*state.ctx.strokeStyle = "#0af"
-            state.ctx.strokeRect(
-                state.mouse.tile.x * editingLayerDef.gridCellWidth,
-                state.mouse.tile.y * editingLayerDef.gridCellHeight,
-                editingLayerDef.gridCellWidth,
-                editingLayerDef.gridCellHeight)*/
-
-            if (editingLayerDef.type == "tile")
+            if (global.editingTileTool === "draw" &&
+                !state.onMouseMove)
             {
                 state.ctx.save()
                 state.ctx.globalAlpha = 0.5
 
                 for (const cell of Project.enumerateTileFieldCellsCentered(global.editingTileStamp))
                 {
+                    if (!cell.tile)
+                        continue
+    
                     const tileset = Project.getTileset(global.project, cell.tile.tilesetId)
                     if (!tileset)
                         continue
@@ -142,11 +145,37 @@ export function renderStage(
 
                 state.ctx.restore()
             }
+            else if (global.editingTileTool === "erase")
+            {
+                state.ctx.strokeStyle = "#f40"
+                state.ctx.strokeRect(
+                    state.mouse.tile.x * editingLayerDef.gridCellWidth,
+                    state.mouse.tile.y * editingLayerDef.gridCellHeight,
+                    editingLayerDef.gridCellWidth,
+                    editingLayerDef.gridCellHeight)
+            }
+
+            if (state.selection)
+            {
+                state.ctx.save()
+
+                state.ctx.strokeStyle = "#0cf"
+
+                const tx1 = Math.min(state.selection.tile1.x, state.selection.tile2.x)
+                const tx2 = Math.max(state.selection.tile1.x, state.selection.tile2.x)
+                const ty1 = Math.min(state.selection.tile1.y, state.selection.tile2.y)
+                const ty2 = Math.max(state.selection.tile1.y, state.selection.tile2.y)
+
+                state.ctx.strokeRect(
+                    tx1 * editingLayerDef.gridCellWidth,
+                    ty1 * editingLayerDef.gridCellHeight,
+                    (tx2 - tx1 + 1) * editingLayerDef.gridCellWidth,
+                    (ty2 - ty1 + 1) * editingLayerDef.gridCellHeight)
+
+                state.ctx.restore()
+            }
         }
     }
-
-    state.ctx.strokeStyle = "#fff"
-    state.ctx.strokeRect(0, 0, stage.width, stage.height)
 
     state.ctx.restore()
 }

@@ -1,6 +1,6 @@
 import * as Editor from "./index"
 import * as Project from "../../project/index"
-import { global, deepAssignProject } from "../../global"
+import { global, addHistory as addHistoryStep } from "../../global"
 
 
 export interface State
@@ -42,6 +42,12 @@ export interface State
         posRaw: { x: number, y: number }
         pos: { x: number, y: number }
         tile: { x: number, y: number }
+    }
+
+    selection: null |
+    {
+        tile1: { x: number, y: number }
+        tile2: { x: number, y: number }
     }
 }
 
@@ -87,6 +93,8 @@ export function createState(worldId: Project.ID, stageId: Project.ID): State
             pos: { x: 0, y: 0 },
             tile: { x: 0, y: 0 },
         },
+
+        selection: null,
     }
 }
 
@@ -94,13 +102,13 @@ export function createState(worldId: Project.ID, stageId: Project.ID): State
 export function onResize(state: State)
 {
     const canvasRect = state.canvas.getBoundingClientRect()
-    state.canvasWidth = canvasRect.width
-    state.canvasHeight = canvasRect.height
+    state.canvasWidth = Math.floor(canvasRect.width)
+    state.canvasHeight = Math.floor(canvasRect.height)
 
-    state.canvas.width = canvasRect.width
-    state.canvas.height = canvasRect.height
+    state.canvas.width = state.canvasWidth
+    state.canvas.height = state.canvasHeight
 
-    Editor.render(state, {})
+    Editor.render(state)
 }
 
 
@@ -110,6 +118,8 @@ export function onMouseDown(state: State, ev: MouseEvent)
     
     if (state.onMouseMove)
         return
+
+    addHistoryStep()
 
     state.mouseDownOrigin =
     {
@@ -121,7 +131,18 @@ export function onMouseDown(state: State, ev: MouseEvent)
     if (ev.button != 0)
         Editor.setupPan(state)
     else
-        Editor.setupDrawTiles(state)
+    {
+        const editingLayerDef = Project.getLayerDef(global.project, global.editingLayerId)
+        if (editingLayerDef && editingLayerDef.type === "tile")
+        {
+            if (global.editingTileTool === "draw")
+                Editor.setupDrawTiles(state)
+            else if (global.editingTileTool === "erase")
+                Editor.setupEraseTiles(state)
+            else if (global.editingTileTool === "select")
+                Editor.setupSelectTiles(state)
+        }
+    }
 
     onMouseMove(state, ev)
 }
@@ -177,13 +198,16 @@ export function onMouseMove(state: State, ev: MouseEvent)
     if (state.onMouseMove)
         state.onMouseMove(state)
     
-    Editor.render(state, {})
+    Editor.render(state)
 }
 
 
 export function onMouseUp(state: State, ev: MouseEvent)
 {
     onMouseMove(state, ev)
+
+    if (state.onMouseMove)
+        addHistoryStep()
 
     if (state.onMouseUp)
         state.onMouseUp(state)
@@ -210,5 +234,153 @@ export function onMouseWheel(state: State, ev: WheelEvent)
     
     onMouseMove(state, ev)
     
-    Editor.render(state, {})
+    Editor.render(state)
+}
+
+
+export function onKeyDown(state: State, ev: KeyboardEvent)
+{
+    const key = ev.key.toLowerCase()
+
+    switch (key)
+    {
+        case "c":
+            if (ev.ctrlKey)
+            {
+                copyTileSelection(state)
+                state.selection = null
+                Editor.render(state)
+            }
+            break
+
+        case "x":
+            if (ev.ctrlKey)
+            {
+                copyTileSelection(state)
+                addHistoryStep()
+                eraseTileSelection(state)
+                addHistoryStep()
+                state.selection = null
+                Editor.render(state)
+            }
+            break
+
+        case "delete":
+        case "backspace":
+            addHistoryStep()
+            eraseTileSelection(state)
+            addHistoryStep()
+            state.selection = null
+            Editor.render(state)
+            break
+    }
+}
+
+
+export function copyTileSelection(state: State)
+{
+    if (!state.selection)
+        return
+    
+    global.project = Project.ensureStageLayer(
+        global.project,
+        state.worldId,
+        state.stageId,
+        global.editingLayerId)
+
+    let layer = Project.getStageLayer(
+        global.project,
+        state.worldId,
+        state.stageId,
+        global.editingLayerId)
+
+    if (!layer || layer.type !== "tile")
+        return
+
+    const tx1 = Math.min(state.selection.tile1.x, state.selection.tile2.x)
+    const tx2 = Math.max(state.selection.tile1.x, state.selection.tile2.x)
+    const ty1 = Math.min(state.selection.tile1.y, state.selection.tile2.y)
+    const ty2 = Math.max(state.selection.tile1.y, state.selection.tile2.y)
+
+    const tileField: Project.TileField =
+    {
+        width: tx2 - tx1 + 1,
+        height: ty2 - ty1 + 1,
+        tiles: [],
+    }
+
+    for (let y = ty1; y <= ty2; y++)
+    {
+        for (let x = tx1; x <= tx2; x++)
+        {
+            const cellIndex = Project.getTileFieldCellIndexForCell(layer.tileField, { x, y })
+            if (cellIndex === undefined)
+                tileField.tiles.push(undefined)
+            else
+                tileField.tiles.push(layer.tileField.tiles[cellIndex])
+        }
+    }
+
+    global.editingTileStamp = tileField
+    global.editingTilesetStampSet.clear()
+    global.editingTileTool = "draw"
+    global.editingToken.commit()
+}
+
+
+export function eraseTileSelection(state: State)
+{
+    if (!state.selection)
+        return
+    
+    global.project = Project.ensureStageLayer(
+        global.project,
+        state.worldId,
+        state.stageId,
+        global.editingLayerId)
+
+    let layer = Project.getStageLayer(
+        global.project,
+        state.worldId,
+        state.stageId,
+        global.editingLayerId)
+
+    if (!layer || layer.type !== "tile")
+        return
+
+    const tx1 = Math.min(state.selection.tile1.x, state.selection.tile2.x)
+    const tx2 = Math.max(state.selection.tile1.x, state.selection.tile2.x)
+    const ty1 = Math.min(state.selection.tile1.y, state.selection.tile2.y)
+    const ty2 = Math.max(state.selection.tile1.y, state.selection.tile2.y)
+
+    for (let y = ty1; y <= ty2; y++)
+    {
+        for (let x = tx1; x <= tx2; x++)
+        {
+            const cellIndex = Project.getTileFieldCellIndexForCell(layer.tileField, { x, y })
+            if (cellIndex === undefined)
+                continue
+        
+            layer = {
+                ...layer,
+                tileField: {
+                    ...layer.tileField,
+                    tiles: [
+                        ...layer.tileField.tiles.slice(0, cellIndex),
+                        undefined,
+                        ...layer.tileField.tiles.slice(cellIndex + 1),
+                    ]
+                }
+            }
+        }
+    }
+
+    global.project = Project.setStageLayer(
+        global.project,
+        state.worldId,
+        state.stageId,
+        global.editingLayerId,
+        layer)
+
+    global.projectToken.commit()
 }

@@ -128,7 +128,7 @@ export interface LayerObject extends LayerCommon
 
 export interface TileField
 {
-    tiles: Tile[]
+    tiles: (Tile | undefined)[]
     width: number
     height: number
 }
@@ -404,7 +404,7 @@ export function getTileFieldCellIndexForCell(tileField: TileField, cell: { x: nu
 }
 
 
-export function *enumerateTileFieldCells(tileField: TileField): Generator<{ tile: Tile, x: number, y: number }, void, void>
+export function *enumerateTileFieldCells(tileField: TileField): Generator<{ tile: Tile | undefined, x: number, y: number }, void, void>
 {
     for (let i = 0; i < tileField.tiles.length; i++)
     {
@@ -415,7 +415,7 @@ export function *enumerateTileFieldCells(tileField: TileField): Generator<{ tile
 }
 
 
-export function *enumerateTileFieldCellsCentered(tileField: TileField): Generator<{ tile: Tile, x: number, y: number }, void, void>
+export function *enumerateTileFieldCellsCentered(tileField: TileField): Generator<{ tile: Tile | undefined, x: number, y: number }, void, void>
 {
     for (const tile of enumerateTileFieldCells(tileField))
     {
