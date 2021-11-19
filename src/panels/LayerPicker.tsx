@@ -6,7 +6,7 @@ import { Input } from "../ui/Input"
 import { Button } from "../ui/Button"
 import { List } from "../ui/List"
 import { Grid, Cell } from "../ui/Grid"
-import { global } from "../global"
+import { global, LAYER_ID_WORLD } from "../global"
 import styled from "styled-components"
 
 
@@ -32,6 +32,18 @@ export function LayerPicker()
     }
 
 
+    const layerItems = [
+        {
+            id: LAYER_ID_WORLD,
+            label: "🗺️ World",
+        },
+        ...global.project.defs.layerDefs.map(layerDef => ({
+            id: layerDef.id,
+            label: getLayerIcon(layerDef) + " " + layerDef.name,
+        }))
+    ]
+
+
     return <PanelPadding>
 
         <Grid template="1fr" templateRows="1fr" fullHeight>
@@ -39,10 +51,7 @@ export function LayerPicker()
             <List
                 value={ global.editingLayerId }
                 onChange={ chooseLayer }
-                items={ global.project.defs.layerDefs.map(layerDef => ({
-                    id: layerDef.id,
-                    label: getLayerIcon(layerDef) + " " + layerDef.name,
-                }))}
+                items={ layerItems }
             />
 
         </Grid>

@@ -1,6 +1,6 @@
 import * as Editor from "./index"
 import * as Project from "../../project/index"
-import { global, addHistory as addHistoryStep } from "../../global"
+import { global, addHistory as addHistoryStep, LAYER_ID_WORLD } from "../../global"
 
 
 export interface State
@@ -12,7 +12,7 @@ export interface State
 
     onMouseMove: null | ((state: State) => void)
     onMouseUp: null | ((state: State) => void)
-    onRender: null | ((state: State) => void)
+    onRenderWorldTool: null | ((state: State) => void)
 
     worldId: Project.ID
     stageId: Project.ID
@@ -62,7 +62,7 @@ export function createState(worldId: Project.ID, stageId: Project.ID): State
 
         onMouseMove: null,
         onMouseUp: null,
-        onRender: null,
+        onRenderWorldTool: null,
 
         worldId,
         stageId,
@@ -132,15 +132,46 @@ export function onMouseDown(state: State, ev: MouseEvent)
         Editor.setupPan(state)
     else
     {
-        const editingLayerDef = Project.getLayerDef(global.project, global.editingLayerId)
-        if (editingLayerDef && editingLayerDef.type === "tile")
+        if (global.editingLayerId === LAYER_ID_WORLD)
         {
             if (global.editingTileTool === "draw")
-                Editor.setupDrawTiles(state)
-            else if (global.editingTileTool === "erase")
-                Editor.setupEraseTiles(state)
-            else if (global.editingTileTool === "select")
-                Editor.setupSelectTiles(state)
+                Editor.setupWorldDraw(state)
+        }
+        else
+        {
+            let switchedStages = false
+
+            const world = Project.getWorld(global.project, state.worldId)
+            if (world)
+            {
+                for (const stage of world.stages)
+                {
+                    if (stage.id !== state.stageId &&
+                        state.mouse.pos.x >= stage.x &&
+                        state.mouse.pos.x <= stage.x + stage.width &&
+                        state.mouse.pos.y >= stage.y &&
+                        state.mouse.pos.y <= stage.y + stage.height)
+                    {
+                        state.stageId = stage.id
+                        switchedStages = true
+                        break
+                    }
+                }
+            }
+
+            if (!switchedStages)
+            {
+                const editingLayerDef = Project.getLayerDef(global.project, global.editingLayerId)
+                if (editingLayerDef && editingLayerDef.type === "tile")
+                {
+                    if (global.editingTileTool === "draw")
+                        Editor.setupDrawTiles(state)
+                    else if (global.editingTileTool === "erase")
+                        Editor.setupEraseTiles(state)
+                    else if (global.editingTileTool === "select")
+                        Editor.setupSelectTiles(state)
+                }
+            }
         }
     }
 
@@ -175,8 +206,8 @@ export function onMouseMove(state: State, ev: MouseEvent)
     else
     {
         state.mouse.tile = {
-            x: 0,
-            y: 0,
+            x: Math.floor(state.mouse.pos.x / global.project.defs.stageWidthMultiple),
+            y: Math.floor(state.mouse.pos.y / global.project.defs.stageHeightMultiple),
         }
     }
     
@@ -214,6 +245,7 @@ export function onMouseUp(state: State, ev: MouseEvent)
 
     state.onMouseMove = null
     state.onMouseUp = null
+    state.onRenderWorldTool = null
 }
 
 

@@ -46,7 +46,11 @@ export function setupEraseTiles(state: Editor.State)
             state.stageId,
             global.editingLayerId,
             layer)
+    }
 
+
+    state.onMouseUp = () =>
+    {
         global.projectToken.commit()
     }
 }

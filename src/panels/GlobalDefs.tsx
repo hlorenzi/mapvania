@@ -54,7 +54,7 @@ export function GeneralDefs()
     return <Grid template="auto auto">
 
         <Cell justifyEnd>
-            Default Stage Size
+            Stage Grid Size
         </Cell>
 
         <Cell>
@@ -62,18 +62,42 @@ export function GeneralDefs()
                 <Cell>
                     <Input
                         number
-                        value={ global.project.defs.stageDefaultWidth }
-                        onChangeNumber={ (value) => deepAssignProject({ defs: { stageDefaultWidth: value } }) }
+                        value={ global.project.defs.stageWidthMultiple }
+                        onChangeNumber={ (value) => deepAssignProject({ defs: { stageWidthMultiple: value } }) }
                     />
                 </Cell>
                 <Cell> × </Cell>
                 <Cell>
                     <Input
-                        value={ global.project.defs.stageDefaultHeight }
-                        onChangeNumber={ (value) => deepAssignProject({ defs: { stageDefaultHeight: value } }) }
+                        value={ global.project.defs.stageHeightMultiple }
+                        onChangeNumber={ (value) => deepAssignProject({ defs: { stageHeightMultiple: value } }) }
                     />
                 </Cell>
                 <Cell>px</Cell>
+            </Grid>
+        </Cell>
+
+        <Cell justifyEnd>
+            Stage Default Size
+        </Cell>
+
+        <Cell>
+            <Grid template="1fr auto 1fr auto">
+                <Cell>
+                    <Input
+                        number
+                        value={ global.project.defs.stageDefaultWidthInTiles }
+                        onChangeNumber={ (value) => deepAssignProject({ defs: { stageDefaultWidthInTiles: value } }) }
+                    />
+                </Cell>
+                <Cell> × </Cell>
+                <Cell>
+                    <Input
+                        value={ global.project.defs.stageDefaultHeightInTiles }
+                        onChangeNumber={ (value) => deepAssignProject({ defs: { stageDefaultHeightInTiles: value } }) }
+                    />
+                </Cell>
+                <Cell>tiles</Cell>
             </Grid>
         </Cell>
 

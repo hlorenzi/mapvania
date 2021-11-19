@@ -16,9 +16,13 @@ export interface Project
 
 export interface Defs
 {
-    // The default dimensions of a new stage, in pixels
-    stageDefaultWidth: number
-    stageDefaultHeight: number
+    stageWidthMultiple: number
+    stageHeightMultiple: number
+
+    // The default dimensions of a new stage, in tiles of the
+    // size multiple above
+    stageDefaultWidthInTiles: number
+    stageDefaultHeightInTiles: number
     
     // The list of layer definitions
     layerDefs: DefLayer[]
@@ -157,8 +161,11 @@ export function projectCreate(): Project
 
             tilesetDefs: [],
 
-            stageDefaultWidth: 16 * 27,
-            stageDefaultHeight: 16 * 15,
+            stageWidthMultiple: 16,
+            stageHeightMultiple: 16,
+            
+            stageDefaultWidthInTiles: 27,
+            stageDefaultHeightInTiles: 15,
         },
 
         worlds: [{

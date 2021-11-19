@@ -27,6 +27,9 @@ export interface Global
 }
 
 
+export const LAYER_ID_WORLD = -10
+
+
 export interface HistoryStep
 {
     project: Project.Project
@@ -34,7 +37,7 @@ export interface HistoryStep
 }
 
 
-export type TileTool = "draw" | "erase" | "select"
+export type TileTool = "move" | "draw" | "erase" | "select"
 
 
 export const global: Global =
@@ -46,10 +49,10 @@ export const global: Global =
     historyPointer: 0,
 
     editingToken: null!,
-    editingLayerId: -1,
+    editingLayerId: LAYER_ID_WORLD,
 
-    editingTileTool: "draw",
-    editingTileToolBeforeKeyToggle: "draw",
+    editingTileTool: "move",
+    editingTileToolBeforeKeyToggle: "move",
     editingTileToolKeyToggled: false,
 
     editingTilesetId: -1,
@@ -116,6 +119,11 @@ export function useKeyboardShortcuts()
 
             switch (key)
             {
+                case "m":
+                    global.editingTileTool = "move"
+                    global.editingToken.commit()
+                    break
+
                 case "b":
                     global.editingTileTool = "draw"
                     global.editingToken.commit()
@@ -249,4 +257,17 @@ function arrayBufferToBase64(buffer: ArrayBuffer)
         result += String.fromCharCode(bytes[i])
 
     return window.btoa(result)
+}
+
+
+export async function loadTilesetImageHTTP(path: string): Promise<Project.ID>
+{
+    const file = await fetch(path)
+    const bytes = await file.arrayBuffer()
+    const imgData = await getImageData(bytes)
+
+    const imageId = global.project.nextId
+    global.images[imageId] = imgData
+    deepAssignProject({ nextId: imageId + 1 })
+    return imageId
 }

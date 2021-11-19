@@ -7,7 +7,7 @@ import { Input } from "../ui/Input"
 import { Button } from "../ui/Button"
 import { List } from "../ui/List"
 import { Grid, Cell } from "../ui/Grid"
-import { global, deepAssignProject } from "../global"
+import { global, LAYER_ID_WORLD } from "../global"
 import styled from "styled-components"
 
 
@@ -125,20 +125,50 @@ export function WorldEditor(props: {
                 alignSelf: "start",
                 backgroundColor: "var(--dockable-panelBkg)",
             }}>
-                <Button
-                    label="✒️ Draw (B)"
-                    selected={ global.editingTileTool === "draw" }
-                    onClick={ () => chooseTileTool("draw") }/>
+                { global.editingLayerId === LAYER_ID_WORLD &&
+                    <>
+                    <Button
+                        label="📐 Move (M)"
+                        selected={ global.editingTileTool === "move" }
+                        onClick={ () => chooseTileTool("move") }
+                    />
 
-                <Button
-                    label="❌ Erase (E)"
-                    selected={ global.editingTileTool === "erase" }
-                    onClick={ () => chooseTileTool("erase") }/>
+                    <Button
+                        label="✒️ Draw (B)"
+                        selected={ global.editingTileTool === "draw" }
+                        onClick={ () => chooseTileTool("draw") }
+                    />
 
-                <Button
-                    label="✂️ Select (Shift)"
-                    selected={ global.editingTileTool === "select" }
-                    onClick={ () => chooseTileTool("select") }/>
+                    <Button
+                        label="✂️ Select (Shift)"
+                        selected={ global.editingTileTool === "select" }
+                        onClick={ () => chooseTileTool("select") }
+                    />
+                    </>
+                }
+                
+                { editingLayerDef && editingLayerDef.type === "tile" &&
+                    <>
+                    <Button
+                        label="✒️ Draw (B)"
+                        selected={ global.editingTileTool === "draw" }
+                        onClick={ () => chooseTileTool("draw") }
+                    />
+
+                    <Button
+                        label="❌ Erase (E)"
+                        selected={ global.editingTileTool === "erase" }
+                        onClick={ () => chooseTileTool("erase") }
+                    />
+
+                    <Button
+                        label="✂️ Select (Shift)"
+                        selected={ global.editingTileTool === "select" }
+                        onClick={ () => chooseTileTool("select") }
+                    />
+                    </>
+                }
+
             </div>
 
             <StyledCanvas
