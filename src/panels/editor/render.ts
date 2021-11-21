@@ -117,10 +117,11 @@ export function renderStage(
         }
     }
 
-    state.ctx.strokeStyle =
-        global.editingLayerId === LAYER_ID_WORLD || stage.id === state.stageId ?
-        "#fff" :
-        "#888"
+    const strongBorder = global.editingLayerId === LAYER_ID_WORLD ?
+        state.stageSelection.has(stage.id) :
+        stage.id === state.stageId
+
+    state.ctx.strokeStyle = strongBorder ? "#fff" : "#888"
 
     state.ctx.strokeRect(0, 0, stage.width, stage.height)
 
@@ -211,16 +212,16 @@ export function renderWorldLayerTools(
         state.ctx.restore()
     }
 
-    if (state.selection)
+    if (state.rectSelection)
     {
         state.ctx.save()
 
         state.ctx.strokeStyle = "#0cf"
 
-        const tx1 = Math.min(state.selection.tile1.x, state.selection.tile2.x)
-        const tx2 = Math.max(state.selection.tile1.x, state.selection.tile2.x)
-        const ty1 = Math.min(state.selection.tile1.y, state.selection.tile2.y)
-        const ty2 = Math.max(state.selection.tile1.y, state.selection.tile2.y)
+        const tx1 = Math.min(state.rectSelection.tile1.x, state.rectSelection.tile2.x)
+        const tx2 = Math.max(state.rectSelection.tile1.x, state.rectSelection.tile2.x)
+        const ty1 = Math.min(state.rectSelection.tile1.y, state.rectSelection.tile2.y)
+        const ty2 = Math.max(state.rectSelection.tile1.y, state.rectSelection.tile2.y)
 
         state.ctx.strokeRect(
             tx1 * global.project.defs.stageWidthMultiple,
@@ -327,16 +328,16 @@ export function renderTileLayerTools(
             editingLayerDef.gridCellHeight)
     }
 
-    if (state.selection)
+    if (state.rectSelection)
     {
         state.ctx.save()
 
         state.ctx.strokeStyle = "#0cf"
 
-        const tx1 = Math.min(state.selection.tile1.x, state.selection.tile2.x)
-        const tx2 = Math.max(state.selection.tile1.x, state.selection.tile2.x)
-        const ty1 = Math.min(state.selection.tile1.y, state.selection.tile2.y)
-        const ty2 = Math.max(state.selection.tile1.y, state.selection.tile2.y)
+        const tx1 = Math.min(state.rectSelection.tile1.x, state.rectSelection.tile2.x)
+        const tx2 = Math.max(state.rectSelection.tile1.x, state.rectSelection.tile2.x)
+        const ty1 = Math.min(state.rectSelection.tile1.y, state.rectSelection.tile2.y)
+        const ty2 = Math.max(state.rectSelection.tile1.y, state.rectSelection.tile2.y)
 
         state.ctx.strokeRect(
             tx1 * editingLayerDef.gridCellWidth,

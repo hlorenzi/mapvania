@@ -38,8 +38,12 @@ export function WorldPicker()
         
                         x: 0,
                         y: 0,
-                        width: global.project.defs.stageDefaultWidth,
-                        height: global.project.defs.stageDefaultHeight,
+                        width:
+                            global.project.defs.stageWidthMultiple *
+                            global.project.defs.stageDefaultWidthInTiles,
+                        height:
+                            global.project.defs.stageHeightMultiple *
+                            global.project.defs.stageDefaultHeightInTiles,
                     }]
                 }
             }

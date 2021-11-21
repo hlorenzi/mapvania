@@ -5,7 +5,7 @@ import { global, deepAssignProject } from "../../global"
 
 export function setupEraseTiles(state: Editor.State)
 {
-    state.selection = null
+    state.rectSelection = null
 
     state.onMouseMove = () =>
     {
@@ -47,7 +47,6 @@ export function setupEraseTiles(state: Editor.State)
             global.editingLayerId,
             layer)
     }
-
 
     state.onMouseUp = () =>
     {

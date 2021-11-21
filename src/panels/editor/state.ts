@@ -44,11 +44,13 @@ export interface State
         tile: { x: number, y: number }
     }
 
-    selection: null |
+    rectSelection: null |
     {
         tile1: { x: number, y: number }
         tile2: { x: number, y: number }
     }
+
+    stageSelection: Set<Project.ID>
 }
 
 
@@ -94,7 +96,9 @@ export function createState(worldId: Project.ID, stageId: Project.ID): State
             tile: { x: 0, y: 0 },
         },
 
-        selection: null,
+        rectSelection: null,
+
+        stageSelection: new Set<Project.ID>(),
     }
 }
 
@@ -132,30 +136,50 @@ export function onMouseDown(state: State, ev: MouseEvent)
         Editor.setupPan(state)
     else
     {
+        const world = Project.getWorld(global.project, state.worldId)
+        if (!world)
+            return
+
         if (global.editingLayerId === LAYER_ID_WORLD)
         {
-            if (global.editingTileTool === "draw")
+            if (global.editingTileTool === "move")
+            {
+                if (!ev.ctrlKey)
+                    state.stageSelection.clear()
+                
+                for (const stage of world.stages)
+                {
+                    if (state.mouse.pos.x >= stage.x &&
+                        state.mouse.pos.x <= stage.x + stage.width &&
+                        state.mouse.pos.y >= stage.y &&
+                        state.mouse.pos.y <= stage.y + stage.height)
+                    {
+                        state.stageSelection.add(stage.id)
+                        state.stageId = stage.id
+                        break
+                    }
+                }
+    
+                Editor.setupWorldMove(state)
+            }
+            else if (global.editingTileTool === "draw")
                 Editor.setupWorldDraw(state)
         }
         else
         {
             let switchedStages = false
 
-            const world = Project.getWorld(global.project, state.worldId)
-            if (world)
+            for (const stage of world.stages)
             {
-                for (const stage of world.stages)
+                if (stage.id !== state.stageId &&
+                    state.mouse.pos.x >= stage.x &&
+                    state.mouse.pos.x <= stage.x + stage.width &&
+                    state.mouse.pos.y >= stage.y &&
+                    state.mouse.pos.y <= stage.y + stage.height)
                 {
-                    if (stage.id !== state.stageId &&
-                        state.mouse.pos.x >= stage.x &&
-                        state.mouse.pos.x <= stage.x + stage.width &&
-                        state.mouse.pos.y >= stage.y &&
-                        state.mouse.pos.y <= stage.y + stage.height)
-                    {
-                        state.stageId = stage.id
-                        switchedStages = true
-                        break
-                    }
+                    state.stageId = stage.id
+                    switchedStages = true
+                    break
                 }
             }
 
@@ -280,7 +304,7 @@ export function onKeyDown(state: State, ev: KeyboardEvent)
             if (ev.ctrlKey)
             {
                 copyTileSelection(state)
-                state.selection = null
+                state.rectSelection = null
                 Editor.render(state)
             }
             break
@@ -292,7 +316,7 @@ export function onKeyDown(state: State, ev: KeyboardEvent)
                 addHistoryStep()
                 eraseTileSelection(state)
                 addHistoryStep()
-                state.selection = null
+                state.rectSelection = null
                 Editor.render(state)
             }
             break
@@ -302,7 +326,7 @@ export function onKeyDown(state: State, ev: KeyboardEvent)
             addHistoryStep()
             eraseTileSelection(state)
             addHistoryStep()
-            state.selection = null
+            state.rectSelection = null
             Editor.render(state)
             break
     }
@@ -311,7 +335,7 @@ export function onKeyDown(state: State, ev: KeyboardEvent)
 
 export function copyTileSelection(state: State)
 {
-    if (!state.selection)
+    if (!state.rectSelection)
         return
     
     global.project = Project.ensureStageLayer(
@@ -329,10 +353,10 @@ export function copyTileSelection(state: State)
     if (!layer || layer.type !== "tile")
         return
 
-    const tx1 = Math.min(state.selection.tile1.x, state.selection.tile2.x)
-    const tx2 = Math.max(state.selection.tile1.x, state.selection.tile2.x)
-    const ty1 = Math.min(state.selection.tile1.y, state.selection.tile2.y)
-    const ty2 = Math.max(state.selection.tile1.y, state.selection.tile2.y)
+    const tx1 = Math.min(state.rectSelection.tile1.x, state.rectSelection.tile2.x)
+    const tx2 = Math.max(state.rectSelection.tile1.x, state.rectSelection.tile2.x)
+    const ty1 = Math.min(state.rectSelection.tile1.y, state.rectSelection.tile2.y)
+    const ty2 = Math.max(state.rectSelection.tile1.y, state.rectSelection.tile2.y)
 
     const tileField: Project.TileField =
     {
@@ -362,7 +386,7 @@ export function copyTileSelection(state: State)
 
 export function eraseTileSelection(state: State)
 {
-    if (!state.selection)
+    if (!state.rectSelection)
         return
     
     global.project = Project.ensureStageLayer(
@@ -380,10 +404,10 @@ export function eraseTileSelection(state: State)
     if (!layer || layer.type !== "tile")
         return
 
-    const tx1 = Math.min(state.selection.tile1.x, state.selection.tile2.x)
-    const tx2 = Math.max(state.selection.tile1.x, state.selection.tile2.x)
-    const ty1 = Math.min(state.selection.tile1.y, state.selection.tile2.y)
-    const ty2 = Math.max(state.selection.tile1.y, state.selection.tile2.y)
+    const tx1 = Math.min(state.rectSelection.tile1.x, state.rectSelection.tile2.x)
+    const tx2 = Math.max(state.rectSelection.tile1.x, state.rectSelection.tile2.x)
+    const ty1 = Math.min(state.rectSelection.tile1.y, state.rectSelection.tile2.y)
+    const ty2 = Math.max(state.rectSelection.tile1.y, state.rectSelection.tile2.y)
 
     for (let y = ty1; y <= ty2; y++)
     {

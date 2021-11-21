@@ -5,7 +5,7 @@ import { global, deepAssignProject } from "../../global"
 
 export function setupSelectTiles(state: Editor.State)
 {
-    state.selection =
+    state.rectSelection =
     {
         tile1: state.mouse.tile,
         tile2: state.mouse.tile,
@@ -28,6 +28,6 @@ export function setupSelectTiles(state: Editor.State)
         if (!layer || layer.type !== "tile")
             return
 
-        state.selection!.tile2 = state.mouse.tile
+        state.rectSelection!.tile2 = state.mouse.tile
     }
 }

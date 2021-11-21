@@ -7,7 +7,7 @@ export function setupDrawTiles(state: Editor.State)
 {
     let lastPlacedTile = { x: -100000, y: -100000 }
 
-    state.selection = null
+    state.rectSelection = null
 
     state.onMouseMove = () =>
     {
