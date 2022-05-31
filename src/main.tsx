@@ -1,20 +1,15 @@
 import * as React from "react"
 import * as ReactDOM from "react-dom"
-import * as Dockable from "@hlorenzi/react-dockable"
-import { GlobalDefs } from "./panels/GlobalDefs"
-import { WorldPicker } from "./panels/WorldPicker"
-import { LayerPicker } from "./panels/LayerPicker"
-import { InputPicker } from "./panels/InputPicker"
-import { WorldEditor } from "./panels/WorldEditor"
-import { global, addHistory, useKeyboardShortcuts } from "./global"
-import * as Project from "./project"
-import { useUpdateToken } from "./util/updateToken"
+import { global, initGlobal } from "./global"
+import { useRefreshToken } from "./util/refreshToken"
+import { EditorRoot } from "./panels/EditorRoot"
+import { ProjectTree } from "./panels/ProjectTree"
+import * as Filesystem from "./data/filesystem"
 
 
 function App()
 {
-    const projectToken = useUpdateToken("refreshProject")
-    const editingToken = useUpdateToken("refreshEditing")
+    const filesystemRefreshToken = useRefreshToken("filesystem")
 
 
     const initialized = React.useRef(false)
@@ -22,59 +17,22 @@ function App()
     {
         initialized.current = true
 
-        global.project = Project.projectCreate()
-        global.projectToken = projectToken
-
-        global.editingToken = editingToken
-
-        addHistory()
+        initGlobal(
+            filesystemRefreshToken,
+        )
     }
-
-
-    useKeyboardShortcuts()
-
-
-    const dockableState = Dockable.useDockable((state) =>
-    {
-        Dockable.createDockedPanel(
-            state, state.rootPanel, Dockable.DockMode.Full,
-            <GlobalDefs/>)
-
-        Dockable.createDockedPanel(
-            state, state.rootPanel, Dockable.DockMode.Full,
-            <WorldEditor worldId={ global.project.worlds[0].id }/>)
-
-        const layerPicker = Dockable.createDockedPanel(
-            state, state.rootPanel, Dockable.DockMode.Left,
-            <LayerPicker/>)
-
-        Dockable.createDockedPanel(
-            state, layerPicker, Dockable.DockMode.Bottom,
-            <WorldPicker/>)
-
-        Dockable.createDockedPanel(
-            state, state.rootPanel, Dockable.DockMode.Right,
-            <InputPicker/>)
-    })
 
 
     return <div style={{
         display: "grid",
-        gridTemplate: "auto 1fr / 1fr",
+        gridTemplate: "auto 1fr / auto 1fr",
         width: "100%",
         height: "100vh",
     }}>
 
-        <div style={{
-            padding: "0.5em",
-            display: "grid",
-            gridTemplate: "auto / auto auto auto 1fr",
-            gridGap: "0.25em",
-        }}>
-            
-        </div>
+        <ProjectTree/>
 
-        <Dockable.Container state={ dockableState }/>
+        <EditorRoot/>
 
     </div>
 }
