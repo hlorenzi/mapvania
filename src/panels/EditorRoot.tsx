@@ -1,14 +1,29 @@
 import * as React from "react"
-import * as ReactDOM from "react-dom"
 import styled from "styled-components"
+import { global } from "../global"
+import { Tabs } from "./Tabs"
 import { EditorEmpty } from "./EditorEmpty"
+import { EditorDefs } from "./EditorDefs"
 
 
 export function EditorRoot()
 {
+    const currentEditor =
+        global.editors.currentEditor < 0 ? undefined :
+        global.editors.editors[global.editors.currentEditor]
+
     return <StyledEditorRoot>
 
-        <EditorEmpty/>
+        <Tabs/>
+
+        { !currentEditor && <EditorEmpty/> }
+
+        { currentEditor?.type === "defs" &&
+            <EditorDefs
+                key={ global.editors.currentEditor }
+                editorIndex={ global.editors.currentEditor }
+            />
+        }
 
     </StyledEditorRoot>
 }
@@ -20,9 +35,11 @@ const StyledEditorRoot = styled.div`
 
     width: 100%;
     height: 100%;
+    max-height: 100%;
+    min-height: 0;
 
     display: grid;
-    grid-template: 1fr / 1fr;
+    grid-template: auto 1fr / 1fr;
     align-items: center;
     justify-items: center;
 `

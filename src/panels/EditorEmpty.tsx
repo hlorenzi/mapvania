@@ -1,8 +1,7 @@
 import * as React from "react"
-import * as ReactDOM from "react-dom"
 import styled from "styled-components"
 import { global } from "../global"
-import { openFolder } from "../actions/openFolder"
+import * as Actions from "../actions"
 import * as Filesystem from "../data/filesystem"
 
 
@@ -32,7 +31,7 @@ export function EditorEmpty()
             <br/>
 
             <button
-                onClick={ openFolder.func }
+                onClick={ Actions.openFolder.func }
             >
                 📁 Choose folder...
             </button>

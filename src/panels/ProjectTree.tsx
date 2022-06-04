@@ -1,8 +1,8 @@
 import * as React from "react"
-import * as ReactDOM from "react-dom"
 import styled from "styled-components"
 import { global } from "../global"
-import { openFolder } from "../actions/openFolder"
+import * as Actions from "../actions"
+import * as Editors from "../data/editors"
 
 
 export function ProjectTree()
@@ -14,18 +14,29 @@ export function ProjectTree()
 
         <StyledHeader>
             PROJECT
+
+            <button
+                onClick={ Actions.createDefFile.func }
+            >
+                + Defs
+            </button>
         </StyledHeader>
 
         <StyledTree>
 
             { currentDirectory.childDirectories.map((directory, i) =>
-                <StyledEntry key={ i }>
+                <StyledEntry
+                    key={ i }
+                >
                     📁 { directory.name }/
                 </StyledEntry>
             )}
 
             { currentDirectory.childFiles.map((file, i) =>
-                <StyledEntry key={ i }>
+                <StyledEntry
+                    key={ i }
+                    onDoubleClick={ () => Editors.openEditorDefs(file.rootRelativePath) }
+                >
                     { file.name }
                 </StyledEntry>
             )}
@@ -55,8 +66,6 @@ const StyledRoot = styled.div`
 
 const StyledHeader = styled.div`
     padding: 0.5em 1em;
-
-    font-size: 0.8em;
 `
 
 
@@ -69,7 +78,6 @@ const StyledTree = styled.div`
 const StyledEntry = styled.div`
     padding: 0.25em 1em;
     
-    font-size: 0.8em;
     cursor: pointer;
 
     &:hover
