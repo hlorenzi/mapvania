@@ -11,5 +11,8 @@ export const save =
         
         if (editor.type === "defs")
             await Editors.saveEditorDefs(global.editors.currentEditor)
+
+        else if (editor.type === "map")
+            await Editors.saveEditorMap(global.editors.currentEditor)
     }
 }

@@ -160,6 +160,32 @@ export async function findFile(rootRelativePath: string)
 }
 
 
+export async function findNearestDefsFile(startingFromRootRelativePath: string)
+{
+    return findNearestFileRecursive(global.filesystem.root, f => f.name.endsWith(".mvdefs"))
+}
+
+
+async function findNearestFileRecursive(
+    currentDirectory: Directory,
+    filter: (f: File) => boolean)
+    : Promise<File | null>
+{
+    const file = currentDirectory.childFiles.find(filter)
+    if (file)
+        return file
+
+    for (const childDirectory of currentDirectory.childDirectories)
+    {
+        const innerFile = await findNearestFileRecursive(childDirectory, filter)
+        if (innerFile)
+            return innerFile
+    }
+
+    return null
+}
+
+
 export async function readFileText(rootRelativePath: string)
 {
     const file = await findFile(rootRelativePath)

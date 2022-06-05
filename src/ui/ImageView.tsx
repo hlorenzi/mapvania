@@ -6,7 +6,7 @@ const StyledImageView = styled.div`
     font-size: 1em;
     font-family: inherit;
     color: inherit;
-    background-color: transparent;
+    background-color: #111111;
 
     width: 100%;
     height: 100%;
@@ -15,7 +15,7 @@ const StyledImageView = styled.div`
     overflow-y: hidden;
 
     box-sizing: border-box;
-    border: 1px solid var(--dockable-panelInactiveBorder);
+    border: 0;
     outline: none;
     border-radius: 0;
 `
@@ -203,10 +203,7 @@ export function ImageView(props: {
                 Math.floor(-imgW / 2),
                 Math.floor(-imgH / 2))
     
-            ctx.fillStyle = "#000"
-            ctx.fillRect(8, 8, imgW, imgH)
-    
-            ctx.fillStyle = "#111"
+            ctx.fillStyle = "#242424"
             ctx.fillRect(0, 0, imgW, imgH)
     
             if (props.imageData)
@@ -215,9 +212,6 @@ export function ImageView(props: {
                 ctx.imageSmoothingEnabled = false
                 ctx.drawImage(props.imageData, 0, 0)
             }
-    
-            ctx.strokeStyle = "#fff"
-            ctx.strokeRect(0, 0, imgW, imgH)
         
             if (props.onRender)
                 props.onRender(ctx)

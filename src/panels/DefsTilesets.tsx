@@ -187,24 +187,18 @@ export function DefsTilesets(props: {
                 </UI.Cell>
 
                 <UI.Cell>
-                    <UI.Grid template="1fr auto 1fr auto">
-                        <UI.Cell>
-                            <UI.Input
-                                number
-                                value={ curTileset.gridCellWidth }
-                                onChangeNumber={ (value) => modifyTileset({ gridCellWidth: value }) }
-                            />
-                        </UI.Cell>
-                        <UI.Cell> × </UI.Cell>
-                        <UI.Cell>
-                            <UI.Input
-                                number
-                                value={ curTileset.gridCellHeight }
-                                onChangeNumber={ (value) => modifyTileset({ gridCellHeight: value }) }
-                            />
-                        </UI.Cell>
-                        <UI.Cell>px</UI.Cell>
-                    </UI.Grid>
+                    <UI.Input
+                        number
+                        value={ curTileset.gridCellWidth }
+                        onChangeNumber={ (value) => modifyTileset({ gridCellWidth: value }) }
+                    />
+                    { " × " }
+                    <UI.Input
+                        number
+                        value={ curTileset.gridCellHeight }
+                        onChangeNumber={ (value) => modifyTileset({ gridCellHeight: value }) }
+                    />
+                    { " px" }
                 </UI.Cell>
 
                 <UI.Cell justifyEnd>
@@ -212,24 +206,18 @@ export function DefsTilesets(props: {
                 </UI.Cell>
 
                 <UI.Cell>
-                    <UI.Grid template="1fr auto 1fr auto">
-                        <UI.Cell>
-                            <UI.Input
-                                number
-                                value={ curTileset.gridGapX }
-                                onChangeNumber={ (value) => modifyTileset({ gridGapX: value }) }
-                            />
-                        </UI.Cell>
-                        <UI.Cell> × </UI.Cell>
-                        <UI.Cell>
-                            <UI.Input
-                                number
-                                value={ curTileset.gridGapY }
-                                onChangeNumber={ (value) => modifyTileset({ gridGapY: value }) }
-                            />
-                        </UI.Cell>
-                        <UI.Cell>px</UI.Cell>
-                    </UI.Grid>
+                    <UI.Input
+                        number
+                        value={ curTileset.gridGapX }
+                        onChangeNumber={ (value) => modifyTileset({ gridGapX: value }) }
+                    />
+                    { " × " }
+                    <UI.Input
+                        number
+                        value={ curTileset.gridGapY }
+                        onChangeNumber={ (value) => modifyTileset({ gridGapY: value }) }
+                    />
+                    { " px" }
                 </UI.Cell>
 
 
@@ -238,24 +226,18 @@ export function DefsTilesets(props: {
                 </UI.Cell>
 
                 <UI.Cell>
-                    <UI.Grid template="1fr auto 1fr auto">
-                        <UI.Cell>
-                            <UI.Input
-                                number
-                                value={ curTileset.gridOffsetX }
-                                onChangeNumber={ (value) => modifyTileset({ gridOffsetX: value }) }
-                            />
-                        </UI.Cell>
-                        <UI.Cell> × </UI.Cell>
-                        <UI.Cell>
-                            <UI.Input
-                                number
-                                value={ curTileset.gridOffsetY }
-                                onChangeNumber={ (value) => modifyTileset({ gridOffsetY: value }) }
-                            />
-                        </UI.Cell>
-                        <UI.Cell>px</UI.Cell>
-                    </UI.Grid>
+                    <UI.Input
+                        number
+                        value={ curTileset.gridOffsetX }
+                        onChangeNumber={ (value) => modifyTileset({ gridOffsetX: value }) }
+                    />
+                    { " × " }
+                    <UI.Input
+                        number
+                        value={ curTileset.gridOffsetY }
+                        onChangeNumber={ (value) => modifyTileset({ gridOffsetY: value }) }
+                    />
+                    { " px" }
                 </UI.Cell>
 
             </UI.Grid>
@@ -263,11 +245,13 @@ export function DefsTilesets(props: {
         </UI.Grid> }
 
         <UI.Cell fullHeight>
-            <UI.ImageView
-                key={ curTilesetId }
-                imageData={ curTilesetImg?.element }
-                onRender={ renderTilesetImage }
-            />
+            { curTileset &&
+                <UI.ImageView
+                    key={ curTilesetId }
+                    imageData={ curTilesetImg?.element }
+                    onRender={ renderTilesetImage }
+                />
+            }
         </UI.Cell>
         
     </UI.Grid>

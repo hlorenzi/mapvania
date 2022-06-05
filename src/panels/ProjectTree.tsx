@@ -20,6 +20,12 @@ export function ProjectTree()
             >
                 + Defs
             </button>
+
+            <button
+                onClick={ Actions.createMapFile.func }
+            >
+                + Map
+            </button>
         </StyledHeader>
 
         <StyledTree>
@@ -35,7 +41,7 @@ export function ProjectTree()
             { currentDirectory.childFiles.map((file, i) =>
                 <StyledEntry
                     key={ i }
-                    onDoubleClick={ () => Editors.openEditorDefs(file.rootRelativePath) }
+                    onDoubleClick={ () => Editors.openEditorByFile(file.rootRelativePath) }
                 >
                     { file.name }
                 </StyledEntry>

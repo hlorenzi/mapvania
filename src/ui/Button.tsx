@@ -18,7 +18,7 @@ const StyledButton = styled.button<{
     
     background-color: transparent;
     box-sizing: border-box;
-    border: 0;
+    border: ${ props => props.selected ? "1px solid #ffffff" : "1px solid transparent" };
     outline: none;
     border-radius: 0.25em;
     cursor: pointer;

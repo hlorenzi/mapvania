@@ -4,6 +4,7 @@ import { global } from "../global"
 import { Tabs } from "./Tabs"
 import { EditorEmpty } from "./EditorEmpty"
 import { EditorDefs } from "./EditorDefs"
+import { EditorMap } from "./EditorMap"
 
 
 export function EditorRoot()
@@ -20,6 +21,13 @@ export function EditorRoot()
 
         { currentEditor?.type === "defs" &&
             <EditorDefs
+                key={ global.editors.currentEditor }
+                editorIndex={ global.editors.currentEditor }
+            />
+        }
+
+        { currentEditor?.type === "map" &&
+            <EditorMap
                 key={ global.editors.currentEditor }
                 editorIndex={ global.editors.currentEditor }
             />
