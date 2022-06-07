@@ -3,6 +3,7 @@ import * as ID from "../data/id"
 import * as Defs from "../data/defs"
 import * as Editors from "../data/editors"
 import { global } from "../global"
+import * as MathUtils from "../util/mathUtils"
 
 
 export function setupWorldMove(state: MapEditor.State)
@@ -29,12 +30,12 @@ export function setupWorldMove(state: MapEditor.State)
             newRooms[room.id] = {
                 ...room,
                 
-                x: snap(
+                x: MathUtils.snap(
                     roomOrig.x +
                         defs.generalDefs.roomWidthMultiple * state.mouseDownDelta.tile.x,
                     defs.generalDefs.roomWidthMultiple),
 
-                y: snap(
+                y: MathUtils.snap(
                     roomOrig.y +
                         defs.generalDefs.roomHeightMultiple * state.mouseDownDelta.tile.y,
                         defs.generalDefs.roomHeightMultiple),
@@ -55,10 +56,4 @@ export function setupWorldMove(state: MapEditor.State)
     {
         global.editors.refreshToken.commit()
     }
-}
-
-
-function snap(x: number, step: number): number
-{
-    return Math.round(x / step) * step
 }

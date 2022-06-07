@@ -5,6 +5,7 @@ import * as Filesystem from "./filesystem"
 import * as ID from "./id"
 import * as Defs from "./defs"
 import * as Map from "./map"
+import * as MapEditor from "../mapEditor"
 
 
 export interface Global
@@ -60,6 +61,17 @@ export interface EditorMap extends EditorCommon
     defs: Defs.Defs
     map: Map.Map
     lastSavedMap: Map.Map
+    mapEditor: MapEditor.State
+
+    history: EditorMapHistoryStep[]
+    historyPointer: number
+}
+
+
+export interface EditorMapHistoryStep
+{
+    tag: string
+    map: Map.Map
 }
 
 
@@ -107,6 +119,7 @@ export function openEditor(editor: Editor)
     global.editors.editors.push(editor)
     global.editors.currentEditor = global.editors.editors.length - 1
     global.editors.refreshToken.commit()
+    return global.editors.currentEditor
 }
 
 
@@ -146,7 +159,6 @@ export async function openEditorDefs(rootRelativePath: string)
             lastSavedDefs: defs,
         }
         openEditor(editor)
-        console.log(editor)
     }
     catch (e)
     {
@@ -190,7 +202,7 @@ export async function openEditorMap(rootRelativePath: string)
             return
         }
         
-        const defsText = await Filesystem.readFileText(rootRelativePath)
+        const defsText = await Filesystem.readFileText(defsFile.rootRelativePath)
         const defs = Defs.parse(defsText)
 
         const mapText = await Filesystem.readFileText(rootRelativePath)
@@ -203,9 +215,15 @@ export async function openEditorMap(rootRelativePath: string)
             defs,
             map,
             lastSavedMap: map,
+            mapEditor: null!,
+            history: [],
+            historyPointer: -1,
         }
-        openEditor(editor)
-        console.log(editor)
+
+        const editorIndex = openEditor(editor)
+
+        editor.mapEditor = MapEditor.createState(editorIndex, "")
+        historyAdd(editorIndex, "initial")
     }
     catch (e)
     {
@@ -234,5 +252,56 @@ export async function saveEditorMap(editorIndex: number)
     catch (e)
     {
         window.alert("An error occurred saving the file!\n\n" + e)
+    }
+}
+
+
+export function historyAdd(editorIndex: number, tag?: string)
+{
+    const editor = global.editors.editors[editorIndex]
+    if (editor.type === "map")
+    {
+        if (editor.history.length > 0 &&
+            editor.history[editor.history.length - 1].map === editor.map)
+            return
+        
+        editor.history = editor.history.slice(0, editor.historyPointer + 1)
+
+        editor.history.push({
+            tag: tag ?? "",
+            map: editor.map,
+        })
+
+        editor.historyPointer = editor.history.length - 1
+    }
+}
+
+
+export function undo(editorIndex: number)
+{
+    const editor = global.editors.editors[editorIndex]
+    if (editor.type === "map")
+    {
+        if (editor.historyPointer - 1 < 0)
+            return
+        
+        editor.historyPointer -= 1
+        editor.map = editor.history[editor.historyPointer].map
+        global.editors.refreshToken.commit()
+    }
+}
+
+
+export function redo(editorIndex: number)
+{
+    const editor = global.editors.editors[editorIndex]
+    if (editor.type === "map")
+    {
+        if (editor.historyPointer + 1 >= editor.history.length)
+            return
+        
+        editor.historyPointer += 1
+        editor.map = editor.history[editor.historyPointer].map
+        global.editors.refreshToken.commit()
     }
 }

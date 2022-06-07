@@ -5,6 +5,8 @@ import * as Defs from "../data/defs"
 import * as Editors from "../data/editors"
 import * as UI from "../ui"
 import { global } from "../global"
+import { LayerPicker } from "./LayerPicker"
+import { TilePicker } from "./TilePicker"
 
 
 const StyledCanvas = styled.canvas`
@@ -22,7 +24,10 @@ export function EditorMap(props: {
 })
 {
     const canvasRef = React.useRef<HTMLCanvasElement>(null)
-    const stateRef = React.useRef<MapEditor.State>()
+
+
+    const editor = global.editors.editors[props.editorIndex] as Editors.EditorMap
+    const editingLayerDef = editor.defs.layerDefs.find(l => l.id === global.editors.mapEditing.layerDefId)
 
 
     React.useEffect(() =>
@@ -30,23 +35,17 @@ export function EditorMap(props: {
         if (!canvasRef.current)
             return
 
-        if (!stateRef.current)
-        {
-            const map = (global.editors.editors[props.editorIndex] as Editors.EditorMap).map
-            stateRef.current = MapEditor.createState(props.editorIndex, [...Object.values(map.rooms)][0]?.id ?? "")
-        }
-
         const canvas = canvasRef.current
-        stateRef.current.canvas = canvas
-        stateRef.current.ctx = canvas.getContext("2d")!
+        editor.mapEditor.canvas = canvas
+        editor.mapEditor.ctx = canvas.getContext("2d")!
 
         const preventDefault = (ev: Event) => ev.preventDefault()
-        const onResize = () => MapEditor.onResize(stateRef.current!)
-        const onMouseDown = (ev: MouseEvent) => MapEditor.onMouseDown(stateRef.current!, ev)
-        const onMouseMove = (ev: MouseEvent) => MapEditor.onMouseMove(stateRef.current!, ev)
-        const onMouseUp = (ev: MouseEvent) => MapEditor.onMouseUp(stateRef.current!, ev)
-        const onMouseWheel = (ev: WheelEvent) => MapEditor.onMouseWheel(stateRef.current!, ev)
-        const onKeyDown = (ev: KeyboardEvent) => MapEditor.onKeyDown(stateRef.current!, ev)
+        const onResize = () => MapEditor.onResize(editor.mapEditor)
+        const onMouseDown = (ev: MouseEvent) => MapEditor.onMouseDown(editor.mapEditor, ev)
+        const onMouseMove = (ev: MouseEvent) => MapEditor.onMouseMove(editor.mapEditor, ev)
+        const onMouseUp = (ev: MouseEvent) => MapEditor.onMouseUp(editor.mapEditor, ev)
+        const onMouseWheel = (ev: WheelEvent) => MapEditor.onMouseWheel(editor.mapEditor, ev)
+        const onKeyDown = (ev: KeyboardEvent) => MapEditor.onKeyDown(editor.mapEditor, ev)
 
         onResize()
 
@@ -83,6 +82,14 @@ export function EditorMap(props: {
         }
 
     }, [canvasRef.current])
+
+
+    React.useEffect(() =>
+    {
+        console.log("refresh map editor")
+        MapEditor.render(editor.mapEditor)
+
+    }, [global.editors.refreshToken.refreshValue])
 
 
     const chooseTileTool = (tool: Editors.TileTool) =>
@@ -134,7 +141,7 @@ export function EditorMap(props: {
                     </>
                 }
                 
-                { false &&//editingLayerDef && editingLayerDef.type === "tile" &&
+                { editingLayerDef && editingLayerDef.type === "tile" &&
                     <>
                     <UI.Button
                         label="✒️ Draw (B)"
@@ -161,6 +168,46 @@ export function EditorMap(props: {
             <StyledCanvas
                 ref={ canvasRef }
             />
+
+            <div style={{
+                gridRow: 1,
+                gridColumn: 1,
+                width: "100%",
+                height: "100%",
+                minHeight: "0",
+                display: "grid",
+                gridTemplate: "1fr / 1fr 25em",
+                pointerEvents: "none",
+                padding: "0.5em",
+            }}>
+
+                <div/>
+
+                <div style={{
+                    width: "100%",
+                    height: "100%",
+                    minHeight: "0",
+                    display: "grid",
+                    gridTemplate: "auto 1fr / 1fr",
+                    gridGap: "0.5em",
+                    pointerEvents: "none",
+                    padding: "0.5em",
+                }}>
+
+                    <LayerPicker
+                        editorIndex={ props.editorIndex }
+                    />
+
+                    { editingLayerDef && editingLayerDef.type === "tile" &&
+                        <TilePicker
+                            editorIndex={ props.editorIndex }
+                        />
+                    }
+
+                </div>
+
+            </div>
+
 
         </div>
 

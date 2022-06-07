@@ -8,20 +8,19 @@ const StyledSelect = styled.select`
     font-size: 1em;
     font-family: inherit;
     color: inherit;
-    background-color: var(--dockable-panelBkg);
+    background-color: #242424;
     cursor: pointer;
 
     box-sizing: border-box;
-    border: 1px solid var(--dockable-panelInactiveBorder);
+    border: 1px solid transparent;
     border-radius: 0;
     outline: none;
 
     padding: 0.25em 0.5em;
 
-    &:focus
+    &:hover
     {
-        outline: none;
-        border: 1px solid var(--dockable-panelActiveBorder);
+        background-color: #2d2d2d;
     }
 `
 

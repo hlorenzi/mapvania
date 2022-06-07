@@ -28,6 +28,7 @@ const StyledListItem = styled.button<{
     width: 100%;
 
     border: 0;
+    outline: none;
     
     appearance: button;
     color: inherit;

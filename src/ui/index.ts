@@ -1,5 +1,6 @@
 export * from "./PanelPadding"
 export * from "./Button"
+export * from "./HeaderAndBody"
 export * from "./ImageView"
 export * from "./Input"
 export * from "./TabGroup"

@@ -5,6 +5,7 @@ import * as Defs from "../data/defs"
 import * as Map from "../data/map"
 import * as Images from "../data/images"
 import { global } from "../global"
+import * as MathUtils from "../util/mathUtils"
 
 
 export function render(state: MapEditor.State)
@@ -17,7 +18,7 @@ export function render(state: MapEditor.State)
     state.ctx.imageSmoothingQuality = "low"
     state.ctx.imageSmoothingEnabled = false
 
-    state.ctx.fillStyle = "#111"
+    state.ctx.fillStyle = "#080808"
     state.ctx.fillRect(0, 0, state.canvasWidth, state.canvasHeight)
 
     state.ctx.lineWidth = 1 / state.camera.zoom
@@ -44,8 +45,8 @@ export function render(state: MapEditor.State)
         state.ctx.save()
         state.ctx.translate(room.x, room.y)
     
-        renderStageBkg(state, room)
-        renderStage(state, defs, room, editingLayerDef)
+        renderRoomBkg(state, room)
+        renderRoom(state, defs, room, editingLayerDef)
 
         state.ctx.restore()
     }
@@ -55,21 +56,29 @@ export function render(state: MapEditor.State)
         state.ctx.save()
         state.ctx.translate(editingRoom.x, editingRoom.y)
     
-        renderStageBkg(state, editingRoom)
+        renderRoomBkg(state, editingRoom)
         renderTileLayerBkg(state, defs, editingRoom, editingLayerDef)
-        renderStage(state, defs, editingRoom, editingLayerDef)
+        renderRoom(state, defs, editingRoom, editingLayerDef)
         renderTileLayerTools(state, defs, editingLayerDef)
         
         state.ctx.restore()
     }
-
-    renderWorldLayerTools(state, defs, editingLayerDef)
     
+    renderWorldLayerTools(state, defs, editingLayerDef)
+    renderInteractionHandles(state)
+
+    if (state.onRenderWorldTool)
+    {
+        state.ctx.save()
+        state.onRenderWorldTool(state)
+        state.ctx.restore()
+    }
+
     state.ctx.restore()
 }
 
 
-export function renderStageBkg(
+export function renderRoomBkg(
     state: MapEditor.State,
     room: Map.Room)
 {
@@ -81,16 +90,21 @@ export function renderStageBkg(
 }
 
 
-export function renderStage(
+export function renderRoom(
     state: MapEditor.State,
     defs: Defs.Defs,
-    stage: Map.Room,
+    room: Map.Room,
     editingLayerDef: Defs.DefLayer | undefined)
 {
     state.ctx.save()
     
-    for (const [_, layer] of Object.entries(stage.layers))
+    for (var i = defs.layerDefs.length - 1; i >= 0; i--)
     {
+        const layerDef = defs.layerDefs[i]
+        const layer = room.layers[layerDef.id]
+        if (!layer)
+            continue
+        
         if (layer.type === "tile")
         {
             const layerDef = Defs.getLayerDef(defs, layer.layerDefId)
@@ -124,12 +138,12 @@ export function renderStage(
     }
 
     const strongBorder = global.editors.mapEditing.layerDefId === Editors.LAYERDEF_ID_WORLD ?
-        state.stageSelection.has(stage.id) :
-        stage.id === state.roomId
+        state.stageSelection.has(room.id) :
+        room.id === state.roomId
 
     state.ctx.strokeStyle = strongBorder ? "#fff" : "#888"
 
-    state.ctx.strokeRect(0, 0, stage.width, stage.height)
+    state.ctx.strokeRect(0, 0, room.width, room.height)
 
     state.ctx.restore()
 }
@@ -232,13 +246,6 @@ export function renderWorldLayerTools(
             (tx2 - tx1 + 1) * defs.generalDefs.roomWidthMultiple,
             (ty2 - ty1 + 1) * defs.generalDefs.roomHeightMultiple)
 
-        state.ctx.restore()
-    }
-
-    if (state.onRenderWorldTool)
-    {
-        state.ctx.save()
-        state.onRenderWorldTool(state)
         state.ctx.restore()
     }
     
@@ -353,4 +360,28 @@ export function renderTileLayerTools(
     }
     
     state.ctx.restore()
+}
+
+
+export function renderInteractionHandles(
+    state: MapEditor.State)
+{
+    if (state.onMouseMove)
+        return
+    
+    const handles = MapEditor.getInteractionHandles(state)
+
+    for (const handle of handles)
+    {
+        const hovering = MathUtils.rectCenteredContains(handle, state.mouse.pos)
+
+        const handleX1 = handle.x - handle.width / 2
+        const handleY1 = handle.y - handle.height / 2
+
+        state.ctx.fillStyle = hovering ? "#2d2d2d" : "#242424"
+        state.ctx.fillRect(handleX1, handleY1, handle.width, handle.height)
+
+        state.ctx.strokeStyle = hovering ? "#ffffff" : "#888888"
+        state.ctx.strokeRect(handleX1, handleY1, handle.width, handle.height)
+    }
 }

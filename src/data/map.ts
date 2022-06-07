@@ -1,5 +1,6 @@
 import * as ID from "./id"
 import * as Defs from "./defs"
+import * as MathUtils from "../util/mathUtils"
 
 
 export interface Map
@@ -194,6 +195,16 @@ export function ensureRoomLayer(defs: Defs.Defs, map: Map, stageId: ID.ID, layer
 }
 
 
+export function makeTileField(widthInTiles: number, heightInTiles: number): TileField
+{
+    return {
+        tiles: new Array<Tile>(widthInTiles * heightInTiles).fill({ tileId: -1, tilesetDefId: "" }),
+        width: widthInTiles,
+        height: heightInTiles,
+    }
+}
+
+
 export function getTileFieldCellIndexForCell(tileField: TileField, cell: { x: number, y: number })
 {
     if (cell.x < 0 || cell.x >= tileField.width || cell.y < 0 || cell.y >= tileField.height)
@@ -225,3 +236,96 @@ export function *enumerateTileFieldCellsCentered(tileField: TileField): Generato
         }
     }
 }
+
+
+export function resizeTileField(
+    tileField: TileField,
+    xOffsetInTiles: number,
+    yOffsetInTiles: number,
+    newWidthInTiles: number,
+    newHeightInTiles: number)
+    : TileField
+{
+    const newTileField = makeTileField(newWidthInTiles, newHeightInTiles)
+
+    for (let y = 0; y < tileField.height; y++)
+    {
+        for (let x = 0; x < tileField.width; x++)
+        {
+            const oldCell = getTileFieldCellIndexForCell(tileField, { x, y })
+            if (oldCell === undefined)
+                continue
+
+            const newX = x - xOffsetInTiles
+            const newY = y - yOffsetInTiles
+    
+            const newCell = getTileFieldCellIndexForCell(newTileField, { x: newX, y: newY })
+            if (newCell === undefined)
+                continue
+
+            newTileField.tiles[newCell] = tileField.tiles[oldCell]
+        }
+    }
+
+    return newTileField
+}
+
+
+export function resizeRoom(
+    defs: Defs.Defs,
+    map: Map,
+    roomId: ID.ID,
+    xOffsetInPx: number,
+    yOffsetInPx: number,
+    newWidthInPx: number,
+    newHeightInPx: number)
+    : Map
+{
+    const room = map.rooms[roomId]
+
+    const newLayers: typeof room.layers = {}
+
+    for (const layer of Object.values(room.layers))
+    {
+        if (layer.type === "tile")
+        {
+            const layerDef = defs.layerDefs.find(l => l.id === layer.layerDefId)
+            if (!layerDef)
+                continue
+            
+            const xOffsetInTiles = Math.floor(xOffsetInPx / layerDef.gridCellWidth)
+            const yOffsetInTiles = Math.floor(yOffsetInPx / layerDef.gridCellHeight)
+            const widthInTiles  = Math.ceil(newWidthInPx  / layerDef.gridCellWidth)
+            const heightInTiles = Math.ceil(newHeightInPx / layerDef.gridCellHeight)
+
+            const newTileField = resizeTileField(
+                layer.tileField,
+                xOffsetInTiles, yOffsetInTiles,
+                widthInTiles, heightInTiles)
+
+            newLayers[layer.layerDefId] = {
+                ...layer,
+                tileField: newTileField,
+            }
+        }
+    }
+
+    const newRoom: Room = {
+        ...room,
+        x: room.x + xOffsetInPx,
+        y: room.y + yOffsetInPx,
+        width: newWidthInPx,
+        height: newHeightInPx,
+        layers: newLayers,
+    }
+
+    return {
+        ...map,
+        rooms: {
+            ...map.rooms,
+            [newRoom.id]: newRoom,
+        }
+    }
+}
+
+

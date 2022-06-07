@@ -2,25 +2,6 @@ import * as React from "react"
 import styled from "styled-components"
 
 
-const StyledImageView = styled.div`
-    font-size: 1em;
-    font-family: inherit;
-    color: inherit;
-    background-color: #111111;
-
-    width: 100%;
-    height: 100%;
-
-    overflow-x: hidden;
-    overflow-y: hidden;
-
-    box-sizing: border-box;
-    border: 0;
-    outline: none;
-    border-radius: 0;
-`
-
-
 export interface ImageViewState
 {
     onMouseMove: null | ((state: ImageViewState) => void),
@@ -152,6 +133,8 @@ export function ImageView(props: {
 
         const onMouseUp = (ev: MouseEvent) =>
         {
+            ev.preventDefault()
+
             onMouseMove(ev)
 
             if (state.current.onMouseUp)
@@ -183,8 +166,18 @@ export function ImageView(props: {
         }
 
 
+        const onContextMenu = (ev: Event) =>
+        {
+            ev.preventDefault()
+        }
+            
+
+
         const render = () =>
         {
+            canvas.width = canvas.clientWidth
+            canvas.height = canvas.clientHeight
+    
             const imgW = props.imageData?.width ?? 0
             const imgH = props.imageData?.height ?? 0
     
@@ -218,40 +211,27 @@ export function ImageView(props: {
     
             ctx.restore()
         }
-
         
-        const onResize = () =>
-        {
-            const canvasRect = canvas.getBoundingClientRect()
-            canvas.width = Math.floor(canvasRect.width)
-            canvas.height = Math.floor(canvasRect.height)
-    
-            render()
-        }
-        
-
-        onResize()
-
 
         const resizeObserver = new ResizeObserver(entries =>
         {
-            window.dispatchEvent(new Event("resize"))
+            //window.dispatchEvent(new Event("resize"))
         })
 
-        window.addEventListener("resize", onResize)
         canvas.addEventListener("mousedown", onMouseDown)
         window.addEventListener("mousemove", onMouseMove)
         window.addEventListener("mouseup", onMouseUp)
         canvas.addEventListener("wheel", onMouseWheel)
+        canvas.addEventListener("contextmenu", onContextMenu)
         resizeObserver.observe(canvas)
 
         return () =>
         {
-            window.removeEventListener("resize", onResize)
             canvas.removeEventListener("mousedown", onMouseDown)
             window.removeEventListener("mousemove", onMouseMove)
             window.removeEventListener("mouseup", onMouseUp)
             canvas.removeEventListener("wheel", onMouseWheel)
+            canvas.removeEventListener("contextmenu", onContextMenu)
             resizeObserver.unobserve(canvas)
         }
 
@@ -272,3 +252,23 @@ export function ImageView(props: {
 
     </StyledImageView>
 }
+
+
+const StyledImageView = styled.div`
+    font-size: 1em;
+    font-family: inherit;
+    color: inherit;
+    background-color: #111111;
+
+    width: 100%;
+    height: 100%;
+    max-height: 100%;
+
+    overflow-x: hidden;
+    overflow-y: hidden;
+
+    box-sizing: border-box;
+    border: 0;
+    outline: none;
+    border-radius: 0;
+`

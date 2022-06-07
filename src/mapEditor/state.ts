@@ -1,9 +1,11 @@
 import * as MapEditor from "./index"
 import * as ID from "../data/id"
 import * as Defs from "../data/defs"
+import * as Map from "../data/map"
 import * as Editors from "../data/editors"
 import * as UI from "../ui"
 import { global } from "../global"
+import * as MathUtils from "../util/mathUtils"
 
 
 export interface State
@@ -121,17 +123,66 @@ export function onResize(state: State)
 }
 
 
+export interface InteractionHandle
+{
+    x: number
+    y: number
+    width: number
+    height: number
+
+    onMouseDown: (state: State) => void
+}
+
+
+export function getInteractionHandles(state: State)
+{
+    const handles: InteractionHandle[] = []
+
+    const defs = (global.editors.editors[state.editorIndex] as Editors.EditorMap).defs
+    const map = (global.editors.editors[state.editorIndex] as Editors.EditorMap).map
+    const room = map.rooms[state.roomId]
+
+    if (room)
+    {
+        const sidesX = [-1,  0,  1, -1, 1, -1, 0, 1]
+        const sidesY = [-1, -1, -1,  0, 0,  1, 1, 1]
+
+        const margin = 12 / state.camera.zoom
+
+        const roomX1 = room.x - margin
+        const roomY1 = room.y - margin
+        const roomX2 = room.x + margin + room.width
+        const roomY2 = room.y + margin + room.height
+        const roomXCenter = room.x + room.width / 2
+        const roomYCenter = room.y + room.height / 2
+
+        for (let i = 0; i < sidesX.length; i++)
+        {
+            handles.push({
+                x: sidesX[i] == -1 ? roomX1 : sidesX[i] == 0 ? roomXCenter : roomX2,
+                y: sidesY[i] == -1 ? roomY1 : sidesY[i] == 0 ? roomYCenter : roomY2,
+                width: 12 / state.camera.zoom,
+                height: 12 / state.camera.zoom,
+
+                onMouseDown: (s) => MapEditor.setupHandleResizeRoom(s, sidesX[i], sidesY[i]),
+            })
+        }
+    }
+
+    return handles
+}
+
+
 export function onMouseDown(state: State, ev: MouseEvent)
 {
     const defs = (global.editors.editors[state.editorIndex] as Editors.EditorMap).defs
     const map = (global.editors.editors[state.editorIndex] as Editors.EditorMap).map
+    const editingLayerDef = Defs.getLayerDef(defs, global.editors.mapEditing.layerDefId)
 
     ev.preventDefault()
     
     if (state.onMouseMove)
         return
-
-    //addHistoryStep()
 
     state.mouseDownOrigin =
     {
@@ -140,8 +191,17 @@ export function onMouseDown(state: State, ev: MouseEvent)
         tile: state.mouse.tile,
     }
 
+    const handles = getInteractionHandles(state)
+    const hoveringHandle = handles.find(h => MathUtils.rectCenteredContains(h, state.mouse.pos))
+
     if (ev.button != 0)
+    {
         MapEditor.setupPan(state)
+    }
+    else if (hoveringHandle)
+    {
+        hoveringHandle.onMouseDown(state)
+    }
     else
     {
         if (global.editors.mapEditing.layerDefId === Editors.LAYERDEF_ID_WORLD)
@@ -149,7 +209,10 @@ export function onMouseDown(state: State, ev: MouseEvent)
             if (global.editors.mapEditing.tileTool === "move")
             {
                 if (!ev.ctrlKey)
+                {
+                    state.roomId = ""
                     state.stageSelection.clear()
+                }
                 
                 for (const room of Object.values(map.rooms))
                 {
@@ -189,18 +252,17 @@ export function onMouseDown(state: State, ev: MouseEvent)
 
             if (!switchedStages)
             {
-                const editingLayerDef = Defs.getLayerDef(defs, global.editors.mapEditing.layerDefId)
-                /*if (editingLayerDef && editingLayerDef.type === "tile")
+                if (editingLayerDef && editingLayerDef.type === "tile")
                 {
                     if (global.editors.mapEditing.tileTool === "draw")
-                        MapEditor.setupDrawTiles(state)
+                        MapEditor.setupTileDraw(state)
 
                     else if (global.editors.mapEditing.tileTool === "erase")
-                        MapEditor.setupEraseTiles(state)
+                        MapEditor.setupTileErase(state)
 
                     else if (global.editors.mapEditing.tileTool === "select")
-                        MapEditor.setupSelectTiles(state)
-                }*/
+                        MapEditor.setupTileSelect(state)
+                }
             }
         }
     }
@@ -269,15 +331,17 @@ export function onMouseUp(state: State, ev: MouseEvent)
 {
     onMouseMove(state, ev)
 
-    //if (state.onMouseMove)
-    //    addHistoryStep()
-
     if (state.onMouseUp)
         state.onMouseUp(state)
+
+    if (state.onMouseMove)
+        Editors.historyAdd(state.editorIndex)
 
     state.onMouseMove = null
     state.onMouseUp = null
     state.onRenderWorldTool = null
+    
+    MapEditor.render(state)
 }
 
 
@@ -311,7 +375,7 @@ export function onKeyDown(state: State, ev: KeyboardEvent)
         case "c":
             if (ev.ctrlKey)
             {
-                //copyTileSelection(state)
+                copyTileSelection(state)
                 state.rectSelection = null
                 MapEditor.render(state)
             }
@@ -320,10 +384,9 @@ export function onKeyDown(state: State, ev: KeyboardEvent)
         case "x":
             if (ev.ctrlKey)
             {
-                //copyTileSelection(state)
-                //addHistoryStep()
-                //eraseTileSelection(state)
-                //addHistoryStep()
+                copyTileSelection(state)
+                eraseTileSelection(state)
+                Editors.historyAdd(state.editorIndex)
                 state.rectSelection = null
                 MapEditor.render(state)
             }
@@ -331,9 +394,8 @@ export function onKeyDown(state: State, ev: KeyboardEvent)
 
         case "delete":
         case "backspace":
-            //addHistoryStep()
-            //eraseTileSelection(state)
-            //addHistoryStep()
+            eraseTileSelection(state)
+            Editors.historyAdd(state.editorIndex)
             state.rectSelection = null
             MapEditor.render(state)
             break
@@ -341,22 +403,23 @@ export function onKeyDown(state: State, ev: KeyboardEvent)
 }
 
 
-/*export function copyTileSelection(state: State)
+export function copyTileSelection(state: State)
 {
+    const editor = (global.editors.editors[state.editorIndex] as Editors.EditorMap)
+
     if (!state.rectSelection)
         return
-    
-    global.project = Project.ensureStageLayer(
-        global.project,
-        state.worldId,
-        state.stageId,
-        global.editingLayerId)
 
-    let layer = Project.getStageLayer(
-        global.project,
-        state.worldId,
-        state.stageId,
-        global.editingLayerId)
+    editor.map = Map.ensureRoomLayer(
+        editor.defs,
+        editor.map,
+        state.roomId,
+        global.editors.mapEditing.layerDefId)
+
+    let layer = Map.getStageLayer(
+        editor.map,
+        state.roomId,
+        global.editors.mapEditing.layerDefId)
 
     if (!layer || layer.type !== "tile")
         return
@@ -366,7 +429,7 @@ export function onKeyDown(state: State, ev: KeyboardEvent)
     const ty1 = Math.min(state.rectSelection.tile1.y, state.rectSelection.tile2.y)
     const ty2 = Math.max(state.rectSelection.tile1.y, state.rectSelection.tile2.y)
 
-    const tileField: Project.TileField =
+    const tileField: Map.TileField =
     {
         width: tx2 - tx1 + 1,
         height: ty2 - ty1 + 1,
@@ -377,7 +440,7 @@ export function onKeyDown(state: State, ev: KeyboardEvent)
     {
         for (let x = tx1; x <= tx2; x++)
         {
-            const cellIndex = Project.getTileFieldCellIndexForCell(layer.tileField, { x, y })
+            const cellIndex = Map.getTileFieldCellIndexForCell(layer.tileField, { x, y })
             if (cellIndex === undefined)
                 tileField.tiles.push(undefined)
             else
@@ -385,30 +448,31 @@ export function onKeyDown(state: State, ev: KeyboardEvent)
         }
     }
 
-    global.editingTileStamp = tileField
-    global.editingTilesetStampSet.clear()
-    global.editingTileTool = "draw"
-    global.editingToken.commit()
+    global.editors.mapEditing.tileStamp = tileField
+    global.editors.mapEditing.tilesetStampSet.clear()
+    global.editors.mapEditing.tileTool = "draw"
+    global.editors.refreshToken.commit()
 }
 
 
 export function eraseTileSelection(state: State)
 {
+    const editor = (global.editors.editors[state.editorIndex] as Editors.EditorMap)
+
     if (!state.rectSelection)
         return
     
-    global.project = Project.ensureStageLayer(
-        global.project,
-        state.worldId,
-        state.stageId,
-        global.editingLayerId)
+    editor.map = Map.ensureRoomLayer(
+        editor.defs,
+        editor.map,
+        state.roomId,
+        global.editors.mapEditing.layerDefId)
 
-    let layer = Project.getStageLayer(
-        global.project,
-        state.worldId,
-        state.stageId,
-        global.editingLayerId)
-
+    let layer = Map.getStageLayer(
+        editor.map,
+        state.roomId,
+        global.editors.mapEditing.layerDefId)
+    
     if (!layer || layer.type !== "tile")
         return
 
@@ -421,7 +485,7 @@ export function eraseTileSelection(state: State)
     {
         for (let x = tx1; x <= tx2; x++)
         {
-            const cellIndex = Project.getTileFieldCellIndexForCell(layer.tileField, { x, y })
+            const cellIndex = Map.getTileFieldCellIndexForCell(layer.tileField, { x, y })
             if (cellIndex === undefined)
                 continue
         
@@ -439,12 +503,11 @@ export function eraseTileSelection(state: State)
         }
     }
 
-    global.project = Project.setStageLayer(
-        global.project,
-        state.worldId,
-        state.stageId,
-        global.editingLayerId,
+    editor.map = Map.setStageLayer(
+        editor.map,
+        state.roomId,
+        global.editors.mapEditing.layerDefId,
         layer)
 
-    global.projectToken.commit()
-}*/
+    global.editors.refreshToken.commit()
+}
