@@ -136,7 +136,7 @@ export function DefsLayers(props: {
     }
 
 
-    return <UI.Grid template="15em auto" templateRows="auto 1fr" fullHeight>
+    return <UI.Grid template="15em 25em" templateRows="auto 1fr" fullHeight>
 
         <UI.Cell>
             <UI.Button

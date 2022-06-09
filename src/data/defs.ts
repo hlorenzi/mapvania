@@ -1,6 +1,8 @@
 import { RefreshToken } from "../util/refreshToken"
-import { global } from "../global"
 import * as ID from "./id"
+import * as Properties from "./properties"
+import { global } from "../global"
+import * as MathUtils from "../util/mathUtils"
 
 
 export interface Defs
@@ -9,6 +11,7 @@ export interface Defs
     generalDefs: DefGeneral
     layerDefs: DefLayer[]
     tilesetDefs: DefTileset[]
+    objectDefs: DefObject[]
 }
 
 
@@ -72,6 +75,22 @@ export interface DefTileset
 }
 
 
+export interface DefObject
+{
+    id: ID.ID
+    name: string
+
+    imageSrc: string
+
+    imageRect: MathUtils.RectWH
+
+    pivotPercent: MathUtils.Point
+    interactionRect: MathUtils.RectWH
+
+    properties: Properties.DefProperties
+}
+
+
 export function makeNew(): Defs
 {
     return {
@@ -84,6 +103,7 @@ export function makeNew(): Defs
         },
         layerDefs: [],
         tilesetDefs: [],
+        objectDefs: [],
     }
 }
 
@@ -106,15 +126,21 @@ export function parse(data: string): Defs
 }
 
 
+export function getLayerDef(defs: Defs, layerDefId: ID.ID)
+{
+    return defs.layerDefs.find(l => l.id === layerDefId)
+}
+
+
 export function getTileset(defs: Defs, tilesetDefId: ID.ID)
 {
     return defs.tilesetDefs.find(t => t.id === tilesetDefId)
 }
 
 
-export function getLayerDef(defs: Defs, layerDefId: ID.ID)
+export function getObjectDef(defs: Defs, objectDefId: ID.ID)
 {
-    return defs.layerDefs.find(l => l.id === layerDefId)
+    return defs.objectDefs.find(o => o.id === objectDefId)
 }
 
 

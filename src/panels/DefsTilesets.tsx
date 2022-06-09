@@ -123,7 +123,7 @@ export function DefsTilesets(props: {
     }, [curTileset, curTilesetImg])
 
 
-    return <UI.Grid template="15em auto 1fr" templateRows="auto 1fr" fullHeight alignStart>
+    return <UI.Grid template="15em 25em 1fr" templateRows="auto 1fr" fullHeight alignStart>
 
         <UI.Cell>
             <UI.Button
