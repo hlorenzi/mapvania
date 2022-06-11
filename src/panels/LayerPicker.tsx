@@ -12,13 +12,15 @@ export function LayerPicker(props: {
     editorIndex: number,
 })
 {
-    const defs = (global.editors.editors[props.editorIndex] as Editors.EditorMap).defs
+    const editor = global.editors.editors[props.editorIndex] as Editors.EditorMap
 
 
     const chooseLayer = (id: ID.ID) =>
     {
         global.editors.mapEditing.layerDefId = id
         global.editors.mapEditing.tileTool = "move"
+        editor.mapEditor.stageSelection.clear()
+        editor.mapEditor.objectSelection.clear()
         global.editors.refreshToken.commit()
     }
 
@@ -36,7 +38,7 @@ export function LayerPicker(props: {
             id: Editors.LAYERDEF_ID_WORLD,
             label: "🗺️ Map",
         },
-        ...defs.layerDefs.map(layerDef => ({
+        ...editor.defs.layerDefs.map(layerDef => ({
             id: layerDef.id,
             label: getLayerIcon(layerDef) + " " + layerDef.name,
         }))

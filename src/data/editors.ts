@@ -25,6 +25,8 @@ export interface Global
         tilesetDefId: ID.ID
         tilesetStampSet: Set<number>
         tileStamp: Map.TileField
+
+        selectedObjectDefId: ID.ID
     }
 }
 
@@ -96,6 +98,8 @@ export function makeNew(refreshToken: RefreshToken): Global
                 width: 0,
                 height: 0,
             },
+
+            selectedObjectDefId: "",
         }
     }
 }

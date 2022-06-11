@@ -1,6 +1,7 @@
 import * as ID from "./id"
 import * as Defs from "./defs"
 import * as MathUtils from "../util/mathUtils"
+import * as Properties from "./properties"
 
 
 export interface Map
@@ -47,6 +48,7 @@ export interface LayerTile extends LayerCommon
 export interface LayerObject extends LayerCommon
 {
     type: "object"
+    objects: { [id: ID.ID]: Obj }
 }
 
 
@@ -62,6 +64,20 @@ export interface Tile
 {
     tilesetDefId: ID.ID
     tileId: number
+}
+
+
+export interface Obj
+{
+    id: ID.ID
+    objectDefId: ID.ID
+
+    x: number
+    y: number
+    width: number
+    height: number
+
+    properties: Properties.PropertyValues
 }
 
 
@@ -121,7 +137,7 @@ export function setRoom(map: Map, roomId: ID.ID, room: Room): Map
 }
 
 
-export function getStageLayer(map: Map, roomId: ID.ID, layerDefId: ID.ID): Layer | undefined
+export function getRoomLayer(map: Map, roomId: ID.ID, layerDefId: ID.ID): Layer | undefined
 {
     const room = getRoom(map, roomId)
     if (!room)
@@ -131,18 +147,18 @@ export function getStageLayer(map: Map, roomId: ID.ID, layerDefId: ID.ID): Layer
 }
 
 
-export function setStageLayer(
+export function setRoomLayer(
     map: Map,
-    stageId: ID.ID,
+    roomId: ID.ID,
     layerId: ID.ID,
     layer: Layer)
     : Map
 {
-    const stage = getRoom(map, stageId)
+    const stage = getRoom(map, roomId)
     if (!stage)
         return map
 
-    return setRoom(map, stageId, {
+    return setRoom(map, roomId, {
         ...stage,
         layers: {
             ...stage.layers,
@@ -162,7 +178,7 @@ export function ensureRoomLayer(defs: Defs.Defs, map: Map, stageId: ID.ID, layer
     if (!layerDef)
         return map
 
-    const layer = getStageLayer(map, stageId, layerDefId)
+    const layer = getRoomLayer(map, stageId, layerDefId)
     if (layer)
         return map
 
@@ -185,6 +201,21 @@ export function ensureRoomLayer(defs: Defs.Defs, map: Map, stageId: ID.ID, layer
                             width: widthInTiles,
                             height: heightInTiles,
                         }
+                    }
+                }
+            })
+        }
+
+        case "object":
+        {
+            return setRoom(map, stageId, {
+                ...room,
+                layers: {
+                    ...room.layers,
+                    [layerDefId]: {
+                        layerDefId,
+                        type: "object",
+                        objects: {},
                     }
                 }
             })
@@ -271,6 +302,26 @@ export function resizeTileField(
 }
 
 
+export function makeObject(
+    defs: Defs.Defs,
+    map: Map,
+    objectDefId: ID.ID)
+    : Obj
+{
+    const objectDef = defs.objectDefs.find(o => o.id === objectDefId)!
+
+    return {
+        id: "",
+        objectDefId,
+        x: 0,
+        y: 0,
+        width: objectDef.interactionRect.width,
+        height: objectDef.interactionRect.height,
+        properties: {},
+    }
+}
+
+
 export function resizeRoom(
     defs: Defs.Defs,
     map: Map,
@@ -306,6 +357,26 @@ export function resizeRoom(
             newLayers[layer.layerDefId] = {
                 ...layer,
                 tileField: newTileField,
+            }
+        }
+
+        else if (layer.type === "object")
+        {
+            const newObjects = { ...layer.objects }
+            for (const object of Object.values(newObjects))
+            {
+                const newObject = {
+                    ...object,
+                    x: object.x - xOffsetInPx,
+                    y: object.y - yOffsetInPx,
+                }
+
+                newObjects[object.id] = newObject
+            }
+
+            newLayers[layer.layerDefId] = {
+                ...layer,
+                objects: newObjects,
             }
         }
     }

@@ -1,6 +1,12 @@
-export function snap(x: number, step: number): number
+export function snapRound(x: number, step: number): number
 {
     return Math.round(x / step) * step
+}
+
+
+export function snap(x: number, step: number): number
+{
+    return Math.floor(x / step) * step
 }
 
 

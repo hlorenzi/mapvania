@@ -30,12 +30,12 @@ export function setupWorldMove(state: MapEditor.State)
             newRooms[room.id] = {
                 ...room,
                 
-                x: MathUtils.snap(
+                x: MathUtils.snapRound(
                     roomOrig.x +
                         defs.generalDefs.roomWidthMultiple * state.mouseDownDelta.tile.x,
                     defs.generalDefs.roomWidthMultiple),
 
-                y: MathUtils.snap(
+                y: MathUtils.snapRound(
                     roomOrig.y +
                         defs.generalDefs.roomHeightMultiple * state.mouseDownDelta.tile.y,
                         defs.generalDefs.roomHeightMultiple),

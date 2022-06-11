@@ -201,7 +201,7 @@ export function DefsObjects(props: {
     }, [curObject, curObjectImg])
 
 
-    return <UI.Grid template="15em 25em 1fr" templateRows="auto 1fr" fullHeight alignStart>
+    return <UI.Grid template="15em 30em 1fr" templateRows="auto 1fr" fullHeight alignStart>
 
         <UI.Cell>
             <UI.Button
@@ -223,9 +223,16 @@ export function DefsObjects(props: {
             }))}
         />
 
-        { curObject && <UI.Grid template="1fr" templateRows="1fr" fullHeight key={ curObject.id }>
+        { curObject && <div key={ curObject.id }
+            style={{
+                width: "100%",
+                height: "100%",
+                overflowY: "scroll",
+                paddingRight: "0.25em",
+                marginBottom: "10em",
+        }}>
             
-            <UI.Grid template="auto auto">
+            <UI.Grid template="auto auto" fullHeight>
 
                 <UI.Cell justifyEnd>
                     Name
@@ -354,7 +361,7 @@ export function DefsObjects(props: {
 
             </UI.Grid>
 
-        </UI.Grid> }
+        </div> }
 
         <UI.Cell fullHeight>
             { curObject &&

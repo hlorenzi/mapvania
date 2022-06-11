@@ -48,11 +48,8 @@ export function TilePicker(props: {
 
             let originTileIndex: number | undefined = undefined
 
-            console.log("tile picker mouse down")
-
             state.onMouseMove = (state: UI.ImageViewState) =>
             {
-                console.log("tile picker mouse move")
                 const tileIndex = Defs.getTileIndexForPixel(curTileset, state.mouse.pos)
                 if (tileIndex === undefined)
                     return
@@ -60,7 +57,6 @@ export function TilePicker(props: {
                 if (originTileIndex === undefined)
                     originTileIndex = tileIndex
 
-                    console.log("tile picker mouse move 2")
                 const origCell = Defs.getCellForTileIndex(curTileset, originTileIndex)
                 const destCell = Defs.getCellForTileIndex(curTileset, tileIndex)
 
@@ -86,7 +82,6 @@ export function TilePicker(props: {
                     }
                 }
                 
-                console.log("tile picker mouse move 3")
                 global.editors.mapEditing.tileTool = "draw"
                 global.editors.refreshToken.commit()
             }

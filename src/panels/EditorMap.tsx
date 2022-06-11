@@ -7,6 +7,8 @@ import * as UI from "../ui"
 import { global } from "../global"
 import { LayerPicker } from "./LayerPicker"
 import { TilePicker } from "./TilePicker"
+import { ObjectPicker } from "./ObjectPicker"
+import { ObjectProperties } from "./ObjectProperties"
 
 
 const StyledCanvas = styled.canvas`
@@ -163,6 +165,28 @@ export function EditorMap(props: {
                     </>
                 }
 
+                { editingLayerDef && editingLayerDef.type === "object" &&
+                    <>
+                    <UI.Button
+                        label="📐 Move (M)"
+                        selected={ global.editors.mapEditing.tileTool === "move" }
+                        onClick={ () => chooseTileTool("move") }
+                    />
+
+                    <UI.Button
+                        label="✒️ Draw (B)"
+                        selected={ global.editors.mapEditing.tileTool === "draw" }
+                        onClick={ () => chooseTileTool("draw") }
+                    />
+
+                    <UI.Button
+                        label="✂️ Select (Shift)"
+                        selected={ global.editors.mapEditing.tileTool === "select" }
+                        onClick={ () => chooseTileTool("select") }
+                    />
+                    </>
+                }
+
             </div>
 
             <StyledCanvas
@@ -194,14 +218,28 @@ export function EditorMap(props: {
                     padding: "0.5em",
                 }}>
 
-                    <LayerPicker
-                        editorIndex={ props.editorIndex }
-                    />
-
-                    { editingLayerDef && editingLayerDef.type === "tile" &&
-                        <TilePicker
+                    { editor.mapEditor && editor.mapEditor.objectSelection.size > 0 ?
+                        <ObjectProperties
                             editorIndex={ props.editorIndex }
                         />
+                    :
+                        <>
+                        <LayerPicker
+                            editorIndex={ props.editorIndex }
+                        />
+
+                        { editingLayerDef && editingLayerDef.type === "tile" &&
+                            <TilePicker
+                                editorIndex={ props.editorIndex }
+                            />
+                        }
+
+                        { editingLayerDef && editingLayerDef.type === "object" &&
+                            <ObjectPicker
+                                editorIndex={ props.editorIndex }
+                            />
+                        }
+                        </>
                     }
 
                 </div>

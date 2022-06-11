@@ -29,8 +29,8 @@ export function setupHandleResizeRoom(state: MapEditor.State, directionX: number
         const widthMinusOneTile = room.width - defs.generalDefs.roomWidthMultiple
         const heightMinusOneTile = room.height - defs.generalDefs.roomHeightMultiple
 
-        const snappedDeltaX = MathUtils.snap(state.mouseDownDelta.pos.x, defs.generalDefs.roomWidthMultiple)
-        const snappedDeltaY = MathUtils.snap(state.mouseDownDelta.pos.y, defs.generalDefs.roomHeightMultiple)
+        const snappedDeltaX = MathUtils.snapRound(state.mouseDownDelta.pos.x, defs.generalDefs.roomWidthMultiple)
+        const snappedDeltaY = MathUtils.snapRound(state.mouseDownDelta.pos.y, defs.generalDefs.roomHeightMultiple)
 
         if (directionX < 0)
             borderDisplacements.left = Math.min(snappedDeltaX, widthMinusOneTile)

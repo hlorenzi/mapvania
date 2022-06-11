@@ -60,14 +60,7 @@ export function FieldArray(props: {
     }
 
 
-    return <UI.Grid template="auto auto auto">
-
-        <UI.Cell span={3} justifyEnd>
-            <UI.Button
-                label="➕ Field"
-                onClick={ createField }
-            />
-        </UI.Cell>
+    return <UI.Grid template="auto auto auto auto">
 
         { props.fields.map((field, i) =>
             <Field
@@ -77,6 +70,13 @@ export function FieldArray(props: {
                 removeField={ () => removeField(i) }
             />
         )}
+
+        <UI.Cell span={4} justifyStart>
+            <UI.Button
+                label="➕ Field"
+                onClick={ createField }
+            />
+        </UI.Cell>
 
     </UI.Grid>
 }
@@ -92,15 +92,57 @@ export function Field(props: {
 
     switch (props.field.type)
     {
-        case "optional":
-            fieldElem = <FieldOptional
+        case "bool":
+            fieldElem = <FieldBool
                 field={ props.field }
                 setField={ props.setField }
             />
             break
-            
+
+        case "string":
+            fieldElem = <FieldString
+                field={ props.field }
+                setField={ props.setField }
+            />
+            break
+
+        case "number":
+            fieldElem = <FieldNumber
+                field={ props.field }
+                setField={ props.setField }
+            />
+            break
+
+        case "point":
+            fieldElem = <FieldPoint
+                field={ props.field }
+                setField={ props.setField }
+            />
+            break
+
+        case "rect":
+            fieldElem = <FieldRect
+                field={ props.field }
+                setField={ props.setField }
+            />
+            break
+
+        case "choice":
+            fieldElem = <FieldChoice
+                field={ props.field }
+                setField={ props.setField }
+            />
+            break
+
         case "struct":
             fieldElem = <FieldStruct
+                field={ props.field }
+                setField={ props.setField }
+            />
+            break
+
+        case "list":
+            fieldElem = <FieldList
                 field={ props.field }
                 setField={ props.setField }
             />
@@ -119,9 +161,19 @@ export function Field(props: {
                 <option value="number">Number</option>
                 <option value="point">Point</option>
                 <option value="rect">Rect</option>
-                <option value="optional">Optional</option>
+                <option value="enum">Enum</option>
+                <option value="choice">Choice</option>
                 <option value="struct">Struct</option>
+                <option value="list">List</option>
             </UI.Select>
+        </UI.Cell>
+
+        <UI.Cell justifyStretch>
+            <UI.Checkbox
+                label="Opt."
+                value={ props.field.optional }
+                onChange={ (value) => props.setField({ ...props.field, optional: value }) }
+            />
         </UI.Cell>
 
         <UI.Cell justifyStretch>
@@ -143,6 +195,10 @@ export function Field(props: {
 
         { fieldElem }
 
+        <UI.Cell span={ 4 }>
+            <div style={{ paddingBottom: "1em" }}/>
+        </UI.Cell>
+
     </>
 }
 
@@ -151,7 +207,7 @@ function Tabulation(props: {
     children: React.ReactNode,
 })
 {
-    return <UI.Cell span={ 3 } justifyStretch>
+    return <UI.Cell span={ 4 } justifyStretch>
         <div style={{
             paddingLeft: "1em",
             paddingBottom: "0.25em",
@@ -165,18 +221,140 @@ function Tabulation(props: {
 }
 
 
-function FieldOptional(props: {
-    field: Properties.DefFieldOptional,
-    setField: (newValue: Properties.DefFieldOptional) => void,
+export function FieldBool(props: {
+    field: Properties.DefFieldBool,
+    setField: (newValue: Properties.DefFieldBool) => void,
 })
 {
     return <Tabulation>
-        <UI.Grid template="auto auto auto">
-            <Field
-                field={ props.field.field }
-                setField={ (newField) => props.setField({ ...props.field, field: newField }) }
-            />
+        <UI.Grid template="auto 1fr">
+            <UI.Cell justifyEnd>
+                Default
+            </UI.Cell>
+
+            <UI.Cell justifyStart>
+                <UI.Checkbox
+                    value={ props.field.defaultValue }
+                    onChange={ (value) => props.setField({ ...props.field, defaultValue: value }) }
+                />
+            </UI.Cell>
         </UI.Grid>
+    </Tabulation>
+}
+
+
+export function FieldString(props: {
+    field: Properties.DefFieldString,
+    setField: (newValue: Properties.DefFieldString) => void,
+})
+{
+    return <Tabulation>
+        <UI.Grid template="auto 1fr">
+            <UI.Cell justifyEnd>
+                Default
+            </UI.Cell>
+
+            <UI.Cell>
+                <UI.Input
+                    value={ props.field.defaultValue }
+                    onChange={ (value) => props.setField({ ...props.field, defaultValue: value }) }
+                    fullWidth
+                />
+            </UI.Cell>
+        </UI.Grid>
+    </Tabulation>
+}
+
+
+export function FieldNumber(props: {
+    field: Properties.DefFieldNumber,
+    setField: (newValue: Properties.DefFieldNumber) => void,
+})
+{
+    return <Tabulation>
+        <UI.Grid template="auto 1fr">
+            <UI.Cell justifyEnd>
+                Default
+            </UI.Cell>
+
+            <UI.Cell>
+                <UI.Input
+                    number
+                    value={ props.field.defaultValue }
+                    onChangeNumber={ (value) => props.setField({ ...props.field, defaultValue: value }) }
+                    fullWidth
+                />
+            </UI.Cell>
+        </UI.Grid>
+    </Tabulation>
+}
+
+
+export function FieldPoint(props: {
+    field: Properties.DefFieldPoint,
+    setField: (newValue: Properties.DefFieldPoint) => void,
+})
+{
+    return <Tabulation>
+        <UI.Grid template="auto 1fr">
+            <UI.Cell justifyEnd>
+                Relative
+            </UI.Cell>
+
+            <UI.Cell justifyStart>
+                <UI.Checkbox
+                    value={ props.field.relative }
+                    onChange={ (value) => props.setField({ ...props.field, relative: value }) }
+                />
+            </UI.Cell>
+
+            <UI.Cell justifyEnd>
+                Show Ghost
+            </UI.Cell>
+
+            <UI.Cell justifyStart>
+                <UI.Checkbox
+                    value={ props.field.showGhost }
+                    onChange={ (value) => props.setField({ ...props.field, showGhost: value }) }
+                />
+            </UI.Cell>
+        </UI.Grid>
+    </Tabulation>
+}
+
+
+export function FieldRect(props: {
+    field: Properties.DefFieldRect,
+    setField: (newValue: Properties.DefFieldRect) => void,
+})
+{
+    return <Tabulation>
+        <UI.Grid template="auto 1fr">
+            <UI.Cell justifyEnd>
+                Relative
+            </UI.Cell>
+
+            <UI.Cell justifyStart>
+                <UI.Checkbox
+                    value={ props.field.relative }
+                    onChange={ (value) => props.setField({ ...props.field, relative: value }) }
+                />
+            </UI.Cell>
+        </UI.Grid>
+    </Tabulation>
+}
+
+
+export function FieldChoice(props: {
+    field: Properties.DefFieldChoice,
+    setField: (newValue: Properties.DefFieldChoice) => void,
+})
+{
+    return <Tabulation>
+        <FieldArray
+            fields={ props.field.choices }
+            setFields={ (newFields) => props.setField({ ...props.field, choices: newFields }) }
+        />
     </Tabulation>
 }
 
@@ -191,5 +369,36 @@ export function FieldStruct(props: {
             fields={ props.field.fields }
             setFields={ (newFields) => props.setField({ ...props.field, fields: newFields }) }
         />
+    </Tabulation>
+}
+
+
+export function FieldList(props: {
+    field: Properties.DefFieldList,
+    setField: (newValue: Properties.DefFieldList) => void,
+})
+{
+    return <Tabulation>
+        <UI.Grid template="auto 1fr">
+            <UI.Cell justifyEnd>
+                Show Path
+            </UI.Cell>
+
+            <UI.Cell justifyStart>
+                <UI.Checkbox
+                    value={ props.field.showPath }
+                    onChange={ (value) => props.setField({ ...props.field, showPath: value }) }
+                />
+            </UI.Cell>
+            
+            <UI.Cell span={ 4 }>
+                <UI.Grid template="auto auto auto auto">
+                    <Field
+                        field={ props.field.element }
+                        setField={ (newField) => props.setField({ ...props.field, element: newField }) }
+                    />
+                </UI.Grid>
+            </UI.Cell>
+        </UI.Grid>
     </Tabulation>
 }

@@ -1,5 +1,6 @@
 export * from "./PanelPadding"
 export * from "./Button"
+export * from "./Checkbox"
 export * from "./HeaderAndBody"
 export * from "./ImageView"
 export * from "./Input"

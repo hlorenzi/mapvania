@@ -12,7 +12,6 @@ export type DefField =
     DefFieldString |
     DefFieldPoint |
     DefFieldRect |
-    DefFieldOptional |
     DefFieldEnum |
     DefFieldChoice |
     DefFieldStruct |
@@ -22,36 +21,44 @@ export type DefField =
 export interface DefFieldCommon
 {
     id: string
+    optional: boolean
+    defaultValue: any
 }
 
 
 export interface DefFieldBool extends DefFieldCommon
 {
     type: "bool"
+    defaultValue: boolean
 }
 
 
 export interface DefFieldNumber extends DefFieldCommon
 {
     type: "number"
+    defaultValue: number
 }
 
 
 export interface DefFieldString extends DefFieldCommon
 {
     type: "string"
+    defaultValue: string
 }
 
 
 export interface DefFieldPoint extends DefFieldCommon
 {
     type: "point"
+    relative: boolean
+    showGhost: boolean
 }
 
 
 export interface DefFieldRect extends DefFieldCommon
 {
     type: "rect"
+    relative: boolean
 }
 
 
@@ -59,13 +66,6 @@ export interface DefFieldEnum extends DefFieldCommon
 {
     type: "enum"
     choices: string[]
-}
-
-
-export interface DefFieldOptional extends DefFieldCommon
-{
-    type: "optional"
-    field: DefField
 }
 
 
@@ -87,21 +87,33 @@ export interface DefFieldList extends DefFieldCommon
 {
     type: "list"
     element: DefField
+    showPath: boolean
 }
 
 
-export type Properties = { [id: string]: FieldValue }
+export type PropertyValues = { [id: string]: FieldValue }
 
 
 export type FieldValue = 
+    null |
     boolean |
     number |
     string |
-    MathUtils.Point |
-    MathUtils.RectWH |
-    string[] |
+    FieldValuePoint |
+    FieldValueRect |
+    FieldValueEnum |
     FieldValueChoice |
-    Properties
+    FieldValueStruct |
+    FieldValueList
+
+
+export type FieldValuePoint = MathUtils.Point
+
+
+export type FieldValueRect = MathUtils.RectWH
+
+
+export type FieldValueEnum = string
 
 
 export interface FieldValueChoice
@@ -111,48 +123,149 @@ export interface FieldValueChoice
 }
 
 
+export type FieldValueStruct = PropertyValues
+
+
+export type FieldValueList = FieldValue[]
+
+
 export function makeDefFieldOfType(id: string, type: DefField["type"]): DefField
 {
+    const common: DefFieldCommon =
+    {
+        id,
+        optional: false,
+        defaultValue: null,
+    }
+
     switch (type)
     {
         case "bool": return {
-            id,
+            ...common,
             type: "bool",
+            defaultValue: false,
         }
 
         case "string": return {
-            id,
+            ...common,
             type: "string",
+            defaultValue: "",
         }
 
         case "number": return {
-            id,
+            ...common,
             type: "number",
+            defaultValue: 0,
         }
 
         case "point": return {
-            id,
+            ...common,
             type: "point",
+            relative: false,
+            showGhost: false,
         }
 
         case "rect": return {
-            id,
+            ...common,
             type: "rect",
+            relative: false,
         }
 
-        case "optional": return {
-            id,
-            type: "optional",
-            field: makeDefFieldOfType("inner", "string")
+        case "enum": return {
+            ...common,
+            type: "enum",
+            choices: ["variant_0"],
         }
 
         case "struct": return {
-            id,
+            ...common,
             type: "struct",
-            fields: [],
+            fields: [makeDefFieldOfType("subfield_0", "string")],
+        }
+
+        case "choice": return {
+            ...common,
+            type: "choice",
+            choices: [makeDefFieldOfType("choice_0", "string")],
+        }
+
+        case "list": return {
+            ...common,
+            type: "list",
+            showPath: false,
+            element: makeDefFieldOfType("subfield_0", "string"),
         }
 
         default:
             throw "invalid field type"
     }
+}
+
+
+export function makeDefaultValueOfField(field: DefField): FieldValue
+{
+    switch (field.type)
+    {
+        case "bool":
+            return field.defaultValue
+
+        case "string":
+            return field.defaultValue
+
+        case "number":
+            return field.defaultValue
+
+        case "point":
+            return { x: 0, y: 0 }
+
+        case "rect":
+            return { x: 0, y: 0, width: 0, height: 0 }
+
+        case "enum":
+            return ""
+
+        case "struct":
+        {
+            const result: any = {}
+            for (const subfield of field.fields)
+                result[subfield.id] = makeDefaultValueOfField(subfield)
+
+            return result
+        }
+
+        case "choice": return {
+            id: field.choices[0].id,
+            value: makeDefaultValueOfField(field.choices[0]),
+        }
+
+        case "list":
+            return []
+
+        default:
+            throw "invalid field type"
+    }
+}
+
+
+export function getDefsIntersection(defs: DefProperties[]): DefProperties
+{
+    if (defs.length == 1)
+        return defs[0]
+    
+    const result: DefProperties = []
+
+    for (let aField = 0; aField < defs.length; aField++)
+    {
+        const field = defs[0][aField]
+
+        const existsOnAll = defs.every(def =>
+            def.find(f => f.id === field.id && f.type === field.type && f.optional === field.optional))
+
+        if (existsOnAll)
+        {
+            result.push(field)
+        }
+    }
+
+    return result
 }

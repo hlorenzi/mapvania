@@ -33,6 +33,7 @@ export interface State
     {
         posRaw: { x: number, y: number }
         pos: { x: number, y: number }
+        posInRoom: { x: number, y: number }
         tile: { x: number, y: number }
     }
 
@@ -40,6 +41,7 @@ export interface State
     {
         posRaw: { x: number, y: number }
         pos: { x: number, y: number }
+        posInRoom: { x: number, y: number }
         tile: { x: number, y: number }
     }
 
@@ -47,6 +49,7 @@ export interface State
     {
         posRaw: { x: number, y: number }
         pos: { x: number, y: number }
+        posInRoom: { x: number, y: number }
         tile: { x: number, y: number }
     }
 
@@ -57,6 +60,7 @@ export interface State
     }
 
     stageSelection: Set<ID.ID>
+    objectSelection: Set<ID.ID>
 }
 
 
@@ -86,6 +90,7 @@ export function createState(editorIndex: number, roomId: ID.ID): State
         {
             posRaw: { x: 0, y: 0 },
             pos: { x: 0, y: 0 },
+            posInRoom: { x: 0, y: 0 },
             tile: { x: 0, y: 0 },
         },
         
@@ -93,6 +98,7 @@ export function createState(editorIndex: number, roomId: ID.ID): State
         {
             posRaw: { x: 0, y: 0 },
             pos: { x: 0, y: 0 },
+            posInRoom: { x: 0, y: 0 },
             tile: { x: 0, y: 0 },
         },
 
@@ -100,12 +106,14 @@ export function createState(editorIndex: number, roomId: ID.ID): State
         {
             posRaw: { x: 0, y: 0 },
             pos: { x: 0, y: 0 },
+            posInRoom: { x: 0, y: 0 },
             tile: { x: 0, y: 0 },
         },
 
         rectSelection: null,
 
         stageSelection: new Set<ID.ID>(),
+        objectSelection: new Set<ID.ID>(),
     }
 }
 
@@ -175,9 +183,11 @@ export function getInteractionHandles(state: State)
 
 export function onMouseDown(state: State, ev: MouseEvent)
 {
-    const defs = (global.editors.editors[state.editorIndex] as Editors.EditorMap).defs
-    const map = (global.editors.editors[state.editorIndex] as Editors.EditorMap).map
+    const editor = (global.editors.editors[state.editorIndex] as Editors.EditorMap)
+    const defs = editor.defs
+    const map = editor.map
     const editingLayerDef = Defs.getLayerDef(defs, global.editors.mapEditing.layerDefId)
+    const layer = Map.getRoomLayer(map, state.roomId, global.editors.mapEditing.layerDefId)
 
     ev.preventDefault()
     
@@ -188,6 +198,7 @@ export function onMouseDown(state: State, ev: MouseEvent)
     {
         posRaw: state.mouse.posRaw,
         pos: state.mouse.pos,
+        posInRoom: state.mouse.posInRoom,
         tile: state.mouse.tile,
     }
 
@@ -206,52 +217,49 @@ export function onMouseDown(state: State, ev: MouseEvent)
     {
         if (global.editors.mapEditing.layerDefId === Editors.LAYERDEF_ID_WORLD)
         {
-            if (global.editors.mapEditing.tileTool === "move")
+            const hoverRoom = Object.values(map.rooms)
+                .find(r => MathUtils.rectContains(r, state.mouse.pos))
+            
+            if (!ev.ctrlKey &&
+                (!hoverRoom || !state.stageSelection.has(hoverRoom.id)))
             {
-                if (!ev.ctrlKey)
-                {
-                    state.roomId = ""
-                    state.stageSelection.clear()
-                }
-                
-                for (const room of Object.values(map.rooms))
-                {
-                    if (state.mouse.pos.x >= room.x &&
-                        state.mouse.pos.x <= room.x + room.width &&
-                        state.mouse.pos.y >= room.y &&
-                        state.mouse.pos.y <= room.y + room.height)
-                    {
-                        state.stageSelection.add(room.id)
-                        state.roomId = room.id
-                        break
-                    }
-                }
-    
-                MapEditor.setupWorldMove(state)
+                state.roomId = ""
+                state.stageSelection.clear()
             }
+
+            if (hoverRoom)
+            {
+                if (ev.ctrlKey && state.stageSelection.has(hoverRoom.id))
+                    state.stageSelection.delete(hoverRoom.id)
+                else
+                    state.stageSelection.add(hoverRoom.id)
+
+                state.roomId = hoverRoom.id
+            }
+
+            if (global.editors.mapEditing.tileTool === "move")
+                MapEditor.setupWorldMove(state)
+
             else if (global.editors.mapEditing.tileTool === "draw")
                 MapEditor.setupWorldDraw(state)
         }
         else
         {
-            let switchedStages = false
-
-            for (const room of Object.values(map.rooms))
+            const hoverRoom = Object.values(map.rooms)
+                .find(r => MathUtils.rectContains(r, state.mouse.pos))
+            
+            if (hoverRoom && hoverRoom.id !== state.roomId)
             {
-                if (room.id !== state.roomId &&
-                    state.mouse.pos.x >= room.x &&
-                    state.mouse.pos.x <= room.x + room.width &&
-                    state.mouse.pos.y >= room.y &&
-                    state.mouse.pos.y <= room.y + room.height)
-                {
-                    state.roomId = room.id
-                    switchedStages = true
-                    break
-                }
+                state.roomId = hoverRoom.id
             }
-
-            if (!switchedStages)
+            else
             {
+                editor.map = Map.ensureRoomLayer(
+                    editor.defs,
+                    editor.map,
+                    state.roomId,
+                    global.editors.mapEditing.layerDefId)
+                    
                 if (editingLayerDef && editingLayerDef.type === "tile")
                 {
                     if (global.editors.mapEditing.tileTool === "draw")
@@ -259,6 +267,36 @@ export function onMouseDown(state: State, ev: MouseEvent)
 
                     else if (global.editors.mapEditing.tileTool === "erase")
                         MapEditor.setupTileErase(state)
+
+                    else if (global.editors.mapEditing.tileTool === "select")
+                        MapEditor.setupTileSelect(state)
+                }
+                else if (
+                    editingLayerDef && editingLayerDef.type === "object" &&
+                    layer && layer.type === "object")
+                {
+                    const hoverObject = Object.values(layer.objects)
+                        .find(r => MathUtils.rectContains(r, state.mouse.posInRoom))
+                    
+                    if (!ev.ctrlKey &&
+                        (!hoverObject || !state.objectSelection.has(hoverObject.id)))
+                    {
+                        state.objectSelection.clear()
+                    }
+                    
+                    if (hoverObject)
+                    {
+                        if (ev.ctrlKey && state.objectSelection.has(hoverObject.id))
+                            state.objectSelection.delete(hoverObject.id)
+                        else
+                            state.objectSelection.add(hoverObject.id)
+                    }
+
+                    if (global.editors.mapEditing.tileTool === "move")
+                        MapEditor.setupObjectMove(state)
+
+                    else if (global.editors.mapEditing.tileTool === "draw")
+                        MapEditor.setupObjectDraw(state)
 
                     else if (global.editors.mapEditing.tileTool === "select")
                         MapEditor.setupTileSelect(state)
@@ -275,6 +313,7 @@ export function onMouseMove(state: State, ev: MouseEvent)
 {
     const defs = (global.editors.editors[state.editorIndex] as Editors.EditorMap).defs
     const map = (global.editors.editors[state.editorIndex] as Editors.EditorMap).map
+    const room = map.rooms[state.roomId]
 
     const canvasRect = state.canvas.getBoundingClientRect()
 
@@ -286,6 +325,11 @@ export function onMouseMove(state: State, ev: MouseEvent)
     state.mouse.pos = {
         x: (state.mouse.posRaw.x - state.canvasWidth  / 2 + state.camera.pos.x) / state.camera.zoom,
         y: (state.mouse.posRaw.y - state.canvasHeight / 2 + state.camera.pos.y) / state.camera.zoom,
+    }
+
+    state.mouse.posInRoom = {
+        x: state.mouse.pos.x - (room?.x ?? 0),
+        y: state.mouse.pos.y - (room?.y ?? 0),
     }
 
     const layer = defs.layerDefs.find(l => l.id === global.editors.mapEditing.layerDefId)
@@ -313,6 +357,11 @@ export function onMouseMove(state: State, ev: MouseEvent)
     state.mouseDownDelta.pos = {
         x: state.mouse.pos.x - state.mouseDownOrigin.pos.x,
         y: state.mouse.pos.y - state.mouseDownOrigin.pos.y,
+    }
+
+    state.mouseDownDelta.posInRoom = {
+        x: state.mouse.posInRoom.x - state.mouseDownOrigin.posInRoom.x,
+        y: state.mouse.posInRoom.y - state.mouseDownOrigin.posInRoom.y,
     }
 
     state.mouseDownDelta.tile = {
@@ -416,7 +465,7 @@ export function copyTileSelection(state: State)
         state.roomId,
         global.editors.mapEditing.layerDefId)
 
-    let layer = Map.getStageLayer(
+    let layer = Map.getRoomLayer(
         editor.map,
         state.roomId,
         global.editors.mapEditing.layerDefId)
@@ -468,7 +517,7 @@ export function eraseTileSelection(state: State)
         state.roomId,
         global.editors.mapEditing.layerDefId)
 
-    let layer = Map.getStageLayer(
+    let layer = Map.getRoomLayer(
         editor.map,
         state.roomId,
         global.editors.mapEditing.layerDefId)
@@ -503,7 +552,7 @@ export function eraseTileSelection(state: State)
         }
     }
 
-    editor.map = Map.setStageLayer(
+    editor.map = Map.setRoomLayer(
         editor.map,
         state.roomId,
         global.editors.mapEditing.layerDefId,

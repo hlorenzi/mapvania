@@ -20,7 +20,7 @@ export function setupTileErase(state: MapEditor.State)
             state.roomId,
             global.editors.mapEditing.layerDefId)
 
-        let layer = Map.getStageLayer(
+        let layer = Map.getRoomLayer(
             editor.map,
             state.roomId,
             global.editors.mapEditing.layerDefId)
@@ -44,7 +44,7 @@ export function setupTileErase(state: MapEditor.State)
             }
         }
 
-        editor.map = Map.setStageLayer(
+        editor.map = Map.setRoomLayer(
             editor.map,
             state.roomId,
             global.editors.mapEditing.layerDefId,

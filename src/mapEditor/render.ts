@@ -58,8 +58,10 @@ export function render(state: MapEditor.State)
     
         renderRoomBkg(state, editingRoom)
         renderTileLayerBkg(state, defs, editingRoom, editingLayerDef)
+        renderObjectLayerBkg(state, defs, editingRoom, editingLayerDef)
         renderRoom(state, defs, editingRoom, editingLayerDef)
         renderTileLayerTools(state, defs, editingLayerDef)
+        renderObjectLayerTools(state, defs, editingLayerDef)
         
         state.ctx.restore()
     }
@@ -135,6 +137,56 @@ export function renderRoom(
                     layerDef.gridCellWidth, layerDef.gridCellHeight)
             }
         }
+
+        else if (layer.type === "object")
+        {
+            const hoverObject =
+                global.editors.mapEditing.layerDefId !== layer.layerDefId ? undefined :
+                state.onMouseMove ? undefined : 
+                    Object.values(layer.objects)
+                        .find(r => MathUtils.rectContains(r, state.mouse.posInRoom))
+            
+            for (const object of Object.values(layer.objects))
+            {
+                if (state.objectSelection.has(object.id) ||
+                    hoverObject === object)
+                    continue
+
+                renderObject(
+                    state,
+                    defs,
+                    object,
+                    false,
+                    false)
+            }
+
+            for (const objectId of state.objectSelection)
+            {
+                if (hoverObject?.id === objectId)
+                    continue
+
+                const object = layer.objects[objectId]
+                if (!object)
+                    continue
+
+                renderObject(
+                    state,
+                    defs,
+                    object,
+                    false,
+                    true)
+            }
+
+            if (hoverObject)
+            {
+                renderObject(
+                    state,
+                    defs,
+                    hoverObject,
+                    true,
+                    state.objectSelection.has(hoverObject.id))
+            }
+        }
     }
 
     const strongBorder = global.editors.mapEditing.layerDefId === Editors.LAYERDEF_ID_WORLD ?
@@ -146,6 +198,61 @@ export function renderRoom(
     state.ctx.strokeRect(0, 0, room.width, room.height)
 
     state.ctx.restore()
+}
+
+
+function renderObject(
+    state: MapEditor.State,
+    defs: Defs.Defs,
+    object: Map.Obj,
+    hovering: boolean,
+    selected: boolean,
+)
+{
+    const objectDef = Defs.getObjectDef(defs, object.objectDefId)
+    if (!objectDef)
+        return
+
+    const image = Images.getImageLazy(objectDef.imageSrc)
+    if (!image)
+        return
+
+    const topleftX = object.x - (object.width * objectDef.pivotPercent.x)
+    const topleftY = object.y - (object.height * objectDef.pivotPercent.y)
+
+    const imageX = topleftX - objectDef.interactionRect.x
+    const imageY = topleftY - objectDef.interactionRect.y
+
+    state.ctx.drawImage(
+        image.element,
+        objectDef.imageRect.x, objectDef.imageRect.y,
+        objectDef.imageRect.width, objectDef.imageRect.height,
+        imageX, imageY,
+        objectDef.imageRect.width, objectDef.imageRect.height)
+
+    if (hovering)
+    {
+        state.ctx.save()
+        state.ctx.setLineDash([2, 2])
+        state.ctx.strokeStyle = "#ccc"
+        state.ctx.strokeRect(
+            topleftX, topleftY,
+            object.width, object.height)
+        state.ctx.restore()
+    }
+
+    if (selected)
+    {
+        state.ctx.fillStyle = "#fff4"
+        state.ctx.fillRect(
+            topleftX, topleftY,
+            object.width, object.height)
+
+        state.ctx.strokeStyle = "#fff"
+        state.ctx.strokeRect(
+            topleftX, topleftY,
+            object.width, object.height)
+    }
 }
 
 
@@ -294,8 +401,6 @@ export function renderTileLayerTools(
 {
     if (!editingLayerDef || editingLayerDef.type !== "tile")
         return
-        
-    state.ctx.save()
 
     if (global.editors.mapEditing.tileTool === "draw" &&
         !state.onMouseMove)
@@ -331,12 +436,14 @@ export function renderTileLayerTools(
     }
     else if (global.editors.mapEditing.tileTool === "erase")
     {
+        state.ctx.save()
         state.ctx.strokeStyle = "#f40"
         state.ctx.strokeRect(
             state.mouse.tile.x * editingLayerDef.gridCellWidth,
             state.mouse.tile.y * editingLayerDef.gridCellHeight,
             editingLayerDef.gridCellWidth,
             editingLayerDef.gridCellHeight)
+        state.ctx.restore()
     }
 
     if (state.rectSelection)
@@ -358,8 +465,105 @@ export function renderTileLayerTools(
 
         state.ctx.restore()
     }
-    
+}
+
+
+export function renderObjectLayerBkg(
+    state: MapEditor.State,
+    defs: Defs.Defs,
+    room: Map.Room,
+    editingLayerDef: Defs.DefLayer | undefined)
+{
+    if (!editingLayerDef || editingLayerDef.type !== "object")
+        return
+        
+    state.ctx.save()
+
+    // Draw dashed lines
+    state.ctx.strokeStyle = "#444"
+    state.ctx.lineDashOffset = 1
+    state.ctx.setLineDash([2, 2])
+
+    state.ctx.beginPath()
+    for (let x = editingLayerDef.gridCellWidth; x < room.width; x += editingLayerDef.gridCellWidth)
+    {
+        state.ctx.moveTo(x, 0)
+        state.ctx.lineTo(x, room.height)
+    }
+
+    for (let y = editingLayerDef.gridCellHeight; y < room.height; y += editingLayerDef.gridCellHeight)
+    {
+        state.ctx.moveTo(0, y)
+        state.ctx.lineTo(room.width, y)
+    }
+    state.ctx.stroke()
+
     state.ctx.restore()
+}
+
+
+export function renderObjectLayerTools(
+    state: MapEditor.State,
+    defs: Defs.Defs,
+    editingLayerDef: Defs.DefLayer | undefined)
+{
+    if (!editingLayerDef || editingLayerDef.type !== "object")
+        return
+        
+    if (global.editors.mapEditing.tileTool === "draw" &&
+        !state.onMouseMove)
+    {
+        const objectDef = Defs.getObjectDef(defs, global.editors.mapEditing.selectedObjectDefId)
+        if (!objectDef)
+            return
+
+        const image = Images.getImageLazy(objectDef.imageSrc)
+        if (!image)
+            return
+
+        const topleftX = MathUtils.snap(
+            state.mouse.posInRoom.x - (objectDef.interactionRect.width * objectDef.pivotPercent.x),
+            editingLayerDef.gridCellWidth)
+
+        const topleftY = MathUtils.snap(
+            state.mouse.posInRoom.y - (objectDef.interactionRect.height * objectDef.pivotPercent.y),
+            editingLayerDef.gridCellWidth)
+
+        const imageX = topleftX - objectDef.interactionRect.x
+        const imageY = topleftY - objectDef.interactionRect.y
+
+        state.ctx.save()
+        state.ctx.globalAlpha = 0.5
+
+        state.ctx.drawImage(
+            image.element,
+            objectDef.imageRect.x, objectDef.imageRect.y,
+            objectDef.imageRect.width, objectDef.imageRect.height,
+            imageX, imageY,
+            objectDef.imageRect.width, objectDef.imageRect.height)
+
+        state.ctx.restore()
+    }
+
+    if (state.rectSelection)
+    {
+        state.ctx.save()
+
+        state.ctx.strokeStyle = "#0cf"
+
+        const tx1 = Math.min(state.rectSelection.tile1.x, state.rectSelection.tile2.x)
+        const tx2 = Math.max(state.rectSelection.tile1.x, state.rectSelection.tile2.x)
+        const ty1 = Math.min(state.rectSelection.tile1.y, state.rectSelection.tile2.y)
+        const ty2 = Math.max(state.rectSelection.tile1.y, state.rectSelection.tile2.y)
+
+        state.ctx.strokeRect(
+            tx1 * editingLayerDef.gridCellWidth,
+            ty1 * editingLayerDef.gridCellHeight,
+            (tx2 - tx1 + 1) * editingLayerDef.gridCellWidth,
+            (ty2 - ty1 + 1) * editingLayerDef.gridCellHeight)
+
+        state.ctx.restore()
+    }
 }
 
 

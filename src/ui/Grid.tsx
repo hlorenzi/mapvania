@@ -39,8 +39,8 @@ const StyledGrid = styled.div<{
     grid-column-gap: 0.5em;
     grid-row-gap: 0.25em;
     justify-items: start;
-    justify-content: start;
-    justify-self: start;
+    justify-content: stretch;
+    justify-self: stretch;
     align-items: ${ props => props.alignItems };
     align-content: start;
 `
@@ -54,6 +54,7 @@ export function Grid(props: {
     alignStart?: boolean,
     maxWidth?: string,
     fullHeight?: boolean,
+    style?: React.CSSProperties,
 })
 {
     return <StyledGrid
@@ -63,6 +64,7 @@ export function Grid(props: {
         alignItems={ props.alignStart ? "start" : "baseline" }
         fullHeight={ !!props.fullHeight }
         maxWidth={ props.maxWidth }
+        style={ props.style }
     >
         { props.children }
     </StyledGrid>
@@ -106,6 +108,7 @@ export function Cell(props: {
     justifyStretch?: boolean,
     fullHeight?: boolean,
     divider?: boolean,
+    style?: React.CSSProperties,
 })
 {
     const justifySelf =
@@ -126,6 +129,7 @@ export function Cell(props: {
         justifySelf={ justifySelf }
         textAlign={ textAlign }
         fullHeight={ !!props.fullHeight }
+        style={ props.style }
     >
         { props.children }
         { props.divider && <StyledDivider/> }
