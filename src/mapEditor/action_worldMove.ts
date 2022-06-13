@@ -22,7 +22,7 @@ export function setupWorldMove(state: MapEditor.State)
 
         for (const room of Object.values(newRooms))
         {
-            if (!state.stageSelection.has(room.id))
+            if (!state.roomSelection.has(room.id))
                 continue
 
             const roomOrig = roomsOrig[room.id]

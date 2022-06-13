@@ -63,6 +63,13 @@ export function render(state: MapEditor.State)
         renderTileLayerTools(state, defs, editingLayerDef)
         renderObjectLayerTools(state, defs, editingLayerDef)
         
+        if (state.onRenderRoomTool)
+        {
+            state.ctx.save()
+            state.onRenderRoomTool(state)
+            state.ctx.restore()
+        }
+        
         state.ctx.restore()
     }
     
@@ -142,9 +149,8 @@ export function renderRoom(
         {
             const hoverObject =
                 global.editors.mapEditing.layerDefId !== layer.layerDefId ? undefined :
-                state.onMouseMove ? undefined : 
-                    Object.values(layer.objects)
-                        .find(r => MathUtils.rectContains(r, state.mouse.posInRoom))
+                state.onMouseMove ? undefined :
+                    MapEditor.getObjectAt(state, state.mouse.posInRoom)
             
             for (const object of Object.values(layer.objects))
             {
@@ -190,7 +196,7 @@ export function renderRoom(
     }
 
     const strongBorder = global.editors.mapEditing.layerDefId === Editors.LAYERDEF_ID_WORLD ?
-        state.stageSelection.has(room.id) :
+        state.roomSelection.has(room.id) :
         room.id === state.roomId
 
     state.ctx.strokeStyle = strongBorder ? "#fff" : "#888"
@@ -223,12 +229,15 @@ function renderObject(
     const imageX = topleftX - objectDef.interactionRect.x
     const imageY = topleftY - objectDef.interactionRect.y
 
+    const imageW = object.width + (objectDef.imageRect.width - objectDef.interactionRect.width)
+    const imageH = object.height + (objectDef.imageRect.height - objectDef.interactionRect.height)
+
     state.ctx.drawImage(
         image.element,
         objectDef.imageRect.x, objectDef.imageRect.y,
         objectDef.imageRect.width, objectDef.imageRect.height,
         object.x + imageX, object.y + imageY,
-        objectDef.imageRect.width, objectDef.imageRect.height)
+        imageW, imageH)
 
     if (hovering)
     {
@@ -275,7 +284,7 @@ function renderObject(
                         objectDef.imageRect.x, objectDef.imageRect.y,
                         objectDef.imageRect.width, objectDef.imageRect.height,
                         visProp.value.x + imageX, visProp.value.y + imageY,
-                        objectDef.imageRect.width, objectDef.imageRect.height)
+                        imageW, imageH)
 
                     state.ctx.restore()
                 }
@@ -588,17 +597,20 @@ export function renderObjectLayerTools(
         if (!image)
             return
 
-        const topleftX = MathUtils.snap(
-            state.mouse.posInRoom.x - (objectDef.interactionRect.width * objectDef.pivotPercent.x),
-            editingLayerDef.gridCellWidth)
+        const topleftX =
+            MathUtils.snap(state.mouse.posInRoom.x, editingLayerDef.gridCellWidth) -
+            (objectDef.interactionRect.width * objectDef.pivotPercent.x)
 
-        const topleftY = MathUtils.snap(
-            state.mouse.posInRoom.y - (objectDef.interactionRect.height * objectDef.pivotPercent.y),
-            editingLayerDef.gridCellWidth)
+        const topleftY =
+            MathUtils.snap(state.mouse.posInRoom.y, editingLayerDef.gridCellWidth) -
+            (objectDef.interactionRect.height * objectDef.pivotPercent.y)
 
         const imageX = topleftX - objectDef.interactionRect.x
         const imageY = topleftY - objectDef.interactionRect.y
 
+        const imageW = objectDef.imageRect.width
+        const imageH = objectDef.imageRect.height
+    
         state.ctx.save()
         state.ctx.globalAlpha = 0.5
 
@@ -607,7 +619,7 @@ export function renderObjectLayerTools(
             objectDef.imageRect.x, objectDef.imageRect.y,
             objectDef.imageRect.width, objectDef.imageRect.height,
             imageX, imageY,
-            objectDef.imageRect.width, objectDef.imageRect.height)
+            imageW, imageH)
 
         state.ctx.restore()
     }

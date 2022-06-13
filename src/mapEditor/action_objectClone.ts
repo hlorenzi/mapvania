@@ -7,7 +7,7 @@ import { global } from "../global"
 import * as MathUtils from "../util/mathUtils"
 
 
-export function setupObjectMove(state: MapEditor.State)
+export function setupObjectClone(state: MapEditor.State)
 {
     const editor = global.editors.editors[state.editorIndex] as Editors.EditorMap
 
@@ -31,32 +31,44 @@ export function setupObjectMove(state: MapEditor.State)
 
     state.onMouseMove = () =>
     {
-        const newObjects = { ...objectsOrig }
+        const mouseDist = MathUtils.pointDistance(
+            { x: 0, y: 0 },
+            state.mouseDownDelta.posInRoom)
 
-        for (const objectId of state.objectSelection)
+        if (mouseDist < Math.max(layerDef.gridCellWidth, layerDef.gridCellHeight))
+            return
+
+        const clonedObjects: Map.LayerObject["objects"] = {}
+
+        const originalSelection = [...state.objectSelection]
+        state.objectSelection.clear()
+
+        let nextIDs = editor.map.nextIDs
+
+        for (const objectId of originalSelection)
         {
             const originalObject = objectsOrig[objectId]
             if (!originalObject)
                 continue
 
-            const newObject = {
+            const [newNextIDs, clonedObjId] = ID.getNextID(nextIDs)
+            nextIDs = newNextIDs
+
+            const clonedObject = {
                 ...originalObject,
-                x: Math.round(originalObject.x + state.mouseDownDelta.posInRoom.x),
-                y: Math.round(originalObject.y + state.mouseDownDelta.posInRoom.y),
+                id: clonedObjId,
             }
 
-            if (!state.toolMoveWithoutSnap)
-            {
-                newObject.x = MathUtils.snapRound(newObject.x, layerDef.gridCellWidth)
-                newObject.y = MathUtils.snapRound(newObject.y, layerDef.gridCellHeight)
-            }
-
-            newObjects[objectId] = newObject
+            clonedObjects[clonedObjId] = clonedObject
+            state.objectSelection.add(clonedObjId)
         }
 
         const newLayer: Map.LayerObject = {
             ...layer as Map.LayerObject,
-            objects: newObjects,
+            objects: {
+                ...layer.objects,
+                ...clonedObjects,
+            },
         }
 
         editor.map = Map.setRoomLayer(
@@ -64,10 +76,12 @@ export function setupObjectMove(state: MapEditor.State)
             state.roomId,
             global.editors.mapEditing.layerDefId,
             newLayer)
-    }
 
-    state.onMouseUp = () =>
-    {
-        global.editors.refreshToken.commit()
+        editor.map = {
+            ...editor.map,
+            nextIDs,
+        }
+
+        MapEditor.setupObjectMove(state)
     }
 }

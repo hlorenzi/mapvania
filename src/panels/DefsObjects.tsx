@@ -64,16 +64,9 @@ export function DefsObjects(props: {
     {
         const [newNextIDs, newID] = ID.getNextID(defs.nextIDs)
 
-        const objectDef: Defs.DefObject =
-        {
-            id: newID,
-            name: "New Object " + (defs.objectDefs.length + 1),
-            imageSrc: "",
-            imageRect: { x: 0, y: 0, width: 0, height: 0 },
-            pivotPercent: { x: 0, y: 0 },
-            interactionRect: { x: 0, y: 0, width: 16, height: 16 },
-            properties: [],
-        }
+        const objectDef = Defs.makeNewObjectDef()
+        objectDef.id = newID
+        objectDef.name = "object_" + (defs.objectDefs.length + 1)
 
         modify(
         {
@@ -295,6 +288,17 @@ export function DefsObjects(props: {
                         onChangeNumber={ (value) => modifyObject({ imageRect: { height: value } }) }
                     />
                     { " px (size)" }
+                </UI.Cell>
+
+                <UI.Cell justifyEnd>
+                    Resizable
+                </UI.Cell>
+
+                <UI.Cell>
+                    <UI.Checkbox
+                        value={ curObject.resizeable }
+                        onChange={ (value) => modifyObject({ resizeable: value }) }
+                    />
                 </UI.Cell>
 
                 <UI.Cell span={ 2 } divider/>

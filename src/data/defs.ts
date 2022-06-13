@@ -19,11 +19,6 @@ export interface DefGeneral
 {
     roomWidthMultiple: number
     roomHeightMultiple: number
-
-    // The default dimensions of a new stage, in tiles of the
-    // size multiple above
-    roomDefaultWidthInTiles: number
-    roomDefaultHeightInTiles: number
 }
 
 
@@ -81,8 +76,8 @@ export interface DefObject
     name: string
 
     imageSrc: string
-
     imageRect: MathUtils.RectWH
+    resizeable: boolean
 
     pivotPercent: MathUtils.Point
     interactionRect: MathUtils.RectWH
@@ -98,12 +93,24 @@ export function makeNew(): Defs
         generalDefs: {
             roomWidthMultiple: 16,
             roomHeightMultiple: 16,
-            roomDefaultWidthInTiles: 18,
-            roomDefaultHeightInTiles: 10,
         },
         layerDefs: [],
         tilesetDefs: [],
         objectDefs: [],
+    }
+}
+
+export function makeNewObjectDef(): DefObject
+{
+    return {
+        id: "",
+        name: "",
+        imageSrc: "",
+        imageRect: { x: 0, y: 0, width: 0, height: 0 },
+        resizeable: false,
+        pivotPercent: { x: 0, y: 0 },
+        interactionRect: { x: 0, y: 0, width: 16, height: 16 },
+        properties: [],
     }
 }
 

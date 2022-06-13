@@ -29,6 +29,8 @@ export function ObjectProperties(props: {
         return null
 
     const objectSelection = [...editor.mapEditor.objectSelection]
+        .filter(id => !!layer.objects[id])
+
     if (objectSelection.length == 0)
         return null
 

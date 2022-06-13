@@ -22,6 +22,7 @@ export interface State
 
     onMouseMove: null | ((state: State) => void)
     onMouseUp: null | ((state: State) => void)
+    onRenderRoomTool: null | ((state: State) => void)
     onRenderWorldTool: null | ((state: State) => void)
 
     toolMoveWithoutSnap: boolean
@@ -64,7 +65,7 @@ export interface State
         tile2: { x: number, y: number }
     }
 
-    stageSelection: Set<ID.ID>
+    roomSelection: Set<ID.ID>
     objectSelection: Set<ID.ID>
 }
 
@@ -83,6 +84,7 @@ export function createState(editorIndex: number, roomId: ID.ID): State
 
         onMouseMove: null,
         onMouseUp: null,
+        onRenderRoomTool: null,
         onRenderWorldTool: null,
 
         toolMoveWithoutSnap: false,
@@ -121,7 +123,7 @@ export function createState(editorIndex: number, roomId: ID.ID): State
 
         rectSelection: null,
 
-        stageSelection: new Set<ID.ID>(),
+        roomSelection: new Set<ID.ID>(),
         objectSelection: new Set<ID.ID>(),
     }
 }
@@ -200,6 +202,35 @@ export function getInteractionHandles(state: State)
                 const object = layer.objects[objectId]
                 if (!object)
                     continue
+
+                const objectDef = Defs.getObjectDef(defs, object.objectDefId)
+                if (!objectDef)
+                    continue
+
+                if (objectDef.resizeable)
+                {
+                    const objPivotedX = object.x - (object.width * objectDef.pivotPercent.x)
+                    const objPivotedY = object.y - (object.height * objectDef.pivotPercent.y)
+                    const objX1 = room.x + objPivotedX - margin
+                    const objY1 = room.y + objPivotedY - margin
+                    const objX2 = room.x + objPivotedX + margin + object.width
+                    const objY2 = room.y + objPivotedY + margin + object.height
+                    const objXCenter = room.x + objPivotedX + object.width / 2
+                    const objYCenter = room.y + objPivotedY + object.height / 2
+            
+                    for (let i = 0; i < sidesX.length; i++)
+                    {
+                        handles.push({
+                            x: sidesX[i] == -1 ? objX1 : sidesX[i] == 0 ? objXCenter : objX2,
+                            y: sidesY[i] == -1 ? objY1 : sidesY[i] == 0 ? objYCenter : objY2,
+                            width: 12 / state.camera.zoom,
+                            height: 12 / state.camera.zoom,
+
+                            visible: true,
+                            onMouseDown: (s) => MapEditor.setupHandleResizeObject(s, object.id, sidesX[i], sidesY[i]),
+                        })
+                    }
+                }
                 
                 const visibleProperties = getObjectVisibleProperties(
                     state, object)
@@ -421,27 +452,35 @@ export function onMouseDown(state: State, ev: MouseEvent)
                 .find(r => MathUtils.rectContains(r, state.mouse.pos))
             
             if (!ev.ctrlKey &&
-                (!hoverRoom || !state.stageSelection.has(hoverRoom.id)))
+                (!hoverRoom || !state.roomSelection.has(hoverRoom.id)))
             {
                 state.roomId = ""
-                state.stageSelection.clear()
+                state.roomSelection.clear()
             }
 
             if (hoverRoom)
             {
-                if (ev.ctrlKey && state.stageSelection.has(hoverRoom.id))
-                    state.stageSelection.delete(hoverRoom.id)
+                if (ev.ctrlKey && state.roomSelection.has(hoverRoom.id))
+                    state.roomSelection.delete(hoverRoom.id)
                 else
-                    state.stageSelection.add(hoverRoom.id)
+                    state.roomSelection.add(hoverRoom.id)
 
                 state.roomId = hoverRoom.id
             }
 
             if (global.editors.mapEditing.tileTool === "move")
-                MapEditor.setupWorldMove(state)
+            {
+                if (!hoverRoom)
+                    MapEditor.setupWorldSelect(state)
+                else
+                    MapEditor.setupWorldMove(state)
+            }
 
             else if (global.editors.mapEditing.tileTool === "draw")
                 MapEditor.setupWorldDraw(state)
+
+            else if (global.editors.mapEditing.tileTool === "select")
+                MapEditor.setupWorldSelect(state)
         }
         else
         {
@@ -475,8 +514,7 @@ export function onMouseDown(state: State, ev: MouseEvent)
                     editingLayerDef && editingLayerDef.type === "object" &&
                     layer && layer.type === "object")
                 {
-                    const hoverObject = Object.values(layer.objects)
-                        .find(r => MathUtils.rectContains(r, state.mouse.posInRoom))
+                    const hoverObject = getObjectAt(state, state.mouse.posInRoom)
                     
                     if (!ev.ctrlKey &&
                         (!hoverObject || !state.objectSelection.has(hoverObject.id)))
@@ -493,13 +531,20 @@ export function onMouseDown(state: State, ev: MouseEvent)
                     }
 
                     if (global.editors.mapEditing.tileTool === "move")
-                        MapEditor.setupObjectMove(state)
+                    {
+                        if (!hoverObject)
+                            MapEditor.setupObjectSelect(state)
+                        else if (ev.altKey)
+                            MapEditor.setupObjectClone(state)
+                        else
+                            MapEditor.setupObjectMove(state)
+                    }
 
                     else if (global.editors.mapEditing.tileTool === "draw")
                         MapEditor.setupObjectDraw(state)
 
                     else if (global.editors.mapEditing.tileTool === "select")
-                        MapEditor.setupTileSelect(state)
+                        MapEditor.setupObjectSelect(state)
                 }
             }
         }
@@ -588,6 +633,7 @@ export function onMouseUp(state: State, ev: MouseEvent)
 
     state.onMouseMove = null
     state.onMouseUp = null
+    state.onRenderRoomTool = null
     state.onRenderWorldTool = null
     
     MapEditor.render(state)
@@ -657,6 +703,8 @@ export function onKey(state: State, ev: KeyboardEvent, down: boolean)
             else if (down)
             {
                 eraseTileSelection(state)
+                eraseObjectSelection(state)
+                eraseRoomSelection(state)
                 Editors.historyAdd(state.editorIndex)
                 state.rectSelection = null
                 state.toolDeleteFromList = false
@@ -786,5 +834,112 @@ export function eraseTileSelection(state: State)
         global.editors.mapEditing.layerDefId,
         layer)
 
+    global.editors.refreshToken.commit()
+}
+
+
+export function getObjectRect(state: State, obj: Map.Obj): MathUtils.RectWH
+{
+    const editor = (global.editors.editors[state.editorIndex] as Editors.EditorMap)
+
+    const objDef = Defs.getObjectDef(editor.defs, obj.objectDefId)
+    if (!objDef)
+        return obj
+
+    return {
+        x: obj.x - (obj.width * objDef.pivotPercent.x),
+        y: obj.y - (obj.height * objDef.pivotPercent.y),
+        width: obj.width,
+        height: obj.height,
+    }
+}
+
+
+export function getObjectAt(state: State, pos: MathUtils.Point)
+{
+    const editor = (global.editors.editors[state.editorIndex] as Editors.EditorMap)
+
+    let layer = Map.getRoomLayer(
+        editor.map,
+        state.roomId,
+        global.editors.mapEditing.layerDefId)
+    
+    if (!layer || layer.type !== "object")
+        return
+
+    for (const obj of Object.values(layer.objects))
+    {
+        if (MathUtils.rectContains(getObjectRect(state, obj), pos))
+            return obj
+    }
+
+    return undefined
+}
+
+
+export function eraseObjectSelection(state: State)
+{
+    const editor = (global.editors.editors[state.editorIndex] as Editors.EditorMap)
+
+    editor.map = Map.ensureRoomLayer(
+        editor.defs,
+        editor.map,
+        state.roomId,
+        global.editors.mapEditing.layerDefId)
+
+    let layer = Map.getRoomLayer(
+        editor.map,
+        state.roomId,
+        global.editors.mapEditing.layerDefId)
+    
+    if (!layer || layer.type !== "object")
+        return
+
+    const newObjects: Map.LayerObject["objects"] = {}
+    for (const object of Object.values(layer.objects))
+    {
+        if (!state.objectSelection.has(object.id))
+            newObjects[object.id] = object
+    }
+
+    const newLayer = {
+        ...layer,
+        objects: newObjects,
+    }
+
+    editor.map = Map.setRoomLayer(
+        editor.map,
+        state.roomId,
+        global.editors.mapEditing.layerDefId,
+        newLayer)
+        
+    state.objectSelection.clear()
+    MapEditor.render(state)
+    global.editors.refreshToken.commit()
+}
+
+
+export function eraseRoomSelection(state: State)
+{
+    const editor = (global.editors.editors[state.editorIndex] as Editors.EditorMap)
+
+    if (global.editors.mapEditing.layerDefId !== Editors.LAYERDEF_ID_WORLD)
+        return
+
+    const newRooms: Map.Map["rooms"] = {}
+    for (const room of Object.values(editor.map.rooms))
+    {
+        if (!state.roomSelection.has(room.id))
+            newRooms[room.id] = room
+    }
+
+    editor.map = {
+        ...editor.map,
+        rooms: newRooms,
+    }
+    
+    state.roomId = ""
+    state.roomSelection.clear()
+    MapEditor.render(state)
     global.editors.refreshToken.commit()
 }

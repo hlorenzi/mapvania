@@ -55,7 +55,7 @@ export function DefsLayers(props: {
         const layerDef: Defs.DefLayerTile = {
             type: "tile",
             id: null!,
-            name: "New Layer " + (defs.layerDefs.length + 1),
+            name: "layer_" + (defs.layerDefs.length + 1),
             gridCellWidth: 16,
             gridCellHeight: 16,
         }
@@ -70,7 +70,7 @@ export function DefsLayers(props: {
         const layerDef: Defs.DefLayerObject = {
             type: "object",
             id: null!,
-            name: "New Layer " + (defs.layerDefs.length + 1),
+            name: "layer_" + (defs.layerDefs.length + 1),
             gridCellWidth: 16,
             gridCellHeight: 16,
         }

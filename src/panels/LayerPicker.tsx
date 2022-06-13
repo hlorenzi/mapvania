@@ -19,7 +19,7 @@ export function LayerPicker(props: {
     {
         global.editors.mapEditing.layerDefId = id
         global.editors.mapEditing.tileTool = "move"
-        editor.mapEditor.stageSelection.clear()
+        editor.mapEditor.roomSelection.clear()
         editor.mapEditor.objectSelection.clear()
         global.editors.refreshToken.commit()
     }

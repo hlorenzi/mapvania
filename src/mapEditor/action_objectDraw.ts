@@ -64,7 +64,7 @@ export function setupObjectDraw(state: MapEditor.State)
     editor.mapEditor.objectSelection.add(newObjectId)
     
     MapEditor.setupObjectMove(state)
-    console.log("create")
 
+    global.editors.mapEditing.tileTool = "move"
     global.editors.refreshToken.commit()
 }

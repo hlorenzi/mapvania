@@ -11,8 +11,7 @@ export function setupHandleResizeRoom(state: MapEditor.State, directionX: number
 {
     const editor = (global.editors.editors[state.editorIndex] as Editors.EditorMap)
     const defs = editor.defs
-    const map = editor.map
-    const room = map.rooms[state.roomId]
+    const room = editor.map.rooms[state.roomId]
 
 
     const borderDisplacements =
@@ -45,14 +44,14 @@ export function setupHandleResizeRoom(state: MapEditor.State, directionX: number
             borderDisplacements.bottom = Math.max(snappedDeltaY, -heightMinusOneTile)
     }
 
-    state.onRenderWorldTool = () =>
+    state.onRenderRoomTool = () =>
     {
         state.ctx.strokeStyle = "#0c0"
 
-        const newRoomX1 = room.x + borderDisplacements.left
-        const newRoomY1 = room.y + borderDisplacements.top
-        const newRoomX2 = room.x + room.width + borderDisplacements.right
-        const newRoomY2 = room.y + room.height + borderDisplacements.bottom
+        const newRoomX1 = borderDisplacements.left
+        const newRoomY1 = borderDisplacements.top
+        const newRoomX2 = room.width + borderDisplacements.right
+        const newRoomY2 = room.height + borderDisplacements.bottom
 
         state.ctx.strokeRect(
             newRoomX1,

@@ -39,23 +39,5 @@ export function DefsGeneral(props: {
             { " px" }
         </UI.Cell>
 
-        <UI.Cell justifyEnd>
-            Room Default Size
-        </UI.Cell>
-
-        <UI.Cell>
-            <UI.Input
-                number
-                value={ defs.generalDefs.roomDefaultWidthInTiles }
-                onChangeNumber={ (value) => modify({ generalDefs: { roomDefaultWidthInTiles: value } }) }
-            />
-            { " × " }
-            <UI.Input
-                value={ defs.generalDefs.roomDefaultHeightInTiles }
-                onChangeNumber={ (value) => modify({ generalDefs: { roomDefaultHeightInTiles: value } }) }
-            />
-            { " tiles" }
-        </UI.Cell>
-
     </UI.Grid>
 }
