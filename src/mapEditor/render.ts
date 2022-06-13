@@ -217,8 +217,8 @@ function renderObject(
     if (!image)
         return
 
-    const topleftX = object.x - (object.width * objectDef.pivotPercent.x)
-    const topleftY = object.y - (object.height * objectDef.pivotPercent.y)
+    const topleftX = -(object.width * objectDef.pivotPercent.x)
+    const topleftY = -(object.height * objectDef.pivotPercent.y)
 
     const imageX = topleftX - objectDef.interactionRect.x
     const imageY = topleftY - objectDef.interactionRect.y
@@ -227,7 +227,7 @@ function renderObject(
         image.element,
         objectDef.imageRect.x, objectDef.imageRect.y,
         objectDef.imageRect.width, objectDef.imageRect.height,
-        imageX, imageY,
+        object.x + imageX, object.y + imageY,
         objectDef.imageRect.width, objectDef.imageRect.height)
 
     if (hovering)
@@ -236,7 +236,7 @@ function renderObject(
         state.ctx.setLineDash([2, 2])
         state.ctx.strokeStyle = "#ccc"
         state.ctx.strokeRect(
-            topleftX, topleftY,
+            object.x + topleftX, object.y + topleftY,
             object.width, object.height)
         state.ctx.restore()
     }
@@ -245,13 +245,80 @@ function renderObject(
     {
         state.ctx.fillStyle = "#fff4"
         state.ctx.fillRect(
-            topleftX, topleftY,
+            object.x + topleftX, object.y + topleftY,
             object.width, object.height)
 
         state.ctx.strokeStyle = "#fff"
         state.ctx.strokeRect(
-            topleftX, topleftY,
+            object.x + topleftX, object.y + topleftY,
             object.width, object.height)
+    }
+
+    if (hovering || selected)
+    {
+        const visibleProperties = MapEditor.getObjectVisibleProperties(
+            state, object)
+
+        const handleSize = 12 / state.camera.zoom
+
+        for (const visProp of visibleProperties)
+        {
+            if (visProp.value.type === "point")
+            {
+                if (visProp.showGhost)
+                {
+                    state.ctx.save()
+                    state.ctx.globalAlpha = 0.5
+                    
+                    state.ctx.drawImage(
+                        image.element,
+                        objectDef.imageRect.x, objectDef.imageRect.y,
+                        objectDef.imageRect.width, objectDef.imageRect.height,
+                        visProp.value.x + imageX, visProp.value.y + imageY,
+                        objectDef.imageRect.width, objectDef.imageRect.height)
+
+                    state.ctx.restore()
+                }
+
+                if (visProp.linksToIndexAsPath !== null)
+                {
+                    state.ctx.save()
+                    state.ctx.strokeStyle = visProp.color
+                    state.ctx.lineWidth = handleSize / 4
+                    state.ctx.beginPath()
+                    state.ctx.moveTo(
+                        visibleProperties[visProp.linksToIndexAsPath].value.x,
+                        visibleProperties[visProp.linksToIndexAsPath].value.y)
+                    state.ctx.lineTo(
+                        visProp.value.x,
+                        visProp.value.y)
+                    state.ctx.stroke()
+                    state.ctx.restore()
+                }
+                else
+                {
+                    state.ctx.save()
+                    state.ctx.strokeStyle = visProp.color
+                    state.ctx.lineWidth = handleSize / 6
+                    state.ctx.setLineDash([handleSize / 2, handleSize / 2])
+                    state.ctx.beginPath()
+                    state.ctx.moveTo(
+                        object.x,
+                        object.y)
+                    state.ctx.lineTo(
+                        visProp.value.x,
+                        visProp.value.y)
+                    state.ctx.stroke()
+                    state.ctx.restore()
+                }
+
+                state.ctx.fillStyle = visProp.color
+                state.ctx.fillRect(
+                    visProp.value.x - handleSize / 2,
+                    visProp.value.y - handleSize / 2,
+                    handleSize, handleSize)
+            }
+        }
     }
 }
 
@@ -579,11 +646,17 @@ export function renderInteractionHandles(
     {
         const hovering = MathUtils.rectCenteredContains(handle, state.mouse.pos)
 
+        if (!handle.visible && !hovering)
+            continue
+
         const handleX1 = handle.x - handle.width / 2
         const handleY1 = handle.y - handle.height / 2
 
-        state.ctx.fillStyle = hovering ? "#2d2d2d" : "#242424"
-        state.ctx.fillRect(handleX1, handleY1, handle.width, handle.height)
+        if (handle.visible)
+        {
+            state.ctx.fillStyle = hovering ? "#2d2d2d" : "#242424"
+            state.ctx.fillRect(handleX1, handleY1, handle.width, handle.height)
+        }
 
         state.ctx.strokeStyle = hovering ? "#ffffff" : "#888888"
         state.ctx.strokeRect(handleX1, handleY1, handle.width, handle.height)

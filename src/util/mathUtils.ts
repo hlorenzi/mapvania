@@ -17,6 +17,20 @@ export interface Point
 }
 
 
+export function pointDistance(a: Point, b: Point)
+{
+    const xx = a.x - b.x
+    const yy = a.y - b.y
+    return Math.sqrt(xx * xx + yy * yy)
+}
+
+
+export function dotProduct(a: Point, b: Point)
+{
+    return a.x * b.x + a.y * b.y
+}
+
+
 export interface RectWH
 {
     x: number

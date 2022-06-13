@@ -27,7 +27,7 @@ export function PropertyValuesPanel(props: {
         })
 
 
-    return <UI.Grid template="auto auto 1fr auto">
+    return <UI.Grid template="auto auto auto 1fr">
 
         { props.defProperties.map(field =>
             <Field
@@ -467,7 +467,7 @@ function Tabulation(props: {
             borderLeft: "0.25em solid #2d2d2d",
             borderBottom: "0.25em solid #2d2d2d",
         }}>
-            <UI.Grid template="auto auto 1fr auto">
+            <UI.Grid template="auto auto auto 1fr">
                 { props.children }
             </UI.Grid>
         </div>

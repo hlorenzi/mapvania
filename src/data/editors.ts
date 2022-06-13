@@ -291,6 +291,7 @@ export function undo(editorIndex: number)
         
         editor.historyPointer -= 1
         editor.map = editor.history[editor.historyPointer].map
+        MapEditor.render(editor.mapEditor)
         global.editors.refreshToken.commit()
     }
 }
@@ -306,6 +307,7 @@ export function redo(editorIndex: number)
         
         editor.historyPointer += 1
         editor.map = editor.history[editor.historyPointer].map
+        MapEditor.render(editor.mapEditor)
         global.editors.refreshToken.commit()
     }
 }

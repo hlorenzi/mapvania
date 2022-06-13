@@ -104,6 +104,7 @@ export function ObjectProperties(props: {
 
                 <UI.Grid template="auto 1fr" fullHeight style={{
                     padding: "1em",
+                    overflowY: "auto",
                 }}>
 
                     <UI.Cell span={ 2 } justifyStart>

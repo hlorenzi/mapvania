@@ -3,6 +3,9 @@ import * as Defs from "./defs"
 import * as MathUtils from "../util/mathUtils"
 
 
+export type FieldFullId = (string | number)[]
+
+
 export type DefProperties = DefField[]
 
 
@@ -266,6 +269,151 @@ export function makeNewValues(defs: DefProperties): PropertyValues
     }
 
     return result
+}
+
+
+export function getValueByFullId(
+    value: FieldValue,
+    fullId: FieldFullId)
+    : FieldValue
+{
+    if (value === null || value === undefined)
+        return null
+    
+    if (fullId.length == 0)
+        return value
+    
+    if (typeof fullId[0] === "string")
+        return getValueByFullId((value as FieldValueStruct)[fullId[0]], fullId.slice(1))
+        
+    else
+        return getValueByFullId((value as FieldValueList)[fullId[0]], fullId.slice(1))
+}
+
+
+export function setValueByFullId(
+    value: FieldValue,
+    fullId: FieldFullId,
+    newValue: FieldValue)
+    : FieldValue
+{
+    if (fullId.length == 0)
+        return newValue
+    
+    if (value === null || value === undefined)
+        return value
+    
+    if (typeof fullId[0] === "string")
+    {
+        const valueStruct = value as FieldValueStruct
+        return {
+            ...valueStruct,
+            [fullId[0]]: setValueByFullId(
+                valueStruct[fullId[0]],
+                fullId.slice(1),
+                newValue),
+        }
+    }
+    else 
+    {
+        const valueList = value as FieldValueList
+        return [
+            ...valueList.slice(0, fullId[0]),
+            setValueByFullId(
+                valueList[fullId[0]],
+                fullId.slice(1),
+                newValue),
+            ...valueList.slice(fullId[0] + 1),
+        ]
+    }
+}
+
+
+export function deleteValueFromListByFullId(
+    value: FieldValue,
+    fullId: FieldFullId)
+    : FieldValue
+{
+    if (fullId.length == 0)
+        return value
+    
+    if (value === null || value === undefined)
+        return value
+    
+    if (typeof fullId[0] === "string")
+    {
+        const valueStruct = value as FieldValueStruct
+        return {
+            ...valueStruct,
+            [fullId[0]]: deleteValueFromListByFullId(
+                valueStruct[fullId[0]],
+                fullId.slice(1)),
+        }
+    }
+    else 
+    {
+        const valueList = value as FieldValueList
+        return [
+            ...valueList.slice(0, fullId[0]),
+            ...valueList.slice(fullId[0] + 1),
+        ]
+    }
+}
+
+
+export function duplicateValueFromListByFullId(
+    value: FieldValue,
+    fullId: FieldFullId,
+    before: boolean)
+    : [FieldValue, FieldFullId]
+{
+    if (fullId.length == 0)
+        return [value, fullId]
+    
+    if (value === null || value === undefined)
+        return [value, fullId]
+    
+    if (typeof fullId[0] === "string")
+    {
+        const valueStruct = value as FieldValueStruct
+
+        const [newValue, newFullId] = duplicateValueFromListByFullId(
+            valueStruct[fullId[0]],
+            fullId.slice(1),
+            before)
+
+        return [
+            { ...valueStruct, [fullId[0]]: newValue },
+            [fullId[0], ...newFullId]
+        ]
+    }
+    else 
+    {
+        const valueList = value as FieldValueList
+
+        if (before)
+        {
+            return [
+                [
+                    ...valueList.slice(0, fullId[0]),
+                    valueList[fullId[0]],
+                    ...valueList.slice(fullId[0]),
+                ],
+                fullId
+            ]
+        }
+        else
+        {
+            return [
+                [
+                    ...valueList.slice(0, fullId[0] + 1),
+                    valueList[fullId[0]],
+                    ...valueList.slice(fullId[0] + 1),
+                ],
+                [fullId[0] + 1, ...fullId.slice(1)]
+            ]
+        }
+    }
 }
 
 

@@ -154,14 +154,14 @@ export function setRoomLayer(
     layer: Layer)
     : Map
 {
-    const stage = getRoom(map, roomId)
-    if (!stage)
+    const room = getRoom(map, roomId)
+    if (!room)
         return map
 
     return setRoom(map, roomId, {
-        ...stage,
+        ...room,
         layers: {
-            ...stage.layers,
+            ...room.layers,
             [layerId]: layer,
         },
     })
@@ -299,6 +299,51 @@ export function resizeTileField(
     }
 
     return newTileField
+}
+
+
+export function getRoomObject(
+    map: Map,
+    roomId: ID.ID,
+    layerDefId: ID.ID,
+    objectId: ID.ID)
+    : Obj | undefined
+{
+    const room = getRoom(map, roomId)
+    if (!room)
+        return undefined
+
+    const layer = room.layers[layerDefId]
+    if (!layer || layer.type !== "object")
+        return undefined
+
+    return layer.objects[objectId]
+}
+
+
+export function setRoomObject(
+    map: Map,
+    roomId: ID.ID,
+    layerDefId: ID.ID,
+    objectId: ID.ID,
+    object: Obj)
+    : Map
+{
+    const room = getRoom(map, roomId)
+    if (!room)
+        return map
+
+    const layer = room.layers[layerDefId]
+    if (!layer || layer.type !== "object")
+        return map
+    
+    return setRoomLayer(map, roomId, layerDefId, {
+        ...layer,
+        objects: {
+            ...layer.objects,
+            [objectId]: object,
+        },
+    })
 }
 
 

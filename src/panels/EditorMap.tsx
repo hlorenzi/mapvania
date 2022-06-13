@@ -5,6 +5,7 @@ import * as Defs from "../data/defs"
 import * as Editors from "../data/editors"
 import * as UI from "../ui"
 import { global } from "../global"
+import { useRefreshByEvent } from "../util/refreshToken"
 import { LayerPicker } from "./LayerPicker"
 import { TilePicker } from "./TilePicker"
 import { ObjectPicker } from "./ObjectPicker"
@@ -25,6 +26,9 @@ export function EditorMap(props: {
     editorIndex: number
 })
 {
+    const refreshByEditors = useRefreshByEvent("editors")
+
+
     const canvasRef = React.useRef<HTMLCanvasElement>(null)
 
 
@@ -43,11 +47,21 @@ export function EditorMap(props: {
 
         const preventDefault = (ev: Event) => ev.preventDefault()
         const onResize = () => MapEditor.onResize(editor.mapEditor)
-        const onMouseDown = (ev: MouseEvent) => MapEditor.onMouseDown(editor.mapEditor, ev)
+        const onMouseDown = (ev: MouseEvent) => {
+            canvas.focus()
+            MapEditor.onMouseDown(editor.mapEditor, ev)
+        }
         const onMouseMove = (ev: MouseEvent) => MapEditor.onMouseMove(editor.mapEditor, ev)
         const onMouseUp = (ev: MouseEvent) => MapEditor.onMouseUp(editor.mapEditor, ev)
         const onMouseWheel = (ev: WheelEvent) => MapEditor.onMouseWheel(editor.mapEditor, ev)
-        const onKeyDown = (ev: KeyboardEvent) => MapEditor.onKeyDown(editor.mapEditor, ev)
+        const onKeyDown = (ev: KeyboardEvent) =>
+        {
+            if (document.activeElement && document.activeElement.tagName === "INPUT")
+                return
+            
+            MapEditor.onKey(editor.mapEditor, ev, true)
+        }
+        const onKeyUp = (ev: KeyboardEvent) => MapEditor.onKey(editor.mapEditor, ev, false)
 
         onResize()
 
@@ -59,6 +73,7 @@ export function EditorMap(props: {
         window.addEventListener("mouseup", onMouseUp)
         canvas.addEventListener("wheel", onMouseWheel)
         window.addEventListener("keydown", onKeyDown)
+        window.addEventListener("keyup", onKeyUp)
         canvas.addEventListener("contextmenu", preventDefault)
 
         const resizeObserver = new ResizeObserver(entries =>
@@ -77,7 +92,8 @@ export function EditorMap(props: {
             window.removeEventListener("mousemove", onMouseMove)
             window.removeEventListener("mouseup", onMouseUp)
             canvas.removeEventListener("wheel", onMouseWheel)
-            window.removeEventListener("keydown", onKeyDown)
+            canvas.removeEventListener("keydown", onKeyDown)
+            window.removeEventListener("keyup", onKeyUp)
             canvas.removeEventListener("contextmenu", preventDefault)
             
             resizeObserver.unobserve(canvas)
@@ -88,10 +104,9 @@ export function EditorMap(props: {
 
     React.useEffect(() =>
     {
-        console.log("refresh map editor")
         MapEditor.render(editor.mapEditor)
 
-    }, [global.editors.refreshToken.refreshValue])
+    }, [refreshByEditors, global.editors.refreshToken.refreshValue])
 
 
     const chooseTileTool = (tool: Editors.TileTool) =>
@@ -200,7 +215,7 @@ export function EditorMap(props: {
                 height: "100%",
                 minHeight: "0",
                 display: "grid",
-                gridTemplate: "1fr / 1fr 25em",
+                gridTemplate: "1fr / 1fr 30em",
                 pointerEvents: "none",
                 padding: "0.5em",
             }}>

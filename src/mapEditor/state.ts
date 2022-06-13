@@ -2,6 +2,7 @@ import * as MapEditor from "./index"
 import * as ID from "../data/id"
 import * as Defs from "../data/defs"
 import * as Map from "../data/map"
+import * as Properties from "../data/properties"
 import * as Editors from "../data/editors"
 import * as UI from "../ui"
 import { global } from "../global"
@@ -22,6 +23,10 @@ export interface State
     onMouseMove: null | ((state: State) => void)
     onMouseUp: null | ((state: State) => void)
     onRenderWorldTool: null | ((state: State) => void)
+
+    toolMoveWithoutSnap: boolean
+    toolAddToList: boolean
+    toolDeleteFromList: boolean
 
     camera:
     {
@@ -79,6 +84,10 @@ export function createState(editorIndex: number, roomId: ID.ID): State
         onMouseMove: null,
         onMouseUp: null,
         onRenderWorldTool: null,
+
+        toolMoveWithoutSnap: false,
+        toolAddToList: false,
+        toolDeleteFromList: false,
 
         camera:
         {
@@ -138,6 +147,8 @@ export interface InteractionHandle
     width: number
     height: number
 
+    visible: boolean
+
     onMouseDown: (state: State) => void
 }
 
@@ -172,12 +183,201 @@ export function getInteractionHandles(state: State)
                 width: 12 / state.camera.zoom,
                 height: 12 / state.camera.zoom,
 
+                visible: true,
                 onMouseDown: (s) => MapEditor.setupHandleResizeRoom(s, sidesX[i], sidesY[i]),
             })
+        }
+
+        const layer = Map.getRoomLayer(
+            map,
+            state.roomId,
+            global.editors.mapEditing.layerDefId)
+
+        if (layer && layer.type === "object")
+        {
+            for (const objectId of state.objectSelection)
+            {
+                const object = layer.objects[objectId]
+                if (!object)
+                    continue
+                
+                const visibleProperties = getObjectVisibleProperties(
+                    state, object)
+
+                for (let i = 0; i < visibleProperties.length; i++)
+                {
+                    const visProp = visibleProperties[i]
+                    const prevDirection =
+                        visProp.linksToIndexAsPath === null ? null :
+                        {
+                            x: visProp.value.x - visibleProperties[visProp.linksToIndexAsPath].value.x,
+                            y: visProp.value.y - visibleProperties[visProp.linksToIndexAsPath].value.y,
+                        }
+
+                    if (visProp.value.type === "point")
+                    {
+                        handles.push({
+                            x: room.x + visProp.value.x,
+                            y: room.y + visProp.value.y,
+                            width: 12 / state.camera.zoom,
+                            height: 12 / state.camera.zoom,
+
+                            visible: false,
+                            onMouseDown: (s) => MapEditor.setupHandleVisibleProperty(s, visProp, prevDirection),
+                        })
+                    }
+                }
+            }
         }
     }
 
     return handles
+}
+
+
+export interface ObjectVisibleProperty
+{
+    objectId: ID.ID,
+    propertyId: Properties.FieldFullId
+    color: string
+    showGhost: boolean
+    value: ObjectVisiblePropertyValue
+    linksToIndexAsPath: number | null
+}
+
+
+export type ObjectVisiblePropertyValue =
+    { type: "point" } & MathUtils.Point |
+    { type: "rect" } & MathUtils.RectWH
+
+
+export function getObjectVisibleProperties(state: State, object: Map.Obj)
+{
+    const editor = (global.editors.editors[state.editorIndex] as Editors.EditorMap)
+    const objectDef = Defs.getObjectDef(editor.defs, object.objectDefId)!
+    const propertyDef = Defs.getObjectPropertyDefs(editor.defs, objectDef)
+
+    const result: ObjectVisibleProperty[] = []
+
+    for (const field of propertyDef)
+    {
+        getObjectVisiblePropertiesRecursive(
+            state,
+            object,
+            result,
+            [field.id],
+            field,
+            object.properties[field.id],
+            null)
+    }
+
+    return result
+}
+
+
+export function getObjectVisiblePropertiesRecursive(
+    state: State,
+    object: Map.Obj,
+    result: ObjectVisibleProperty[],
+    fieldId: Properties.FieldFullId,
+    field: Properties.DefField,
+    value: Properties.FieldValue,
+    linksToIndexAsPath: number | null)
+{
+    if (field.type === "point")
+    {
+        const valuePoint = value as Properties.FieldValuePoint
+        if (!valuePoint)
+            return
+
+        result.push({
+            objectId: object.id,
+            propertyId: fieldId,
+            color: "#ffff00",
+            showGhost: field.showGhost,
+            value: {
+                type: "point",
+                x: valuePoint.x + (field.relative ? object.x : 0),
+                y: valuePoint.y + (field.relative ? object.y : 0),
+            },
+            linksToIndexAsPath,
+        })
+    }
+
+    else if (field.type === "rect")
+    {
+        const valueRect = value as Properties.FieldValueRect
+        if (!valueRect)
+            return
+
+        result.push({
+            objectId: object.id,
+            propertyId: fieldId,
+            color: "#ffcc00",
+            showGhost: false,
+            value: {
+                type: "rect",
+                x: valueRect.x + (field.relative ? object.x : 0),
+                y: valueRect.y + (field.relative ? object.y : 0),
+                width: valueRect.width,
+                height: valueRect.height,
+            },
+            linksToIndexAsPath,
+        })
+    }
+
+    else if (field.type === "struct")
+    {
+        const valueStruct = value as Properties.FieldValueStruct
+        if (!valueStruct)
+            return
+
+        for (const subfield of field.fields)
+        {
+            getObjectVisiblePropertiesRecursive(
+                state, object, result,
+                [...fieldId, subfield.id],
+                subfield, valueStruct[subfield.id],
+                linksToIndexAsPath)
+        }
+    }
+
+    else if (field.type === "enum")
+    {
+        const valueEnum = value as Properties.FieldValueEnum
+        if (!valueEnum)
+            return
+
+        const variantField = field.variants.find(v => v.id === valueEnum.variantId)
+        if (!variantField)
+            return
+
+        getObjectVisiblePropertiesRecursive(
+            state, object, result,
+            fieldId, variantField, valueEnum.value,
+            linksToIndexAsPath)
+    }
+
+    else if (field.type === "list")
+    {
+        const valueList = value as Properties.FieldValueList
+        if (!valueList)
+            return
+
+        for (let i = 0; i < valueList.length; i++)
+        {
+            const linksToIndex =
+                !field.showPath ? null :
+                i == 0 ? null :
+                result.length - 1
+            
+            getObjectVisiblePropertiesRecursive(
+                state, object, result,
+                [...fieldId, i],
+                field.element, valueList[i],
+                linksToIndex)
+        }
+    }
 }
 
 
@@ -415,38 +615,66 @@ export function onMouseWheel(state: State, ev: WheelEvent)
 }
 
 
-export function onKeyDown(state: State, ev: KeyboardEvent)
+export function onKey(state: State, ev: KeyboardEvent, down: boolean)
 {
     const key = ev.key.toLowerCase()
+    console.log(key, down)
 
     switch (key)
     {
         case "c":
-            if (ev.ctrlKey)
+            if (down && ev.ctrlKey)
             {
                 copyTileSelection(state)
                 state.rectSelection = null
                 MapEditor.render(state)
+                ev.preventDefault()
             }
             break
 
         case "x":
-            if (ev.ctrlKey)
+            if (down && ev.ctrlKey)
             {
                 copyTileSelection(state)
                 eraseTileSelection(state)
                 Editors.historyAdd(state.editorIndex)
                 state.rectSelection = null
                 MapEditor.render(state)
+                ev.preventDefault()
             }
             break
 
+        case "d":
         case "delete":
         case "backspace":
-            eraseTileSelection(state)
-            Editors.historyAdd(state.editorIndex)
-            state.rectSelection = null
-            MapEditor.render(state)
+            if (state.onMouseMove)
+            {
+                state.toolDeleteFromList = down
+                state.onMouseMove(state)
+                MapEditor.render(state)
+                ev.preventDefault()
+            }
+            else if (down)
+            {
+                eraseTileSelection(state)
+                Editors.historyAdd(state.editorIndex)
+                state.rectSelection = null
+                state.toolDeleteFromList = false
+                MapEditor.render(state)
+                ev.preventDefault()
+            }
+            break
+
+        case "q":
+        case "control":
+            state.toolMoveWithoutSnap = down
+            ev.preventDefault()
+            break
+
+        case "a":
+        case "alt":
+            state.toolAddToList = down
+            ev.preventDefault()
             break
     }
 }

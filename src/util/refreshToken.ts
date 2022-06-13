@@ -8,6 +8,22 @@ export interface RefreshToken
 }
 
 
+export function useRefreshByEvent(eventName: string)
+{
+    const [refresh, setRefresh] = React.useState(0)
+
+    React.useEffect(() =>
+    {
+        const fn = () => setRefresh(r => r + 1)
+        window.addEventListener(eventName, fn)
+        return window.removeEventListener(eventName, fn)
+
+    }, [])
+
+    return refresh
+}
+
+
 export function useRefreshToken(windowEventName: string): RefreshToken
 {
     const [refreshValue, setRefreshValue] = React.useState(0)
