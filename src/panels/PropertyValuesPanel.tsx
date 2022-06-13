@@ -16,26 +16,25 @@ export function PropertyValuesPanel(props: {
     setProperties: (modifyFn: (values: Properties.PropertyValues) => Properties.PropertyValues) => void,
 })
 {
-    const set = (id: string, value: Properties.FieldValue) =>
-    {
-        props.setProperties((old) =>
+    const modify = (fieldId: string, modifyFn: (value: Properties.FieldValue) => Properties.FieldValue) =>
+        props.setProperties(old =>
         {
             return {
                 ...old,
-                [id]: value,
+                [fieldId]:
+                    modifyFn(old[fieldId])
             }
         })
-    }
 
 
-    return <UI.Grid template="auto auto 1fr">
+    return <UI.Grid template="auto auto 1fr auto">
 
         { props.defProperties.map(field =>
             <Field
                 key={ field.id }
                 field={ field }
                 values={ props.properties.map(p => p[field.id]) }
-                setProperties={ props.setProperties }
+                modifyValue={ (newValue) => modify(field.id, newValue) }
             />
         )}
 
@@ -46,7 +45,10 @@ export function PropertyValuesPanel(props: {
 export function Field<T extends Properties.DefField>(props: {
     field: T,
     values: Properties.FieldValue[],
-    setProperties: (modifyFn: (values: Properties.PropertyValues) => Properties.PropertyValues) => void,
+    modifyValue: (modifyFn: (value: Properties.FieldValue) => Properties.FieldValue) => void,
+    removeField?: () => void,
+    moveFieldUp?: () => void,
+    moveFieldDown?: () => void,
 })
 {
     let Elem: any = () => <div/>
@@ -69,8 +71,24 @@ export function Field<T extends Properties.DefField>(props: {
             Elem = FieldPoint
             break
 
+        case "rect":
+            Elem = FieldRect
+            break
+
+        case "choice":
+            Elem = FieldChoice
+            break
+
         case "struct":
             Elem = FieldStruct
+            break
+
+        case "enum":
+            Elem = FieldEnum
+            break
+
+        case "list":
+            Elem = FieldList
             break
     }
 
@@ -79,9 +97,30 @@ export function Field<T extends Properties.DefField>(props: {
         props.values[0] !== null)
 
     const modify = (newValue: Properties.FieldValue) =>
-        props.setProperties(old => ({ ...old, [props.field.id]: newValue }))
+        props.modifyValue(old => newValue)
 
     return <>
+        <UI.Cell justifyEnd>
+            { props.removeField &&
+                <UI.Button
+                    label="❌"
+                    onClick={ props.removeField }
+                />
+            }
+            { props.moveFieldUp &&
+                <UI.Button
+                    label="🔼"
+                    onClick={ props.moveFieldUp }
+                />
+            }
+            { props.moveFieldDown &&
+                <UI.Button
+                    label="🔽"
+                    onClick={ props.moveFieldDown }
+                />
+            }
+        </UI.Cell>
+
         <UI.Cell justifyEnd>
             { props.field.id }
         </UI.Cell>
@@ -99,7 +138,7 @@ export function Field<T extends Properties.DefField>(props: {
             field={ props.field }
             enabled={ enabled }
             values={ props.values }
-            setProperties={ props.setProperties }
+            modifyValue={ props.modifyValue }
         />
     </>
 }
@@ -109,7 +148,7 @@ export function FieldBool(props: {
     field: Properties.DefFieldBool,
     enabled: boolean,
     values: Properties.FieldValue[],
-    setProperties: (modifyFn: (values: Properties.PropertyValues) => Properties.PropertyValues) => void,
+    modifyValue: (modifyFn: (value: Properties.FieldValue) => Properties.FieldValue) => void,
 })
 {
     const value = props.values.reduce<boolean | null>(
@@ -117,7 +156,7 @@ export function FieldBool(props: {
         props.values[0] as boolean)
 
     const modify = (newValue: boolean) =>
-        props.setProperties(old => ({ ...old, [props.field.id]: newValue }))
+        props.modifyValue(old => newValue)
 
     return <>
         <UI.Cell justifyStart>
@@ -140,7 +179,7 @@ export function FieldString(props: {
     field: Properties.DefFieldString,
     enabled: boolean,
     values: Properties.FieldValue[],
-    setProperties: (modifyFn: (values: Properties.PropertyValues) => Properties.PropertyValues) => void,
+    modifyValue: (modifyFn: (value: Properties.FieldValue) => Properties.FieldValue) => void,
 })
 {
     const value = props.values.reduce<string | null>(
@@ -148,7 +187,7 @@ export function FieldString(props: {
         props.values[0] as string)
 
     const modify = (newValue: string) =>
-        props.setProperties(old => ({ ...old, [props.field.id]: newValue }))
+        props.modifyValue(old => newValue)
 
     return <>
         <UI.Cell justifyStretch>
@@ -168,7 +207,7 @@ export function FieldNumber(props: {
     field: Properties.DefFieldNumber,
     enabled: boolean,
     values: Properties.FieldValue[],
-    setProperties: (modifyFn: (values: Properties.PropertyValues) => Properties.PropertyValues) => void,
+    modifyValue: (modifyFn: (value: Properties.FieldValue) => Properties.FieldValue) => void,
 })
 {
     const value = props.values.reduce<number | null>(
@@ -176,7 +215,7 @@ export function FieldNumber(props: {
         props.values[0] as number)
 
     const modify = (newValue: number) =>
-        props.setProperties(old => ({ ...old, [props.field.id]: newValue }))
+        props.modifyValue(old => newValue)
 
     return <>
         <UI.Cell justifyStretch>
@@ -196,8 +235,8 @@ export function FieldNumber(props: {
 export function FieldPoint(props: {
     field: Properties.DefFieldPoint,
     enabled: boolean,
-    values: Properties.FieldValue[],
-    setProperties: (modifyFn: (values: Properties.PropertyValues) => Properties.PropertyValues) => void,
+    values: Properties.FieldValuePoint[],
+    modifyValue: (modifyFn: (value: Properties.FieldValue) => Properties.FieldValue) => void,
 })
 {
     const valueX = props.values.reduce<number | null>(
@@ -217,10 +256,26 @@ export function FieldPoint(props: {
         (props.values[0] as Properties.FieldValuePoint)?.y ?? null)
         
     const modifyX = (newValue: number) =>
-        props.setProperties(old => ({ ...old, [props.field.id]: { ...old[props.field.id] as any, x: newValue }}))
+        props.modifyValue(old =>
+        {
+            const oldPoint = old as Properties.FieldValuePoint
+
+            return {
+                ...oldPoint,
+                x: newValue,
+            }
+        })
 
     const modifyY = (newValue: number) =>
-        props.setProperties(old => ({ ...old, [props.field.id]: { ...old[props.field.id] as any, y: newValue }}))
+        props.modifyValue(old =>
+        {
+            const oldPoint = old as Properties.FieldValuePoint
+
+            return {
+                ...oldPoint,
+                y: newValue,
+            }
+        })
 
     return <>
         <UI.Cell justifyStart>
@@ -244,21 +299,199 @@ export function FieldPoint(props: {
 }
 
 
+export function FieldRect(props: {
+    field: Properties.DefFieldRect,
+    enabled: boolean,
+    values: Properties.FieldValueRect[],
+    modifyValue: (modifyFn: (value: Properties.FieldValue) => Properties.FieldValue) => void,
+})
+{
+    const valueX = props.values.reduce<number | null>(
+        (accum, x) =>
+        {
+            const value = (x as Properties.FieldValueRect)?.x ?? null
+            return value !== null && value == accum ? accum : null
+        },
+        (props.values[0] as Properties.FieldValueRect)?.x ?? null)
+
+    const valueY = props.values.reduce<number | null>(
+        (accum, x) =>
+        {
+            const value = (x as Properties.FieldValueRect)?.y ?? null
+            return value !== null && value == accum ? accum : null
+        },
+        (props.values[0] as Properties.FieldValueRect)?.y ?? null)
+        
+    const valueW = props.values.reduce<number | null>(
+        (accum, x) =>
+        {
+            const value = (x as Properties.FieldValueRect)?.width ?? null
+            return value !== null && value == accum ? accum : null
+        },
+        (props.values[0] as Properties.FieldValueRect)?.width ?? null)
+        
+    const valueH = props.values.reduce<number | null>(
+        (accum, x) =>
+        {
+            const value = (x as Properties.FieldValueRect)?.height ?? null
+            return value !== null && value == accum ? accum : null
+        },
+        (props.values[0] as Properties.FieldValueRect)?.height ?? null)
+        
+    const modifyX = (newValue: number) =>
+        props.modifyValue(old =>
+        {
+            const oldRect = old as Properties.FieldValueRect
+
+            return {
+                ...oldRect,
+                x: newValue,
+            }
+        })
+
+    const modifyY = (newValue: number) =>
+        props.modifyValue(old =>
+        {
+            const oldRect = old as Properties.FieldValueRect
+
+            return {
+                ...oldRect,
+                y: newValue,
+            }
+        })
+
+    const modifyW = (newValue: number) =>
+        props.modifyValue(old =>
+        {
+            const oldRect = old as Properties.FieldValueRect
+
+            return {
+                ...oldRect,
+                width: newValue,
+            }
+        })
+
+    const modifyH = (newValue: number) =>
+        props.modifyValue(old =>
+        {
+            const oldRect = old as Properties.FieldValueRect
+
+            return {
+                ...oldRect,
+                height: newValue,
+            }
+        })
+
+    return <>
+        <UI.Cell justifyStart>
+            <UI.Input
+                number
+                value={ !props.enabled ? " " : valueX ?? "" }
+                placeholder={ valueX === null ? "- multiple values -" : "" }
+                onChangeNumber={ modifyX }
+                disabled={ !props.enabled }
+            />
+            { " × " }
+            <UI.Input
+                number
+                value={ !props.enabled ? " " : valueY ?? "" }
+                placeholder={ valueY === null ? "- multiple values -" : "" }
+                onChangeNumber={ modifyY }
+                disabled={ !props.enabled }
+            />
+            <br/>
+            <UI.Input
+                number
+                value={ !props.enabled ? " " : valueW ?? "" }
+                placeholder={ valueW === null ? "- multiple values -" : "" }
+                onChangeNumber={ modifyW }
+                disabled={ !props.enabled }
+            />
+            { " × " }
+            <UI.Input
+                number
+                value={ !props.enabled ? " " : valueH ?? "" }
+                placeholder={ valueH === null ? "- multiple values -" : "" }
+                onChangeNumber={ modifyH }
+                disabled={ !props.enabled }
+            />
+        </UI.Cell>
+
+    </>
+}
+
+
+export function FieldChoice(props: {
+    field: Properties.DefFieldChoice,
+    enabled: boolean,
+    values: Properties.FieldValueChoice[],
+    modifyValue: (modifyFn: (value: Properties.FieldValue) => Properties.FieldValue) => void,
+})
+{
+    const value = props.values.reduce<string | null>(
+        (accum, x) => x !== null && x == accum ? accum : null,
+        props.values[0] as Properties.FieldValueChoice)
+
+    const modify = (newValue: string) =>
+        props.modifyValue(old => newValue)
+
+    return <>
+        <UI.Cell justifyStretch>
+            <UI.Select
+                value={ !props.enabled ? "" : value ?? "" }
+                onChange={ modify }
+                disabled={ !props.enabled }
+            >
+                { props.field.choices.map((choice, i) =>
+                    <option
+                        key={ i }
+                        value={ choice }
+                    >
+                        { choice }
+                    </option>
+                )}
+            </UI.Select>
+        </UI.Cell>
+    </>
+}
+
+
+function Tabulation(props: {
+    children: React.ReactNode,
+})
+{
+    return <UI.Cell span={ 4 } justifyStretch>
+        <div style={{
+            paddingLeft: "1em",
+            paddingBottom: "0.25em",
+            borderLeft: "0.25em solid #2d2d2d",
+            borderBottom: "0.25em solid #2d2d2d",
+        }}>
+            <UI.Grid template="auto auto 1fr auto">
+                { props.children }
+            </UI.Grid>
+        </div>
+    </UI.Cell>
+}
+
+
 export function FieldStruct(props: {
     field: Properties.DefFieldStruct,
     enabled: boolean,
     values: Properties.FieldValueStruct[],
-    setProperties: (modifyFn: (values: Properties.PropertyValues) => Properties.PropertyValues) => void,
+    modifyValue: (modifyFn: (value: Properties.FieldValue) => Properties.FieldValue) => void,
 })
 {
-    const modify = (modifyFn: (values: Properties.PropertyValues) => Properties.PropertyValues) =>
+    const modify = (fieldId: string, modifyFn: (value: Properties.FieldValue) => Properties.FieldValue) =>
     {
-        props.setProperties((old) =>
+        props.modifyValue((old) =>
         {
+            const oldStruct = old as Properties.FieldValueStruct
+
             return {
-                ...old,
-                [props.field.id]:
-                    modifyFn(old[props.field.id] as Properties.FieldValueStruct),
+                ...oldStruct,
+                [fieldId]:
+                    modifyFn(oldStruct[fieldId]),
             }
         })
     }
@@ -267,28 +500,212 @@ export function FieldStruct(props: {
         <div/>
 
         { props.enabled &&
-            <UI.Cell span={ 3 }>
+            <Tabulation>
         
-                <UI.Grid template="auto auto 1fr" style={{
-                    paddingLeft: "1em",
-                    paddingBottom: "0.5em",
-                    borderLeft: "4px solid #2d2d2d",
-                    borderBottom: "4px solid #2d2d2d",
-                    borderBottomLeftRadius: "1em",
-                }}>
+                { props.field.fields.map(field =>
+                    <Field
+                        key={ field.id }
+                        field={ field }
+                        values={ props.values.map(p => p?.[field.id]) }
+                        modifyValue={ (newValue) => modify(field.id, newValue) }
+                    />
+                )}
+            
+            </Tabulation>
+        }
+    </>
+}
 
-                    { props.field.fields.map(field =>
+
+export function FieldEnum(props: {
+    field: Properties.DefFieldEnum,
+    enabled: boolean,
+    values: Properties.FieldValueEnum[],
+    modifyValue: (modifyFn: (value: Properties.FieldValue) => Properties.FieldValue) => void,
+})
+{
+    const variant = props.values.reduce<string | null>(
+        (accum, x) =>
+        {
+            const value = (x as Properties.FieldValueEnum)?.variantId ?? null
+            return value !== null && value == accum ? accum : null
+        },
+        (props.values[0] as Properties.FieldValueEnum)?.variantId ?? null)
+        
+    const modifyVariantId = (newVariantId: string) =>
+        props.modifyValue(old =>
+        {
+            return {
+                variantId: newVariantId,
+                value: Properties.makeNewValue(
+                    props.field.variants.find(v => v.id === newVariantId)!),
+            }
+        })
+
+    const modify = (modifyFn: (value: Properties.FieldValue) => Properties.FieldValue) =>
+    {
+        props.modifyValue((old) =>
+        {
+            const oldStruct = old as Properties.FieldValueEnum
+
+            return {
+                ...oldStruct,
+                value:
+                    modifyFn(oldStruct.value),
+            }
+        })
+    }
+
+    return <>
+        <UI.Cell justifyStretch>
+            <UI.Select
+                value={ !props.enabled ? "" : variant ?? "" }
+                onChange={ modifyVariantId }
+                disabled={ !props.enabled }
+            >
+                { props.field.variants.map((choice, i) =>
+                    <option
+                        key={ i }
+                        value={ choice.id }
+                    >
+                        { choice.id }
+                    </option>
+                )}
+            </UI.Select>
+        </UI.Cell>
+
+        { props.enabled && !!variant &&
+            <Tabulation>
+                <Field
+                    field={ props.field.variants.find(v => v.id === variant)! }
+                    modifyValue={ modify }
+                    values={ props.values.map(v => v.value) }
+                />
+            </Tabulation>
+        }
+    </>
+}
+
+
+export function FieldList(props: {
+    field: Properties.DefFieldList,
+    enabled: boolean,
+    values: Properties.FieldValueList[],
+    modifyValue: (modifyFn: (value: Properties.FieldValue) => Properties.FieldValue) => void,
+})
+{
+    const [refresh, setRefresh] = React.useState(0)
+
+    const length = props.values.reduce<number | null>(
+        (accum, x) =>
+        {
+            const value = (x as Properties.FieldValueList)?.length ?? null
+            return value !== null && value == accum ? accum : null
+        },
+        (props.values[0] as Properties.FieldValueList)?.length ?? null)
+
+
+    const modify = (index: number, modifyFn: (value: Properties.FieldValue) => Properties.FieldValue) =>
+    {
+        props.modifyValue(old =>
+        {
+            const oldList = old as Properties.FieldValueList
+
+            return [
+                ...oldList.slice(0, index),
+                modifyFn(oldList[index]),
+                ...oldList.slice(index + 1),
+            ]
+        })
+    }
+
+
+    const createElement = () =>
+    {
+        props.modifyValue(old =>
+        {
+            const oldList = old as Properties.FieldValueList
+
+            return [
+                ...oldList,
+                Properties.makeNewValue(props.field.element),
+            ]
+        })
+    }
+
+
+    const removeElement = (index: number) =>
+    {
+        props.modifyValue(old =>
+        {
+            const oldList = old as Properties.FieldValueList
+
+            return [
+                ...oldList.slice(0, index),
+                ...oldList.slice(index + 1),
+            ]
+        })
+    }
+
+
+    const moveElement = (oldIndex: number, newIndex: number) =>
+    {
+        props.modifyValue(old =>
+        {
+            const oldList = old as Properties.FieldValueList
+
+            if (newIndex < 0 || newIndex > oldList.length)
+                return oldList
+
+            const withFieldRemoved = [
+                ...oldList.slice(0, oldIndex),
+                ...oldList.slice(oldIndex + 1),
+            ]
+
+            return [
+                ...withFieldRemoved.slice(0, newIndex),
+                oldList[oldIndex],
+                ...withFieldRemoved.slice(newIndex),
+            ]
+        })
+
+        setRefresh(r => r + 1)
+    }
+
+
+    return <>
+        <Tabulation key={ length + "_" + refresh }>
+
+            { length !== null ?
+                <>
+                    { props.values[0].map((element, i) =>
                         <Field
-                            key={ field.id }
-                            field={ field }
-                            values={ props.values.map(p => p?.[field.id]) }
-                            setProperties={ (newValue) => modify(newValue) }
+                            key={ i }
+                            field={ props.field.element }
+                            values={ props.values.map(p => p?.[i]) }
+                            modifyValue={ (newValue) => modify(i, newValue) }
+                            removeField={ () => removeElement(i) }
+                            moveFieldUp={ () => moveElement(i, i - 1) }
+                            moveFieldDown={ () => moveElement(i, i + 1) }
                         />
                     )}
 
-                </UI.Grid>
-            
-            </UI.Cell>
-        }
+                    <UI.Cell span={4} justifyStart>
+                        <UI.Button
+                            label="➕ Element"
+                            onClick={ createElement }
+                        />
+                    </UI.Cell>
+
+                </>
+            :
+                <UI.Cell span={4} justifyStart>
+                    <span style={{ color: "#606060" }}>
+                        - multiple list lengths -
+                    </span>
+                </UI.Cell>
+            }
+        
+        </Tabulation>
     </>
 }

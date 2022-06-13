@@ -11,7 +11,7 @@ const StyledInput = styled.input<{
     background-color: #2d2d2d;
 
     justify-self: stretch;
-    width: 5em;
+    width: 4em;
 
     ${ props => props.fullWidth ? "width: 100%;" : "" }
 
@@ -21,6 +21,11 @@ const StyledInput = styled.input<{
     border-radius: 0;
 
     padding: 0.25em 0.5em;
+
+    &[disabled]
+    {
+        opacity: 0.5;
+    }
 
     &:hover
     {

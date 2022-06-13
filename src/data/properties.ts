@@ -62,17 +62,17 @@ export interface DefFieldRect extends DefFieldCommon
 }
 
 
-export interface DefFieldEnum extends DefFieldCommon
+export interface DefFieldChoice extends DefFieldCommon
 {
-    type: "enum"
+    type: "choice"
     choices: string[]
 }
 
 
-export interface DefFieldChoice extends DefFieldCommon
+export interface DefFieldEnum extends DefFieldCommon
 {
-    type: "choice"
-    choices: DefField[]
+    type: "enum"
+    variants: DefField[]
 }
 
 
@@ -101,8 +101,8 @@ export type FieldValue =
     string |
     FieldValuePoint |
     FieldValueRect |
-    FieldValueEnum |
     FieldValueChoice |
+    FieldValueEnum |
     FieldValueStruct |
     FieldValueList
 
@@ -113,12 +113,12 @@ export type FieldValuePoint = MathUtils.Point
 export type FieldValueRect = MathUtils.RectWH
 
 
-export type FieldValueEnum = string
+export type FieldValueChoice = string
 
 
-export interface FieldValueChoice
+export interface FieldValueEnum
 {
-    id: string
+    variantId: string
     value: FieldValue
 }
 
@@ -171,10 +171,10 @@ export function makeDefFieldOfType(id: string, type: DefField["type"]): DefField
             relative: false,
         }
 
-        case "enum": return {
+        case "choice": return {
             ...common,
-            type: "enum",
-            choices: ["variant_0"],
+            type: "choice",
+            choices: ["choice_0"],
         }
 
         case "struct": return {
@@ -183,17 +183,17 @@ export function makeDefFieldOfType(id: string, type: DefField["type"]): DefField
             fields: [makeDefFieldOfType("subfield_0", "string")],
         }
 
-        case "choice": return {
+        case "enum": return {
             ...common,
-            type: "choice",
-            choices: [makeDefFieldOfType("choice_0", "string")],
+            type: "enum",
+            variants: [makeDefFieldOfType("variant_0", "string")],
         }
 
         case "list": return {
             ...common,
             type: "list",
             showPath: false,
-            element: makeDefFieldOfType("subfield_0", "string"),
+            element: makeDefFieldOfType("element", "string"),
         }
 
         default:
@@ -221,21 +221,21 @@ export function makeDefaultValueOfField(field: DefField): FieldValue
         case "rect":
             return { x: 0, y: 0, width: 0, height: 0 }
 
-        case "enum":
-            return ""
+        case "choice":
+            return field.choices[0] ?? null
 
         case "struct":
         {
             const result: any = {}
             for (const subfield of field.fields)
-                result[subfield.id] = makeDefaultValueOfField(subfield)
+                result[subfield.id] = makeNewValue(subfield)
 
             return result
         }
 
-        case "choice": return {
-            id: field.choices[0].id,
-            value: makeDefaultValueOfField(field.choices[0]),
+        case "enum": return field.variants.length == 0 ? null : {
+            variantId: field.variants[0].id,
+            value: makeNewValue(field.variants[0]),
         }
 
         case "list":
@@ -244,6 +244,28 @@ export function makeDefaultValueOfField(field: DefField): FieldValue
         default:
             throw "invalid field type"
     }
+}
+
+
+export function makeNewValue(field: DefField): FieldValue
+{
+    if (field.optional)
+        return null
+
+    return makeDefaultValueOfField(field)
+}
+
+
+export function makeNewValues(defs: DefProperties): PropertyValues
+{
+    const result: PropertyValues = {}
+
+    for (const field of defs)
+    {
+        result[field.id] = makeDefaultValueOfField(field)
+    }
+
+    return result
 }
 
 

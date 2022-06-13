@@ -38,9 +38,10 @@ export function ObjectProperties(props: {
     const objectDefIds = [...objectDefIdsSet]
     const objectDefs = objectDefIds
         .map(id => Defs.getObjectDef(editor.defs, id)!)
+        .filter(def => !!def)
 
     const propertiesDef = Properties.getDefsIntersection(
-        objectDefs.map(def => def?.properties))
+        objectDefs.map(def => Defs.getObjectPropertyDefs(editor.defs, def)))
 
     const properties = objectSelection.map(id => layer.objects[id].properties)
 

@@ -309,6 +309,7 @@ export function makeObject(
     : Obj
 {
     const objectDef = defs.objectDefs.find(o => o.id === objectDefId)!
+    const propertyDefs = Defs.getObjectPropertyDefs(defs, objectDef)
 
     return {
         id: "",
@@ -317,7 +318,7 @@ export function makeObject(
         y: 0,
         width: objectDef.interactionRect.width,
         height: objectDef.interactionRect.height,
-        properties: {},
+        properties: Properties.makeNewValues(propertyDefs),
     }
 }
 

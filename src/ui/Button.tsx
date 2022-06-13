@@ -14,7 +14,7 @@ const StyledButton = styled.button<{
     justify-self: stretch;
 
     ${ props => props.fullWidth ? "width: 100%;" : "" }
-    min-width: 2em;
+    min-width: 1em;
     
     background-color: transparent;
     box-sizing: border-box;
@@ -24,7 +24,7 @@ const StyledButton = styled.button<{
     cursor: pointer;
     text-align: center;
 
-    padding: 0.25em 0.5em;
+    padding: 0.25em 0.25em;
 
     &:hover
     {

@@ -144,6 +144,12 @@ export function getObjectDef(defs: Defs, objectDefId: ID.ID)
 }
 
 
+export function getObjectPropertyDefs(defs: Defs, objectDef: DefObject)
+{
+    return objectDef.properties
+}
+
+
 export function getTilesPerRow(tileset: DefTileset)
 {
     return Math.floor(

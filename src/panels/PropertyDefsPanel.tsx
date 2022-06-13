@@ -60,6 +60,24 @@ export function FieldArray(props: {
     }
 
 
+    const moveField = (oldIndex: number, newIndex: number) =>
+    {
+        if (newIndex < 0 || newIndex > props.fields.length)
+            return
+
+        const withFieldRemoved = [
+            ...props.fields.slice(0, oldIndex),
+            ...props.fields.slice(oldIndex + 1),
+        ]
+
+        props.setFields([
+            ...withFieldRemoved.slice(0, newIndex),
+            props.fields[oldIndex],
+            ...withFieldRemoved.slice(newIndex),
+        ])
+    }
+
+
     return <UI.Grid template="auto auto auto auto">
 
         { props.fields.map((field, i) =>
@@ -68,6 +86,8 @@ export function FieldArray(props: {
                 field={ field }
                 setField={ (newField) => modifyField(i, newField) }
                 removeField={ () => removeField(i) }
+                moveFieldUp={ () => moveField(i, i - 1) }
+                moveFieldDown={ () => moveField(i, i + 1) }
             />
         )}
 
@@ -86,6 +106,8 @@ export function Field(props: {
     field: Properties.DefField,
     setField: (newValue: Properties.DefField) => void,
     removeField?: () => void,
+    moveFieldUp?: () => void,
+    moveFieldDown?: () => void,
 })
 {
     let fieldElem = <></>
@@ -134,6 +156,13 @@ export function Field(props: {
             />
             break
 
+        case "enum":
+            fieldElem = <FieldEnum
+                field={ props.field }
+                setField={ props.setField }
+            />
+            break
+
         case "struct":
             fieldElem = <FieldStruct
                 field={ props.field }
@@ -150,6 +179,27 @@ export function Field(props: {
     }
 
     return <>
+        
+        <UI.Cell justifyEnd>
+            { props.removeField &&
+                <UI.Button
+                    label="❌"
+                    onClick={ props.removeField }
+                />
+            }
+            { props.moveFieldUp &&
+                <UI.Button
+                    label="🔼"
+                    onClick={ props.moveFieldUp }
+                />
+            }
+            { props.moveFieldDown &&
+                <UI.Button
+                    label="🔽"
+                    onClick={ props.moveFieldDown }
+                />
+            }
+        </UI.Cell>
 
         <UI.Cell justifyStretch>
             <UI.Select
@@ -182,15 +232,6 @@ export function Field(props: {
                 onChange={ (value) => props.setField({ ...props.field, id: value }) }
                 fullWidth
             />
-        </UI.Cell>
-        
-        <UI.Cell justifyEnd>
-            { props.removeField &&
-                <UI.Button
-                    label="❌"
-                    onClick={ props.removeField }
-                />
-            }
         </UI.Cell>
 
         { fieldElem }
@@ -347,13 +388,119 @@ export function FieldRect(props: {
 
 export function FieldChoice(props: {
     field: Properties.DefFieldChoice,
-    setField: (newValue: Properties.DefFieldChoice) => void,
+    setField: (newField: Properties.DefFieldChoice) => void,
+})
+{
+    const modifyChoice = (index: number, newId: string) =>
+    {
+        props.setField({
+            ...props.field,
+            choices: [
+                ...props.field.choices.slice(0, index),
+                newId,
+                ...props.field.choices.slice(index + 1),
+            ],
+        })
+    }
+
+
+    const addChoice = () =>
+    {
+        props.setField({
+            ...props.field,
+            choices: [
+                ...props.field.choices,
+                "choice_" + props.field.choices.length,
+            ],
+        })
+    }
+
+
+    const removeChoice = (index: number) =>
+    {
+        props.setField({
+            ...props.field,
+            choices: [
+                ...props.field.choices.slice(0, index),
+                ...props.field.choices.slice(index + 1),
+            ],
+        })
+    }
+
+
+    const moveChoice = (oldIndex: number, newIndex: number) =>
+    {
+        if (newIndex < 0 || newIndex > props.field.choices.length)
+            return
+
+        const withFieldRemoved = [
+            ...props.field.choices.slice(0, oldIndex),
+            ...props.field.choices.slice(oldIndex + 1),
+        ]
+
+        props.setField({
+            ...props.field,
+            choices: [
+                ...withFieldRemoved.slice(0, newIndex),
+                props.field.choices[oldIndex],
+                ...withFieldRemoved.slice(newIndex),
+            ],
+        })
+    }
+
+
+    return <Tabulation>
+
+        <UI.Grid template="auto 1fr">
+
+            { props.field.choices.map((choice, i) =>
+                <React.Fragment key={ i }>
+                    <UI.Cell justifyEnd>
+                        <UI.Button
+                            label="❌"
+                            onClick={ () => removeChoice(i) }
+                        />
+                        <UI.Button
+                            label="🔼"
+                            onClick={ () => moveChoice(i, i - 1) }
+                        />
+                        <UI.Button
+                            label="🔽"
+                            onClick={ () => moveChoice(i, i + 1) }
+                        />
+                    </UI.Cell>
+                    <UI.Cell justifyStretch>
+                        <UI.Input
+                            value={ choice }
+                            onChange={ (value) => modifyChoice(i, value) }
+                            fullWidth
+                        />
+                    </UI.Cell>
+                </React.Fragment>
+            )}
+
+            <UI.Cell span={2} justifyStart>
+                <UI.Button
+                    label="➕ Choice"
+                    onClick={ addChoice }
+                />
+            </UI.Cell>
+
+        </UI.Grid>
+
+    </Tabulation>
+}
+
+
+export function FieldEnum(props: {
+    field: Properties.DefFieldEnum,
+    setField: (newValue: Properties.DefFieldEnum) => void,
 })
 {
     return <Tabulation>
         <FieldArray
-            fields={ props.field.choices }
-            setFields={ (newFields) => props.setField({ ...props.field, choices: newFields }) }
+            fields={ props.field.variants }
+            setFields={ (newFields) => props.setField({ ...props.field, variants: newFields }) }
         />
     </Tabulation>
 }
