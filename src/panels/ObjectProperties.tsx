@@ -109,14 +109,32 @@ export function ObjectProperties(props: {
                     overflowY: "auto",
                 }}>
 
-                    <UI.Cell span={ 2 } justifyStart>
+                    { objectSelection.length > 1 &&
+                        <UI.Cell span={ 2 } justifyStart>
                         {
                             objectSelection.length +
-                            " object" +
-                            (objectSelection.length == 1 ? "" : "s") +
-                            " selected"
+                            " objects selected"
                         }
-                    </UI.Cell>
+                        </UI.Cell>
+                    }
+
+                    { objectSelection.length == 1 &&
+                        <UI.Cell span={ 2 } justifyStart>
+                        {
+                            "ID: " + objectSelection[0]
+                        }
+                        </UI.Cell>
+                    }
+
+                    { objectDefs.length == 1 &&
+                        <UI.Cell span={ 2 } justifyStart>
+                        {
+                            "Type: " + objectDefs[0].name
+                        }
+                        </UI.Cell>
+                    }
+
+                    <UI.Cell span={ 2 } divider/>
 
                     <UI.Cell span={ 2 } justifyStretch>
                         

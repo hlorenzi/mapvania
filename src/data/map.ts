@@ -101,24 +101,6 @@ export function makeNew(): Map
 }
 
 
-export function stringify(map: Map): string
-{
-    return JSON.stringify({
-        ...map,
-        type: "map",
-        version: 1,
-    },
-    undefined, 2)
-}
-
-
-export function parse(data: string): Map
-{
-    const json = JSON.parse(data)
-    return { ...makeNew(), ...(json as Map) }
-}
-
-
 export function getRoom(map: Map, roomId: ID.ID): Room | undefined
 {
     return map.rooms[roomId]
@@ -186,21 +168,18 @@ export function ensureRoomLayer(defs: Defs.Defs, map: Map, stageId: ID.ID, layer
     {
         case "tile":
         {
-            const widthInTiles  = Math.ceil(room.width  / layerDef.gridCellWidth)
-            const heightInTiles = Math.ceil(room.height / layerDef.gridCellHeight)
-
             return setRoom(map, stageId, {
                 ...room,
                 layers: {
                     ...room.layers,
                     [layerDefId]: {
-                        layerDefId,
                         type: "tile",
-                        tileField: {
-                            tiles: new Array<Tile>(widthInTiles * heightInTiles).fill({ tileId: -1, tilesetDefId: "" }),
-                            width: widthInTiles,
-                            height: heightInTiles,
-                        }
+                        layerDefId,
+                        tileField: makeTileFieldForArea(
+                            layerDef.gridCellWidth,
+                            layerDef.gridCellHeight,
+                            room.width,
+                            room.height)
                     }
                 }
             })
@@ -213,26 +192,43 @@ export function ensureRoomLayer(defs: Defs.Defs, map: Map, stageId: ID.ID, layer
                 layers: {
                     ...room.layers,
                     [layerDefId]: {
-                        layerDefId,
                         type: "object",
+                        layerDefId,
                         objects: {},
                     }
                 }
             })
         }
     }
-
-    return map
 }
 
 
-export function makeTileField(widthInTiles: number, heightInTiles: number): TileField
+export function makeTileField(
+    widthInTiles: number,
+    heightInTiles: number)
+    : TileField
 {
     return {
-        tiles: new Array<Tile>(widthInTiles * heightInTiles).fill({ tileId: -1, tilesetDefId: "" }),
+        tiles: new Array<Tile | undefined>(widthInTiles * heightInTiles)
+            .fill(undefined),
+
         width: widthInTiles,
         height: heightInTiles,
     }
+}
+
+
+export function makeTileFieldForArea(
+    gridCellWidth: number,
+    gridCellHeight: number,
+    areaWidth: number,
+    areaHeight: number)
+    : TileField
+{
+    const widthInTiles  = Math.ceil(areaWidth  / gridCellWidth)
+    const heightInTiles = Math.ceil(areaHeight / gridCellHeight)
+
+    return makeTileField(widthInTiles, heightInTiles)
 }
 
 

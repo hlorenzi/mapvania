@@ -24,3 +24,9 @@ export function getNextID(nextIDs: NextIDs): [NextIDs, string]
 
     return [newNextIDs, prefix + nextID]
 }
+
+
+export function compareIDs(a: ID, b: ID): number
+{
+    return a.localeCompare(b, "en")
+}

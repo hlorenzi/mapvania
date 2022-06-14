@@ -2,6 +2,7 @@ import { global } from "../global"
 import * as Filesystem from "../data/filesystem"
 import * as Defs from "../data/defs"
 import * as Map from "../data/map"
+import * as MapSerialization from "../data/map_serialization"
 import * as Editors from "../data/editors"
 
 
@@ -10,12 +11,12 @@ export const createMapFile =
     func: async () =>
     {
         const handle = await window.showSaveFilePicker({
-            suggestedName: "map.mvmap",
+            suggestedName: "map" + Filesystem.MAP_EXTENSION,
             types: [
                 {
                     description: "Mapvania Map File",
                     accept: {
-                        "text/json": [".mvmap", ".json"],
+                        "text/json": [Filesystem.MAP_EXTENSION],
                     }
                 },
             ]
@@ -29,11 +30,12 @@ export const createMapFile =
             if (!rootRelativePath)
                 throw "file not contained in root folder"
 
-            const newMap = Map.makeNew()
-            const newMapData = Map.stringify(newMap)
+            const map = Map.makeNew()
+            const serMap = MapSerialization.serialize(null!, map)
+            const serMapText = Filesystem.stringify(serMap)
 
             const writable = await handle.createWritable()
-            await writable.write(newMapData)
+            await writable.write(serMapText)
             await writable.close()
 
             await Filesystem.refreshEntries()

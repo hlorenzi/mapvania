@@ -664,7 +664,6 @@ export function onMouseWheel(state: State, ev: WheelEvent)
 export function onKey(state: State, ev: KeyboardEvent, down: boolean)
 {
     const key = ev.key.toLowerCase()
-    console.log(key, down)
 
     switch (key)
     {

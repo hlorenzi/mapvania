@@ -6,6 +6,7 @@ import { useRefreshToken } from "./util/refreshToken"
 import { EditorRoot } from "./panels/EditorRoot"
 import { ProjectTree } from "./panels/ProjectTree"
 import * as Filesystem from "./data/filesystem"
+import * as Editors from "./data/editors"
 
 
 function App()
@@ -45,6 +46,17 @@ function App()
 
     </div>
 }
+
+
+window.addEventListener("beforeunload", (ev) =>
+{
+    if (Editors.isAnyEditorUnsaved())
+    {
+        ev.preventDefault()
+        ev.returnValue = "Lose unsaved changes?"
+        return ev.returnValue
+    }
+})
 
 
 document.body.onload = function()

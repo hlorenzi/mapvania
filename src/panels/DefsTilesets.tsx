@@ -44,7 +44,7 @@ export function DefsTilesets(props: {
         const tilesetDef: Defs.DefTileset =
         {
             id: newID,
-            name: "New Tileset " + (defs.tilesetDefs.length + 1),
+            name: "tileset_" + (defs.tilesetDefs.length + 1),
             imageSrc: "",
             width: 0,
             height: 0,
@@ -76,6 +76,38 @@ export function DefsTilesets(props: {
         modify(
         {
             tilesetDefs: defs.tilesetDefs.filter(l => l.id !== curTilesetId),
+        })
+    }
+
+
+    const moveUp = () =>
+    {
+        if (curTilesetIndex <= 0)
+            return
+            
+        modify({
+            tilesetDefs: [
+                ...defs.tilesetDefs.slice(0, curTilesetIndex - 1),
+                curTileset!,
+                defs.tilesetDefs[curTilesetIndex - 1],
+                ...defs.tilesetDefs.slice(curTilesetIndex + 1),
+            ],
+        })
+    }
+
+
+    const moveDown = () =>
+    {
+        if (curTilesetIndex >= defs.tilesetDefs.length - 1)
+            return
+
+        modify({
+            tilesetDefs: [
+                ...defs.tilesetDefs.slice(0, curTilesetIndex),
+                defs.tilesetDefs[curTilesetIndex + 1],
+                curTileset!,
+                ...defs.tilesetDefs.slice(curTilesetIndex + 2),
+            ],
         })
     }
 
@@ -141,7 +173,8 @@ export function DefsTilesets(props: {
             onChange={ setCurTilesetId }
             items={ defs.tilesetDefs.map(tilesetDef => ({
                 id: tilesetDef.id,
-                label: "🌲 " + tilesetDef.name,
+                label: tilesetDef.name,
+                icon: Defs.getTilesetDefIconElement(tilesetDef),
             }))}
         />
 
@@ -165,6 +198,16 @@ export function DefsTilesets(props: {
                 </UI.Cell>
                 
                 <UI.Cell span={ 2 } justifyEnd>
+                    <UI.Button
+                        label="🔼"
+                        onClick={ moveUp }
+                    />
+
+                    <UI.Button
+                        label="🔽"
+                        onClick={ moveDown }
+                    />
+
                     <UI.Button
                         label="❌ Delete"
                         onClick={ deleteCurTileset }

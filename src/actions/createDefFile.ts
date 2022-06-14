@@ -9,12 +9,12 @@ export const createDefFile =
     func: async () =>
     {
         const handle = await window.showSaveFilePicker({
-            suggestedName: "project.mvdefs",
+            suggestedName: "project" + Filesystem.DEFS_EXTENSION,
             types: [
                 {
                     description: "Mapvania Definition File",
                     accept: {
-                        "text/json": [".mvdefs", ".json"],
+                        "text/json": [Filesystem.DEFS_EXTENSION],
                     }
                 },
             ]

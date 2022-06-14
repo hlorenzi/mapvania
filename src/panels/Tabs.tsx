@@ -25,6 +25,12 @@ export function Tabs()
                 >
                     { editor.name }
                     { Editors.isEditorUnsaved(editor) ? "*" : "" }
+
+                    <StyledTabButton
+                        onClick={ () => Editors.askAndCloseEditor(i) }
+                    >
+                        ×
+                    </StyledTabButton>
                 </StyledTab>
             )}
 
@@ -66,9 +72,25 @@ const StyledTab = styled.div<{
     height: 100%;
 
     margin-right: 1px;
-    padding: 0.25em 1em;
+    padding: 0.25em 0 0.25em 1em;
     
     cursor: pointer;
 
     background-color: ${ props => props.selected ? "#1e1e1e" : "#2d2d2d" };
+`
+
+
+const StyledTabButton = styled.button`
+    color: inherit;
+    background-color: transparent;
+    border: 0;
+    border-radius: 0.25em;
+    margin-left: 0.25em;
+    margin-right: 0.25em;
+    cursor: pointer;
+
+    &:hover
+    {
+        background-color: #444444;
+    }
 `

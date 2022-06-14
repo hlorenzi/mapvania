@@ -10,8 +10,15 @@ import * as MathUtils from "../util/mathUtils"
 
 export function render(state: MapEditor.State)
 {
-    const defs = (global.editors.editors[state.editorIndex] as Editors.EditorMap).defs
-    const map = (global.editors.editors[state.editorIndex] as Editors.EditorMap).map
+    if (state.editorIndex < 0 || state.editorIndex >= global.editors.editors.length)
+        return
+
+    const editor = global.editors.editors[state.editorIndex]
+    if (editor.type !== "map")
+        return
+    
+    const defs = editor.defs
+    const map = editor.map
 
     state.ctx.save()
 
@@ -148,6 +155,7 @@ export function renderRoom(
         else if (layer.type === "object")
         {
             const hoverObject =
+                state.roomId !== room.id ? undefined :
                 global.editors.mapEditing.layerDefId !== layer.layerDefId ? undefined :
                 state.onMouseMove ? undefined :
                     MapEditor.getObjectAt(state, state.mouse.posInRoom)
@@ -220,8 +228,6 @@ function renderObject(
         return
 
     const image = Images.getImageLazy(objectDef.imageSrc)
-    if (!image)
-        return
 
     const topleftX = -(object.width * objectDef.pivotPercent.x)
     const topleftY = -(object.height * objectDef.pivotPercent.y)
@@ -232,12 +238,13 @@ function renderObject(
     const imageW = object.width + (objectDef.imageRect.width - objectDef.interactionRect.width)
     const imageH = object.height + (objectDef.imageRect.height - objectDef.interactionRect.height)
 
-    state.ctx.drawImage(
-        image.element,
-        objectDef.imageRect.x, objectDef.imageRect.y,
-        objectDef.imageRect.width, objectDef.imageRect.height,
-        object.x + imageX, object.y + imageY,
-        imageW, imageH)
+    if (image)
+        state.ctx.drawImage(
+            image.element,
+            objectDef.imageRect.x, objectDef.imageRect.y,
+            objectDef.imageRect.width, objectDef.imageRect.height,
+            object.x + imageX, object.y + imageY,
+            imageW, imageH)
 
     if (hovering)
     {
@@ -279,12 +286,13 @@ function renderObject(
                     state.ctx.save()
                     state.ctx.globalAlpha = 0.5
                     
-                    state.ctx.drawImage(
-                        image.element,
-                        objectDef.imageRect.x, objectDef.imageRect.y,
-                        objectDef.imageRect.width, objectDef.imageRect.height,
-                        visProp.value.x + imageX, visProp.value.y + imageY,
-                        imageW, imageH)
+                    if (image)
+                        state.ctx.drawImage(
+                            image.element,
+                            objectDef.imageRect.x, objectDef.imageRect.y,
+                            objectDef.imageRect.width, objectDef.imageRect.height,
+                            visProp.value.x + imageX, visProp.value.y + imageY,
+                            imageW, imageH)
 
                     state.ctx.restore()
                 }

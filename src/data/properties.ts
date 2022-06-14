@@ -424,7 +424,7 @@ export function getDefsIntersection(defs: DefProperties[]): DefProperties
     
     const result: DefProperties = []
 
-    for (let aField = 0; aField < defs.length; aField++)
+    for (let aField = 0; aField < defs[0].length; aField++)
     {
         const field = defs[0][aField]
 
@@ -438,4 +438,178 @@ export function getDefsIntersection(defs: DefProperties[]): DefProperties
     }
 
     return result
+}
+
+
+export function serializeValues(
+    fields: DefProperties,
+    values: PropertyValues)
+    : PropertyValues
+{
+    return values
+}
+
+
+export function deserializeValues(
+    fields: DefProperties,
+    serValues: PropertyValues)
+    : PropertyValues
+{
+    const values: PropertyValues = {}
+
+    for (const field of fields)
+    {
+        values[field.id] = deserializeValue(
+            field,
+            serValues[field.id])
+    }
+
+    return values
+}
+
+
+export function deserializeValue(
+    field: DefField,
+    serValue: FieldValue)
+    : FieldValue
+{
+    switch (field.type)
+    {
+        case "bool":
+        {
+            if (typeof serValue === "boolean")
+                return serValue as boolean
+
+            break
+        }
+        
+        case "string":
+        {
+            if (typeof serValue === "string")
+                return serValue as string
+
+            break
+        }
+
+        case "number":
+        {
+            if (typeof serValue === "number" && isFinite(serValue))
+                return serValue as number
+
+            break
+        }
+
+        case "point":
+        {
+            if (typeof serValue === "object" &&
+                !!serValue &&
+                "x" in serValue &&
+                "y" in serValue &&
+                typeof serValue.x === "number" &&
+                typeof serValue.y === "number" &&
+                isFinite(serValue.x) &&
+                isFinite(serValue.y))
+            {
+                const point: FieldValuePoint = {
+                    x: serValue.x,
+                    y: serValue.y,
+                }
+                return point
+            }
+            break
+        }
+
+        case "rect":
+        {
+            if (typeof serValue === "object" &&
+                !!serValue &&
+                "x" in serValue &&
+                "y" in serValue &&
+                "width" in serValue &&
+                "height" in serValue &&
+                typeof serValue.x === "number" &&
+                typeof serValue.y === "number" &&
+                typeof serValue.width === "number" &&
+                typeof serValue.height === "number" &&
+                isFinite(serValue.x) &&
+                isFinite(serValue.y) &&
+                isFinite(serValue.width) &&
+                isFinite(serValue.height))
+            {
+                const rect: FieldValueRect = {
+                    x: serValue.x,
+                    y: serValue.y,
+                    width: serValue.width,
+                    height: serValue.height,
+                }
+                return rect
+            }
+            break
+        }
+
+        case "choice":
+        {
+            if (typeof serValue === "string" &&
+                field.choices.some(c => c === serValue))
+            {
+                return serValue as FieldValueChoice
+            }
+            break
+        }
+
+        case "struct":
+        {
+            if (typeof serValue === "object" &&
+                !!serValue)
+            {
+                const subvalues = makeDefaultValueOfField(field) as FieldValueStruct
+            
+                for (const subfield of field.fields)
+                {
+                    subvalues[subfield.id] = deserializeValue(
+                        subfield,
+                        (serValue as FieldValueStruct)[subfield.id])
+                }
+
+                return subvalues
+            }
+            break
+        }
+
+        case "enum":
+        {
+            if (typeof serValue === "object" &&
+                !!serValue &&
+                "variantId" in serValue &&
+                "value" in serValue &&
+                typeof serValue.variantId === "string")
+            {
+                const variantField = field.variants.find(v => v.id === serValue.variantId)
+                if (variantField)
+                {
+                    const enumValue: FieldValueEnum = {
+                        variantId: serValue.variantId,
+                        value: deserializeValue(variantField, serValue.value)
+                    }
+                    return enumValue
+                }
+            }
+            break
+        }
+
+        case "list":
+        {
+            if (Array.isArray(serValue))
+            {
+                const list: FieldValueList = []
+                for (let i = 0; i < serValue.length; i++)
+                    list[i] = deserializeValue(field.element, serValue[i])
+
+                return list
+            }
+            break
+        }
+    }
+    
+    return makeNewValue(field)
 }

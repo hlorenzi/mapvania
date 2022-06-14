@@ -63,7 +63,7 @@ export function Input(props: {
 {
     const inputRef = React.useRef<HTMLInputElement>(null)
 
-    const [needsRefresh, setNeedsRefresh] = React.useState(false)
+    const [needsRefresh, setNeedsRefresh] = React.useState(0)
 
     const propValue = props.value !== undefined ? props.value.toString() : ""
 
@@ -74,8 +74,10 @@ export function Input(props: {
 
     const onChange = (ev: any) =>
     {
-        //console.log("onChange")
-        const newValue: string = ev.target.value
+        const newValue = ev.target.value as string
+        if (newValue === value)
+            return
+        
         setValue(newValue)
 
         if (props.onChange && !props.onlyOnBlur)
@@ -92,14 +94,16 @@ export function Input(props: {
 
     const onBlur = (ev: any) =>
     {
-        //console.log("onBlur")
-        const newValue = ev.target.value
+        setNeedsRefresh(r => r + 1)
+
+        const newValue = ev.target.value as string
+        if (newValue === value)
+            return
+        
         setValue(newValue)
 
         if (props.onChange)
             props.onChange(newValue)
-
-        setNeedsRefresh(!needsRefresh)
     }
 
 
@@ -113,13 +117,13 @@ export function Input(props: {
         
         const hasFocus =
             inputRef.current && document.activeElement === inputRef.current
-            
-        //console.log(hasFocus, value, propValue.toString())
+        
+        //console.log(hasFocus, value, propValue)
     
-        if (props.onChange && !hasFocus && propValue.toString() != value)
-            setValue(propValue.toString())
+        if (!hasFocus)
+            setValue(propValue)
 
-    }, [inputRef.current, propValue, needsRefresh])
+    }, [inputRef.current, value, propValue, needsRefresh])
 
 
     return <StyledInput

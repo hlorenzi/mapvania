@@ -4,6 +4,8 @@ import * as IndexedDBKeyVal from "idb-keyval"
 
 
 export const DIRECTORY_SEPARATOR = "/"
+export const DEFS_EXTENSION = ".defs.json"
+export const MAP_EXTENSION = ".map.json"
 
 
 export interface Global
@@ -43,6 +45,18 @@ export function makeNew(refreshToken: RefreshToken): Global
             childFiles: [],
         }
     }
+}
+
+
+export function stringify(obj: any): string
+{
+    return JSON.stringify(obj, undefined, 2)
+}
+
+
+export function parse(text: string): any
+{
+    return JSON.parse(text)
 }
 
 
@@ -160,9 +174,13 @@ export async function findFile(rootRelativePath: string)
 }
 
 
-export async function findNearestDefsFile(startingFromRootRelativePath: string)
+export async function findNearestDefsFile(
+    startingFromRootRelativePath: string)
+    : Promise<File | null>
 {
-    return findNearestFileRecursive(global.filesystem.root, f => f.name.endsWith(".mvdefs"))
+    return findNearestFileRecursive(
+        global.filesystem.root,
+        f => f.name.endsWith(DEFS_EXTENSION))
 }
 
 

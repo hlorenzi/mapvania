@@ -1,5 +1,7 @@
+import * as React from "react"
 import { RefreshToken } from "../util/refreshToken"
 import * as ID from "./id"
+import * as Images from "./images"
 import * as Properties from "./properties"
 import { global } from "../global"
 import * as MathUtils from "../util/mathUtils"
@@ -173,6 +175,12 @@ export function getTilesPerColumn(tileset: DefTileset)
 }
 
 
+export function getTotalTileNumber(tileset: DefTileset)
+{
+    return getTilesPerRow(tileset) * getTilesPerColumn(tileset)
+}
+
+
 export function getTileIndexForPixel(tileset: DefTileset, pos: { x: number, y: number }): number | undefined
 {
     const x = Math.floor((pos.x - tileset.gridOffsetX) / (tileset.gridCellWidth  + tileset.gridGapX))
@@ -213,4 +221,56 @@ export function getCellForTileIndex(tileset: DefTileset, tileIndex: number): { x
     const y = Math.floor(tileIndex / tilesPerRow)
 
     return { x, y }
+}
+
+
+export function getTilesetDefIconElement(tilesetDef: DefTileset): React.ReactNode | null
+{
+    const image = Images.getImageLazy(tilesetDef.imageSrc)
+    if (!image)
+        return <span/>
+
+    return <div style={{
+        objectFit: "contain",
+        display: "inline-block",
+    }}>
+        <div style={{
+            width: Math.min(64, tilesetDef.width) + "px",
+            height: Math.min(64, tilesetDef.height) + "px",
+            overflow: "hidden",
+        }}>
+            <img
+                src={ image.element.src }
+                style={{
+                    marginLeft: (-tilesetDef.gridOffsetX) + "px",
+                    marginTop: (-tilesetDef.gridOffsetY) + "px",
+            }}/>
+        </div>
+    </div>
+}
+
+
+export function getObjectDefIconElement(objectDef: DefObject): React.ReactNode | null
+{
+    const image = Images.getImageLazy(objectDef.imageSrc)
+    if (!image)
+        return <span/>
+
+    return <div style={{
+        objectFit: "contain",
+        display: "inline-block",
+    }}>
+        <div style={{
+            width: Math.min(64, objectDef.imageRect.width) + "px",
+            height: Math.min(64, objectDef.imageRect.height) + "px",
+            overflow: "hidden",
+        }}>
+            <img
+                src={ image.element.src }
+                style={{
+                    marginLeft: (-objectDef.imageRect.x) + "px",
+                    marginTop: (-objectDef.imageRect.y) + "px",
+            }}/>
+        </div>
+    </div>
 }

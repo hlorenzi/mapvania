@@ -5,6 +5,7 @@ import * as Filesystem from "./filesystem"
 import * as ID from "./id"
 import * as Defs from "./defs"
 import * as Map from "./map"
+import * as MapSerialization from "./map_serialization"
 import * as MapEditor from "../mapEditor"
 
 
@@ -61,6 +62,7 @@ export interface EditorMap extends EditorCommon
 {
     type: "map"
     defs: Defs.Defs
+    defsRootRelativePath: string
     map: Map.Map
     lastSavedMap: Map.Map
     mapEditor: MapEditor.State
@@ -129,10 +131,20 @@ export function openEditor(editor: Editor)
 
 export function openEditorByFile(rootRelativePath: string)
 {
-    if (rootRelativePath.endsWith(".mvdefs"))
+    const alreadyOpenedEditorIndex = global.editors.editors
+        .findIndex(e => e.rootRelativePath == rootRelativePath)
+
+    if (alreadyOpenedEditorIndex >= 0)
+    {
+        global.editors.currentEditor = alreadyOpenedEditorIndex
+        global.editors.refreshToken.commit()
+        return
+    }
+
+    if (rootRelativePath.endsWith(Filesystem.DEFS_EXTENSION))
         openEditorDefs(rootRelativePath)
 
-    else
+    else if (rootRelativePath.endsWith(Filesystem.MAP_EXTENSION))
         openEditorMap(rootRelativePath)
 }
 
@@ -146,6 +158,40 @@ export function isEditorUnsaved(editor: Editor)
         return editor.map !== editor.lastSavedMap
 
     return false
+}
+
+
+export function isAnyEditorUnsaved()
+{
+    return global.editors.editors.some(e => isEditorUnsaved(e))
+}
+
+
+export function askAndCloseEditor(index: number)
+{
+    if (isEditorUnsaved(global.editors.editors[index]))
+    {
+        if (!window.confirm("Lose unsaved changes?"))
+            return
+    }
+
+    global.editors.editors.splice(index, 1)
+
+    if (global.editors.currentEditor > index)
+        global.editors.currentEditor -= 1
+
+    global.editors.currentEditor = Math.min(
+        global.editors.currentEditor,
+        global.editors.editors.length - 1)
+
+    for (let i = 0; i < global.editors.editors.length; i++)
+    {
+        const editor = global.editors.editors[i]
+        if (editor.type === "map")
+            editor.mapEditor.editorIndex = i
+    }
+
+    global.editors.refreshToken.commit()
 }
 
 
@@ -166,6 +212,7 @@ export async function openEditorDefs(rootRelativePath: string)
     }
     catch (e)
     {
+        console.error(e)
         window.alert("An error occurred reading the file!\n\n" + e)
     }
 }
@@ -186,10 +233,31 @@ export async function saveEditorDefs(editorIndex: number)
         await writable.close()
 
         editorData.lastSavedDefs = editorData.defs
+
+        // Refresh maps for open editors
+        for (const editor of global.editors.editors)
+        {
+            if (editor.type === "map" &&
+                editor.defsRootRelativePath === editorData.rootRelativePath)
+            {
+                const serializedMap = MapSerialization.serialize(
+                    editor.defs,
+                    editor.map)
+
+                const reloadedMap = MapSerialization.deserialize(
+                    editorData.defs,
+                    serializedMap)
+
+                editor.defs = editorData.defs
+                editor.map = reloadedMap
+            }
+        }
+
         global.editors.refreshToken.commit()
     }
     catch (e)
     {
+        console.error(e)
         window.alert("An error occurred saving the file!\n\n" + e)
     }
 }
@@ -209,14 +277,16 @@ export async function openEditorMap(rootRelativePath: string)
         const defsText = await Filesystem.readFileText(defsFile.rootRelativePath)
         const defs = Defs.parse(defsText)
 
-        const mapText = await Filesystem.readFileText(rootRelativePath)
-        const map = Map.parse(mapText)
+        const serMapText = await Filesystem.readFileText(rootRelativePath)
+        const serMap = Filesystem.parse(serMapText) as MapSerialization.SerializedMap
+        const map = MapSerialization.deserialize(defs, serMap)
 
         const editor: EditorMap = {
             type: "map",
             name: rootRelativePath,
             rootRelativePath,
             defs,
+            defsRootRelativePath: defsFile.rootRelativePath,
             map,
             lastSavedMap: map,
             mapEditor: null!,
@@ -231,6 +301,7 @@ export async function openEditorMap(rootRelativePath: string)
     }
     catch (e)
     {
+        console.error(e)
         window.alert("An error occurred reading the file!\n\n" + e)
     }
 }
@@ -242,12 +313,13 @@ export async function saveEditorMap(editorIndex: number)
     {
         const editorData = global.editors.editors[editorIndex] as EditorMap
 
-        const mapData = Map.stringify(editorData.map)
+        const serMap = MapSerialization.serialize(editorData.defs, editorData.map)
+        const serMapText = Filesystem.stringify(serMap)
 
         const file = await Filesystem.findFile(editorData.rootRelativePath)
 
         const writable = await (file.handle as any).createWritable()
-        await writable.write(mapData)
+        await writable.write(serMapText)
         await writable.close()
 
         editorData.lastSavedMap = editorData.map
@@ -255,6 +327,7 @@ export async function saveEditorMap(editorIndex: number)
     }
     catch (e)
     {
+        console.error(e)
         window.alert("An error occurred saving the file!\n\n" + e)
     }
 }

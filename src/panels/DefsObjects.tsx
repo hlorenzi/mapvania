@@ -92,6 +92,38 @@ export function DefsObjects(props: {
     }
 
 
+    const moveUp = () =>
+    {
+        if (curObjectIndex <= 0)
+            return
+            
+        modify({
+            objectDefs: [
+                ...defs.objectDefs.slice(0, curObjectIndex - 1),
+                curObject!,
+                defs.objectDefs[curObjectIndex - 1],
+                ...defs.objectDefs.slice(curObjectIndex + 1),
+            ],
+        })
+    }
+
+
+    const moveDown = () =>
+    {
+        if (curObjectIndex >= defs.objectDefs.length - 1)
+            return
+
+        modify({
+            objectDefs: [
+                ...defs.objectDefs.slice(0, curObjectIndex),
+                defs.objectDefs[curObjectIndex + 1],
+                curObject!,
+                ...defs.objectDefs.slice(curObjectIndex + 2),
+            ],
+        })
+    }
+
+
     const loadImage = async () =>
     {
         const imageRootRelativePath = await Filesystem.showImagePicker()
@@ -212,7 +244,8 @@ export function DefsObjects(props: {
             onChange={ setCurObjectId }
             items={ defs.objectDefs.map(objectDef => ({
                 id: objectDef.id,
-                label: "🍎 " + objectDef.name,
+                label: objectDef.name,
+                icon: Defs.getObjectDefIconElement(objectDef),
             }))}
         />
 
@@ -243,6 +276,16 @@ export function DefsObjects(props: {
                 </UI.Cell>
                 
                 <UI.Cell span={ 2 } justifyEnd>
+                    <UI.Button
+                        label="🔼"
+                        onClick={ moveUp }
+                    />
+
+                    <UI.Button
+                        label="🔽"
+                        onClick={ moveDown }
+                    />
+
                     <UI.Button
                         label="❌ Delete"
                         onClick={ deleteCurObject }
@@ -288,17 +331,6 @@ export function DefsObjects(props: {
                         onChangeNumber={ (value) => modifyObject({ imageRect: { height: value } }) }
                     />
                     { " px (size)" }
-                </UI.Cell>
-
-                <UI.Cell justifyEnd>
-                    Resizable
-                </UI.Cell>
-
-                <UI.Cell>
-                    <UI.Checkbox
-                        value={ curObject.resizeable }
-                        onChange={ (value) => modifyObject({ resizeable: value }) }
-                    />
                 </UI.Cell>
 
                 <UI.Cell span={ 2 } divider/>
@@ -352,6 +384,17 @@ export function DefsObjects(props: {
                         onChangeNumber={ (value) => modifyObject({ interactionRect: { height: value } }) }
                     />
                     { " px (size)" }
+                </UI.Cell>
+
+                <UI.Cell justifyEnd>
+                    Resizable
+                </UI.Cell>
+
+                <UI.Cell>
+                    <UI.Checkbox
+                        value={ curObject.resizeable }
+                        onChange={ (value) => modifyObject({ resizeable: value }) }
+                    />
                 </UI.Cell>
 
                 <UI.Cell span={ 2 } divider/>
