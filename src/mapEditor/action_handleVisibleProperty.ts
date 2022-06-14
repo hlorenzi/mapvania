@@ -11,6 +11,8 @@ import * as MathUtils from "../util/mathUtils"
 export function setupHandleVisibleProperty(
     state: MapEditor.State,
     visProp: MapEditor.ObjectVisibleProperty,
+    sideX: number,
+    sideY: number,
     listPrevDirection: MathUtils.Point | null,
     denyAddingToList?: boolean)
 {
@@ -89,7 +91,11 @@ export function setupHandleVisibleProperty(
                     })
 
                 visProp.propertyId = newFullId
-                setupHandleVisibleProperty(state, visProp, null, denyAddingToList)
+                setupHandleVisibleProperty(
+                    state,
+                    visProp,
+                    sideX, sideY,
+                    null, denyAddingToList)
             }
         }
 
@@ -107,8 +113,63 @@ export function setupHandleVisibleProperty(
 
             if (!state.toolMoveWithoutSnap)
             {
-                newValue.x = MathUtils.snap(newValue.x, layerDef.gridCellWidth)
-                newValue.y = MathUtils.snap(newValue.y, layerDef.gridCellHeight)
+                newValue.x = MathUtils.snapRound(newValue.x, layerDef.gridCellWidth)
+                newValue.y = MathUtils.snapRound(newValue.y, layerDef.gridCellHeight)
+            }
+    
+            editor.map = Map.setRoomObject(
+                editor.map,
+                state.roomId,
+                global.editors.mapEditing.layerDefId,
+                visProp.objectId,
+                {
+                    ...object,
+                    properties: Properties.setValueByFullId(
+                        object.properties,
+                        visProp.propertyId,
+                        newValue) as any
+                })
+        }
+
+        else if (visProp.value.type === "rect" &&
+            (!state.toolAddToList || denyAddingToList))
+        {
+            let newX1 = (originalValue as any)?.x
+            let newX2 = newX1 + (originalValue as any)?.width
+            let newY1 = (originalValue as any)?.y
+            let newY2 = newY1 + (originalValue as any)?.height
+
+            if (sideX < 0)
+                newX1 = Math.round(newX1 + state.mouseDownDelta.pos.x)
+            else if (sideX > 0)
+                newX2 = Math.round(newX2 + state.mouseDownDelta.pos.x)
+
+            if (sideY < 0)
+                newY1 = Math.round(newY1 + state.mouseDownDelta.pos.y)
+            else if (sideY > 0)
+                newY2 = Math.round(newY2 + state.mouseDownDelta.pos.y)
+
+            if (!state.toolMoveWithoutSnap)
+            {
+                if (sideX < 0)
+                    newX1 = MathUtils.snapRound(newX1, layerDef.gridCellWidth)
+                else if (sideX > 0)
+                    newX2 = MathUtils.snapRound(newX2, layerDef.gridCellWidth)
+                    
+                if (sideY < 0)
+                    newY1 = MathUtils.snapRound(newY1, layerDef.gridCellHeight)
+                else if (sideY > 0)
+                    newY2 = MathUtils.snapRound(newY2, layerDef.gridCellHeight)
+            }
+
+            const newX = Math.min(newX1, newX2)
+            const newY = Math.min(newY1, newY2)
+
+            const newValue: MathUtils.RectWH = {
+                x: newX,
+                y: newY,
+                width: Math.max(newX1, newX2) - newX,
+                height: Math.max(newY1, newY2) - newY,
             }
     
             editor.map = Map.setRoomObject(

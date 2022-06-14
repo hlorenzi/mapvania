@@ -254,8 +254,32 @@ export function getInteractionHandles(state: State)
                             height: 12 / state.camera.zoom,
 
                             visible: false,
-                            onMouseDown: (s) => MapEditor.setupHandleVisibleProperty(s, visProp, prevDirection),
+                            onMouseDown: (s) => MapEditor.setupHandleVisibleProperty(s, visProp, 0, 0, prevDirection),
                         })
+                    }
+
+                    else if (visProp.value.type === "rect")
+                    {
+                        const rectX1 = room.x + visProp.value.x
+                        const rectY1 = room.y + visProp.value.y
+                        const rectX2 = room.x + visProp.value.x + visProp.value.width
+                        const rectY2 = room.y + visProp.value.y + visProp.value.height
+                
+                        for (let i = 0; i < sidesX.length; i++)
+                        {
+                            if (sidesX[i] == 0 || sidesY[i] == 0)
+                                continue
+                            
+                            handles.push({
+                                x: sidesX[i] == -1 ? rectX1 : rectX2,
+                                y: sidesY[i] == -1 ? rectY1 : rectY2,
+                                width: 12 / state.camera.zoom,
+                                height: 12 / state.camera.zoom,
+    
+                                visible: false,
+                                onMouseDown: (s) => MapEditor.setupHandleVisibleProperty(s, visProp, sidesX[i], sidesY[i], prevDirection),
+                            })
+                        }
                     }
                 }
             }
@@ -344,7 +368,7 @@ export function getObjectVisiblePropertiesRecursive(
         result.push({
             objectId: object.id,
             propertyId: fieldId,
-            color: "#ffcc00",
+            color: "#ff8800",
             showGhost: false,
             value: {
                 type: "rect",

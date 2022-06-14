@@ -279,60 +279,94 @@ function renderObject(
 
         for (const visProp of visibleProperties)
         {
+            if (visProp.showGhost)
+            {
+                state.ctx.save()
+                state.ctx.globalAlpha = 0.5
+                
+                if (image)
+                    state.ctx.drawImage(
+                        image.element,
+                        objectDef.imageRect.x, objectDef.imageRect.y,
+                        objectDef.imageRect.width, objectDef.imageRect.height,
+                        visProp.value.x + imageX, visProp.value.y + imageY,
+                        imageW, imageH)
+
+                state.ctx.restore()
+            }
+
+            if (visProp.linksToIndexAsPath !== null)
+            {
+                state.ctx.save()
+                state.ctx.strokeStyle = visProp.color
+                state.ctx.lineWidth = handleSize / 4
+                state.ctx.beginPath()
+                state.ctx.moveTo(
+                    visibleProperties[visProp.linksToIndexAsPath].value.x,
+                    visibleProperties[visProp.linksToIndexAsPath].value.y)
+                state.ctx.lineTo(
+                    visProp.value.x,
+                    visProp.value.y)
+                state.ctx.stroke()
+                state.ctx.restore()
+            }
+            else
+            {
+                state.ctx.save()
+                state.ctx.strokeStyle = visProp.color
+                state.ctx.lineWidth = handleSize / 6
+                state.ctx.setLineDash([handleSize / 2, handleSize / 2])
+                state.ctx.beginPath()
+                state.ctx.moveTo(
+                    object.x,
+                    object.y)
+                state.ctx.lineTo(
+                    visProp.value.x,
+                    visProp.value.y)
+                state.ctx.stroke()
+                state.ctx.restore()
+            }
+
             if (visProp.value.type === "point")
             {
-                if (visProp.showGhost)
-                {
-                    state.ctx.save()
-                    state.ctx.globalAlpha = 0.5
-                    
-                    if (image)
-                        state.ctx.drawImage(
-                            image.element,
-                            objectDef.imageRect.x, objectDef.imageRect.y,
-                            objectDef.imageRect.width, objectDef.imageRect.height,
-                            visProp.value.x + imageX, visProp.value.y + imageY,
-                            imageW, imageH)
-
-                    state.ctx.restore()
-                }
-
-                if (visProp.linksToIndexAsPath !== null)
-                {
-                    state.ctx.save()
-                    state.ctx.strokeStyle = visProp.color
-                    state.ctx.lineWidth = handleSize / 4
-                    state.ctx.beginPath()
-                    state.ctx.moveTo(
-                        visibleProperties[visProp.linksToIndexAsPath].value.x,
-                        visibleProperties[visProp.linksToIndexAsPath].value.y)
-                    state.ctx.lineTo(
-                        visProp.value.x,
-                        visProp.value.y)
-                    state.ctx.stroke()
-                    state.ctx.restore()
-                }
-                else
-                {
-                    state.ctx.save()
-                    state.ctx.strokeStyle = visProp.color
-                    state.ctx.lineWidth = handleSize / 6
-                    state.ctx.setLineDash([handleSize / 2, handleSize / 2])
-                    state.ctx.beginPath()
-                    state.ctx.moveTo(
-                        object.x,
-                        object.y)
-                    state.ctx.lineTo(
-                        visProp.value.x,
-                        visProp.value.y)
-                    state.ctx.stroke()
-                    state.ctx.restore()
-                }
-
                 state.ctx.fillStyle = visProp.color
                 state.ctx.fillRect(
                     visProp.value.x - handleSize / 2,
                     visProp.value.y - handleSize / 2,
+                    handleSize, handleSize)
+            }
+            else if (visProp.value.type === "rect")
+            {
+                state.ctx.save()
+                state.ctx.strokeStyle = visProp.color
+                state.ctx.lineWidth = handleSize / 4
+                state.ctx.strokeRect(
+                    visProp.value.x,
+                    visProp.value.y,
+                    visProp.value.width,
+                    visProp.value.height)
+                state.ctx.restore()
+
+                state.ctx.fillStyle = visProp.color
+                
+                state.ctx.fillRect(
+                    visProp.value.x - handleSize / 2,
+                    visProp.value.y - handleSize / 2,
+                    handleSize, handleSize)
+                    
+                state.ctx.fillRect(
+                    visProp.value.x + visProp.value.width - handleSize / 2,
+                    visProp.value.y - handleSize / 2,
+                    handleSize, handleSize)
+                    
+                state.ctx.fillRect(
+                    visProp.value.x + visProp.value.width - handleSize / 2,
+                    visProp.value.y + visProp.value.height - handleSize / 2,
+                    handleSize, handleSize)
+                    
+                state.ctx.fillRect(
+                    visProp.value.x - handleSize / 2,
+                    visProp.value.y + visProp.value.height - handleSize / 2,
                     handleSize, handleSize)
             }
         }
