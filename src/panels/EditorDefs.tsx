@@ -7,6 +7,7 @@ import { global } from "../global"
 import { DefsGeneral } from "./DefsGeneral"
 import { DefsLayers } from "./DefsLayers"
 import { DefsTilesets } from "./DefsTilesets"
+import { DefsTileAttributes } from "./DefsTileAttributes"
 import { DefsObjects } from "./DefsObjects"
 
 
@@ -29,6 +30,7 @@ export function EditorDefs(props: {
                         "General",
                         "Layers",
                         "Tilesets",
+                        "Tile Attributes",
                         "Objects",
                 ]}/>
             </UI.Cell>
@@ -52,6 +54,12 @@ export function EditorDefs(props: {
             }
 
             { tab === 3 &&
+                <DefsTileAttributes
+                    editorIndex={ props.editorIndex }
+                />
+            }
+
+            { tab === 4 &&
                 <DefsObjects
                     editorIndex={ props.editorIndex }
                 />

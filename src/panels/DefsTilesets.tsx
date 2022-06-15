@@ -23,10 +23,12 @@ export function DefsTilesets(props: {
     }
 
     const [curTilesetId, setCurTilesetId] = React.useState<ID.ID>("")
+    const [curTileAttrbId, setCurTileAttrbId] = React.useState<ID.ID>("")
+
     const curTilesetIndex = defs.tilesetDefs.findIndex(t => t.id === curTilesetId)
     const curTileset = defs.tilesetDefs.find(t => t.id === curTilesetId)
     const curTilesetImg = Images.getImageLazy(curTileset?.imageSrc ?? "")
-
+    
 
     const modifyTileset = (tilesetDef: DeepAssignable<Defs.DefTileset>) =>
     {
@@ -54,6 +56,7 @@ export function DefsTilesets(props: {
             gridGapY: 0,
             gridOffsetX: 0,
             gridOffsetY: 0,
+            tileAttributes: [],
         }
 
         modify(
@@ -138,7 +141,13 @@ export function DefsTilesets(props: {
         if (!curTileset || !curTilesetImg)
             return
 
+        const attrbDef = Defs.getTileAttributeDef(defs, curTileAttrbId)
+
         ctx.strokeStyle = "#ccc"
+        
+        ctx.textAlign = "center"
+        ctx.textBaseline = "middle"
+        ctx.font = "900 " + (curTileset.gridCellHeight * 0.75) + "px system-ui"
         
         for (let x = curTileset.gridOffsetX;
             x + curTileset.gridCellWidth <= curTilesetImg.width;
@@ -148,11 +157,101 @@ export function DefsTilesets(props: {
                 y + curTileset.gridCellHeight <= curTilesetImg.height;
                 y += curTileset.gridCellHeight + curTileset.gridGapY)
             {
-                ctx.strokeRect(x, y, curTileset.gridCellWidth, curTileset.gridCellHeight)
+                ctx.strokeRect(
+                    x, y,
+                    curTileset.gridCellWidth, curTileset.gridCellHeight)
+            
+                if (attrbDef)
+                {
+                    const tileIndex = Defs.getTileIndexForPixel(
+                        curTileset,
+                        { x, y })
+
+                    if (tileIndex === undefined)
+                        continue
+
+                    const attrbs = Defs.getTileAttributesForTile(
+                        curTileset.tileAttributes,
+                        tileIndex)
+
+                    if (attrbs.some(a => a === curTileAttrbId))
+                    {
+                        ctx.fillStyle = attrbDef.color
+                        ctx.globalAlpha = 0.25
+                        ctx.fillRect(
+                            x, y,
+                            curTileset.gridCellWidth, curTileset.gridCellHeight)
+                        ctx.globalAlpha = 1
+
+                        ctx.fillStyle = "#000"
+                        ctx.fillText(
+                            attrbDef.label,
+                            x + curTileset.gridCellWidth / 2 + 1,
+                            y + curTileset.gridCellHeight / 2 + 1,
+                            curTileset.gridCellWidth * 0.95)
+
+                        ctx.fillStyle = attrbDef.color
+                        ctx.fillText(
+                            attrbDef.label,
+                            x + curTileset.gridCellWidth / 2,
+                            y + curTileset.gridCellHeight / 2,
+                            curTileset.gridCellWidth * 0.95)
+                    }
+                }
             }
         }
 
-    }, [curTileset, curTilesetImg])
+    }, [curTileset, curTilesetImg, curTileAttrbId])
+
+
+    const onMouseDown = (state: UI.ImageViewState) =>
+    {
+        if (!curTileset)
+            return
+        
+        let erasing: boolean | null = null
+
+        let curAttrbs = curTileset.tileAttributes
+
+        state.onMouseMove = (state: UI.ImageViewState) =>
+        {
+            if (!curTileset)
+                return
+            
+            const tileIndex = Defs.getTileIndexForPixel(
+                curTileset,
+                state.mouse.pos)
+
+            if (tileIndex === undefined)
+                return
+
+            const attrbs = new Set(Defs.getTileAttributesForTile(
+                curAttrbs,
+                tileIndex))
+
+            if (erasing === null)
+                erasing = attrbs.has(curTileAttrbId)
+
+            if (erasing)
+                attrbs.delete(curTileAttrbId)
+            else
+                attrbs.add(curTileAttrbId)
+                
+            curAttrbs = Defs.setTileAttributesForTile(
+                curAttrbs,
+                tileIndex,
+                [...attrbs])
+
+            modifyTileset({
+                tileAttributes: curAttrbs,
+            })
+        }
+
+        state.onMouseUp = () =>
+        {
+            global.editors.refreshToken.commit()
+        }
+    }
 
 
     return <UI.Grid template="15em 25em 1fr" templateRows="auto 1fr" fullHeight alignStart>
@@ -178,7 +277,7 @@ export function DefsTilesets(props: {
             }))}
         />
 
-        { curTileset && <UI.Grid template="1fr" templateRows="1fr" fullHeight key={ curTileset.id }>
+        { curTileset && <UI.Grid template="1fr" templateRows="auto 1fr" fullHeight key={ curTileset.id }>
             
             <UI.Grid template="auto auto">
 
@@ -285,6 +384,16 @@ export function DefsTilesets(props: {
 
             </UI.Grid>
 
+            <UI.List
+                value={ curTileAttrbId }
+                onChange={ setCurTileAttrbId }
+                items={ defs.tileAttributeDefs.map(tileAttrbDef => ({
+                    id: tileAttrbDef.id,
+                    label: tileAttrbDef.name,
+                    icon: Defs.getTileAttributeDefIconElement(tileAttrbDef),
+                }))}
+            />
+
         </UI.Grid> }
 
         <UI.Cell fullHeight>
@@ -292,6 +401,7 @@ export function DefsTilesets(props: {
                 <UI.ImageView
                     key={ curTilesetId }
                     imageData={ curTilesetImg?.element }
+                    onMouseDown={ onMouseDown }
                     onRender={ renderTilesetImage }
                 />
             }

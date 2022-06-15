@@ -13,6 +13,7 @@ export interface Defs
     generalDefs: DefGeneral
     layerDefs: DefLayer[]
     tilesetDefs: DefTileset[]
+    tileAttributeDefs: DefTileAttribute[]
     objectDefs: DefObject[]
 }
 
@@ -69,6 +70,18 @@ export interface DefTileset
 
     gridOffsetX: number
     gridOffsetY: number
+
+    tileAttributes: ID.ID[][]
+}
+
+
+export interface DefTileAttribute
+{
+    id: ID.ID
+    name: string
+
+    label: string
+    color: string
 }
 
 
@@ -98,6 +111,7 @@ export function makeNew(): Defs
         },
         layerDefs: [],
         tilesetDefs: [],
+        tileAttributeDefs: [],
         objectDefs: [],
     }
 }
@@ -144,6 +158,12 @@ export function getLayerDef(defs: Defs, layerDefId: ID.ID)
 export function getTileset(defs: Defs, tilesetDefId: ID.ID)
 {
     return defs.tilesetDefs.find(t => t.id === tilesetDefId)
+}
+
+
+export function getTileAttributeDef(defs: Defs, tileAttributeDefId: ID.ID)
+{
+    return defs.tileAttributeDefs.find(a => a.id === tileAttributeDefId)
 }
 
 
@@ -224,6 +244,33 @@ export function getCellForTileIndex(tileset: DefTileset, tileIndex: number): { x
 }
 
 
+export function getTileAttributesForTile(
+    tileAttributes: DefTileset["tileAttributes"],
+    tileIndex: number)
+    : ID.ID[]
+{
+    if (tileIndex < 0 || tileIndex >= tileAttributes.length)
+        return []
+
+    return tileAttributes[tileIndex]
+}
+
+
+export function setTileAttributesForTile(
+    tileAttributes: DefTileset["tileAttributes"],
+    tileIndex: number,
+    attributes: ID.ID[])
+    : DefTileset["tileAttributes"]
+{
+    const newTileAttributes = [...tileAttributes]
+    while (tileIndex >= newTileAttributes.length)
+        newTileAttributes.push([])
+
+    newTileAttributes[tileIndex] = attributes
+    return newTileAttributes
+}
+
+
 export function getTilesetDefIconElement(tilesetDef: DefTileset): React.ReactNode | null
 {
     const image = Images.getImageLazy(tilesetDef.imageSrc)
@@ -246,6 +293,18 @@ export function getTilesetDefIconElement(tilesetDef: DefTileset): React.ReactNod
                     marginTop: (-tilesetDef.gridOffsetY) + "px",
             }}/>
         </div>
+    </div>
+}
+
+
+export function getTileAttributeDefIconElement(tileAttributeDef: DefTileAttribute): React.ReactNode | null
+{
+    return <div style={{
+        marginRight: "0.5em",
+        display: "inline-block",
+        color: tileAttributeDef.color,
+    }}>
+        { tileAttributeDef.label }
     </div>
 }
 

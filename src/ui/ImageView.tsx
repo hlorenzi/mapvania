@@ -6,6 +6,7 @@ export interface ImageViewState
 {
     onMouseMove: null | ((state: ImageViewState) => void),
     onMouseUp: null | ((state: ImageViewState) => void),
+    mouseDown: boolean,
     mouse: {
         posRaw: { x: number, y: number },
         pos: { x: number, y: number },
@@ -37,6 +38,7 @@ export function ImageView(props: {
     const state = React.useRef<ImageViewState>({
         onMouseMove: null,
         onMouseUp: null,
+        mouseDown: false,
         mouse: {
             posRaw: { x: 0, y: 0 },
             pos: { x: 0, y: 0 },
@@ -71,6 +73,8 @@ export function ImageView(props: {
             
             if (state.current.onMouseMove)
                 return
+
+            state.current.mouseDown = true
 
             state.current.mouseDownOrigin =
             {
@@ -140,6 +144,7 @@ export function ImageView(props: {
             if (state.current.onMouseUp)
                 state.current.onMouseUp(state.current)
 
+            state.current.mouseDown = false
             state.current.onMouseMove = null
             state.current.onMouseUp = null
         }
