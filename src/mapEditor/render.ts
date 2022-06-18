@@ -67,8 +67,8 @@ export function render(state: MapEditor.State)
         renderTileLayerBkg(state, defs, editingRoom, editingLayerDef)
         renderObjectLayerBkg(state, defs, editingRoom, editingLayerDef)
         renderRoom(state, defs, editingRoom, editingLayerDef)
-        renderTileLayerTools(state, defs, editingLayerDef)
-        renderObjectLayerTools(state, defs, editingLayerDef)
+        renderTileLayerForeground(state, defs, editingRoom, editingLayerDef)
+        renderObjectLayerForeground(state, defs, editingRoom, editingLayerDef)
         
         if (state.onRenderRoomTool)
         {
@@ -395,6 +395,9 @@ export function renderWorldLayerBkg(
 {
     if (editingLayerDef || global.editors.mapEditing.layerDefId !== Editors.LAYERDEF_ID_WORLD)
         return
+
+    if (global.editors.mapEditing.showGrid === "none")
+        return
         
     state.ctx.save()
 
@@ -500,39 +503,35 @@ export function renderTileLayerBkg(
 {
     if (!editingLayerDef || editingLayerDef.type !== "tile")
         return
-        
-    state.ctx.save()
 
-    // Draw dashed lines
-    state.ctx.strokeStyle = "#444"
-    state.ctx.lineDashOffset = 1
-    state.ctx.setLineDash([2, 2])
-
-    state.ctx.beginPath()
-    for (let x = editingLayerDef.gridCellWidth; x < room.width; x += editingLayerDef.gridCellWidth)
-    {
-        state.ctx.moveTo(x, 0)
-        state.ctx.lineTo(x, room.height)
-    }
-
-    for (let y = editingLayerDef.gridCellHeight; y < room.height; y += editingLayerDef.gridCellHeight)
-    {
-        state.ctx.moveTo(0, y)
-        state.ctx.lineTo(room.width, y)
-    }
-    state.ctx.stroke()
-
-    state.ctx.restore()
+    if (global.editors.mapEditing.showGrid === "background")
+        drawGrid(
+            state,
+            "#444",
+            0, 0,
+            room.width, room.height,
+            editingLayerDef.gridCellWidth,
+            editingLayerDef.gridCellHeight)
 }
 
 
-export function renderTileLayerTools(
+export function renderTileLayerForeground(
     state: MapEditor.State,
     defs: Defs.Defs,
+    room: Map.Room,
     editingLayerDef: Defs.DefLayer | undefined)
 {
     if (!editingLayerDef || editingLayerDef.type !== "tile")
         return
+
+    if (global.editors.mapEditing.showGrid === "foreground")
+        drawGrid(
+            state,
+            "#444",
+            0, 0,
+            room.width, room.height,
+            editingLayerDef.gridCellWidth,
+            editingLayerDef.gridCellHeight)
 
     if (global.editors.mapEditing.tileTool === "draw" &&
         !state.onMouseMove)
@@ -610,39 +609,35 @@ export function renderObjectLayerBkg(
     if (!editingLayerDef || editingLayerDef.type !== "object")
         return
         
-    state.ctx.save()
-
-    // Draw dashed lines
-    state.ctx.strokeStyle = "#444"
-    state.ctx.lineDashOffset = 1
-    state.ctx.setLineDash([2, 2])
-
-    state.ctx.beginPath()
-    for (let x = editingLayerDef.gridCellWidth; x < room.width; x += editingLayerDef.gridCellWidth)
-    {
-        state.ctx.moveTo(x, 0)
-        state.ctx.lineTo(x, room.height)
-    }
-
-    for (let y = editingLayerDef.gridCellHeight; y < room.height; y += editingLayerDef.gridCellHeight)
-    {
-        state.ctx.moveTo(0, y)
-        state.ctx.lineTo(room.width, y)
-    }
-    state.ctx.stroke()
-
-    state.ctx.restore()
+    if (global.editors.mapEditing.showGrid === "background")
+        drawGrid(
+            state,
+            "#444",
+            0, 0,
+            room.width, room.height,
+            editingLayerDef.gridCellWidth,
+            editingLayerDef.gridCellHeight)
 }
 
 
-export function renderObjectLayerTools(
+export function renderObjectLayerForeground(
     state: MapEditor.State,
     defs: Defs.Defs,
+    room: Map.Room,
     editingLayerDef: Defs.DefLayer | undefined)
 {
     if (!editingLayerDef || editingLayerDef.type !== "object")
         return
         
+    if (global.editors.mapEditing.showGrid === "foreground")
+        drawGrid(
+            state,
+            "#444",
+            0, 0,
+            room.width, room.height,
+            editingLayerDef.gridCellWidth,
+            editingLayerDef.gridCellHeight)
+            
     if (global.editors.mapEditing.tileTool === "draw" &&
         !state.onMouseMove)
     {
@@ -744,8 +739,7 @@ function drawImage(
     destX: number,
     destY: number,
     destW: number,
-    destH: number,
-)
+    destH: number)
 {
     // Use a margin to avoid artifacts between tiles
     const srcMargin = 0.01
@@ -761,4 +755,39 @@ function drawImage(
         destY + destMargin,
         destW - destMargin * 2,
         destH - destMargin * 2)
+}
+
+
+export function drawGrid(
+    state: MapEditor.State,
+    strokeColor: string,
+    x: number,
+    y: number,
+    width: number,
+    height: number,
+    gridCellWidth: number,
+    gridCellHeight: number)
+{
+    state.ctx.save()
+
+    // Draw dashed lines
+    state.ctx.strokeStyle = strokeColor
+    state.ctx.lineDashOffset = 1
+    state.ctx.setLineDash([2, 2])
+
+    state.ctx.beginPath()
+    for (let x = gridCellWidth; x < width; x += gridCellWidth)
+    {
+        state.ctx.moveTo(x, 0)
+        state.ctx.lineTo(x, height)
+    }
+
+    for (let y = gridCellHeight; y < height; y += gridCellHeight)
+    {
+        state.ctx.moveTo(0, y)
+        state.ctx.lineTo(width, y)
+    }
+    state.ctx.stroke()
+
+    state.ctx.restore()
 }

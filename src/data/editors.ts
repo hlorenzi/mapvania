@@ -28,6 +28,8 @@ export interface Global
         tileStamp: Map.TileField
 
         selectedObjectDefId: ID.ID
+
+        showGrid: "none" | "background" | "foreground"
     }
 }
 
@@ -102,6 +104,8 @@ export function makeNew(refreshToken: RefreshToken): Global
             },
 
             selectedObjectDefId: "",
+
+            showGrid: "background",
         }
     }
 }

@@ -115,27 +115,45 @@ export function EditorMap(props: {
         global.editors.refreshToken.commit()
     }
 
+    const toggleShowGrid = () =>
+    {
+        global.editors.mapEditing.showGrid =
+            global.editors.mapEditing.showGrid === "none" ? "background" :
+            global.editors.mapEditing.showGrid === "background" ? "foreground" :
+            "none"
+            
+        global.editors.refreshToken.commit()
+    }
+
 
     return <UI.PanelPadding noOverflow>
 
         <div style={{
             display: "grid",
-            gridTemplate: "1fr / 1fr",
+            gridTemplate: "1fr / auto 1fr auto 30em",
             width: "100%",
             height: "100%",
             minHeight: "0",
         }}>
 
+            <StyledCanvas
+                ref={ canvasRef }
+                style={{
+                    gridRow: 1,
+                    gridColumn: "1 / 5",
+                    width: "100%",
+                    height: "100%",
+            }}/>
+
             <div style={{
                 gridRow: 1,
                 gridColumn: 1,
-                position: "relative",
-                top: "1em",
-                left: "1em",
                 justifySelf: "start",
                 alignSelf: "start",
-                backgroundColor: "#111111",
+                margin: "1em",
+                backgroundColor: "#111",
             }}>
+
                 { global.editors.mapEditing.layerDefId === Editors.LAYERDEF_ID_WORLD &&
                     <>
                     <UI.Button
@@ -204,63 +222,62 @@ export function EditorMap(props: {
 
             </div>
 
-            <StyledCanvas
-                ref={ canvasRef }
-            />
+            <div style={{
+                gridRow: 1,
+                gridColumn: 3,
+                justifySelf: "end",
+                alignSelf: "start",
+                margin: "1em",
+                backgroundColor: "#111",
+            }}>
+                <UI.Button
+                    label={
+                        "🌐 Grid: " +
+                        (global.editors.mapEditing.showGrid === "background" ? "Back" :
+                        global.editors.mapEditing.showGrid === "foreground" ? "Front" :
+                        "Off") }
+                    onClick={ toggleShowGrid }
+                />
+            </div>
 
             <div style={{
                 gridRow: 1,
-                gridColumn: 1,
+                gridColumn: 4,
                 width: "100%",
                 height: "100%",
                 minHeight: "0",
                 display: "grid",
-                gridTemplate: "1fr / 1fr 30em",
+                gridTemplate: "auto 1fr / 1fr",
+                gridGap: "0.5em",
                 pointerEvents: "none",
                 padding: "0.5em",
             }}>
 
-                <div/>
+                { editor.mapEditor && editor.mapEditor.objectSelection.size > 0 ?
+                    <ObjectProperties
+                        editorIndex={ props.editorIndex }
+                    />
+                :
+                    <>
+                    <LayerPicker
+                        editorIndex={ props.editorIndex }
+                    />
 
-                <div style={{
-                    width: "100%",
-                    height: "100%",
-                    minHeight: "0",
-                    display: "grid",
-                    gridTemplate: "auto 1fr / 1fr",
-                    gridGap: "0.5em",
-                    pointerEvents: "none",
-                    padding: "0.5em",
-                }}>
-
-                    { editor.mapEditor && editor.mapEditor.objectSelection.size > 0 ?
-                        <ObjectProperties
+                    { editingLayerDef && editingLayerDef.type === "tile" &&
+                        <TilePicker
                             editorIndex={ props.editorIndex }
                         />
-                    :
-                        <>
-                        <LayerPicker
-                            editorIndex={ props.editorIndex }
-                        />
-
-                        { editingLayerDef && editingLayerDef.type === "tile" &&
-                            <TilePicker
-                                editorIndex={ props.editorIndex }
-                            />
-                        }
-
-                        { editingLayerDef && editingLayerDef.type === "object" &&
-                            <ObjectPicker
-                                editorIndex={ props.editorIndex }
-                            />
-                        }
-                        </>
                     }
 
-                </div>
+                    { editingLayerDef && editingLayerDef.type === "object" &&
+                        <ObjectPicker
+                            editorIndex={ props.editorIndex }
+                        />
+                    }
+                    </>
+                }
 
             </div>
-
 
         </div>
 
