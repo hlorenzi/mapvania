@@ -142,13 +142,17 @@ export function renderRoom(
 
                 const imagePx = Defs.getPixelForTileIndex(tileset, cell.tile.tileId)
 
-                state.ctx.drawImage(
+                drawImage(
+                    state,
                     image.element,
-                    imagePx.x, imagePx.y,
-                    tileset.gridCellWidth, tileset.gridCellHeight,
+                    imagePx.x,
+                    imagePx.y,
+                    tileset.gridCellWidth,
+                    tileset.gridCellHeight,
                     cell.x * layerDef.gridCellWidth,
                     cell.y * layerDef.gridCellHeight,
-                    layerDef.gridCellWidth, layerDef.gridCellHeight)
+                    layerDef.gridCellWidth,
+                    layerDef.gridCellHeight)
             }
         }
 
@@ -237,14 +241,19 @@ function renderObject(
 
     const imageW = object.width + (objectDef.imageRect.width - objectDef.interactionRect.width)
     const imageH = object.height + (objectDef.imageRect.height - objectDef.interactionRect.height)
-
+    
     if (image)
-        state.ctx.drawImage(
+        drawImage(
+            state,
             image.element,
-            objectDef.imageRect.x, objectDef.imageRect.y,
-            objectDef.imageRect.width, objectDef.imageRect.height,
-            object.x + imageX, object.y + imageY,
-            imageW, imageH)
+            objectDef.imageRect.x,
+            objectDef.imageRect.y,
+            objectDef.imageRect.width,
+            objectDef.imageRect.height,
+            object.x + imageX,
+            object.y + imageY,
+            imageW,
+            imageH)
 
     if (hovering)
     {
@@ -285,12 +294,17 @@ function renderObject(
                 state.ctx.globalAlpha = 0.5
                 
                 if (image)
-                    state.ctx.drawImage(
+                    drawImage(
+                        state,
                         image.element,
-                        objectDef.imageRect.x, objectDef.imageRect.y,
-                        objectDef.imageRect.width, objectDef.imageRect.height,
-                        visProp.value.x + imageX, visProp.value.y + imageY,
-                        imageW, imageH)
+                        objectDef.imageRect.x,
+                        objectDef.imageRect.y,
+                        objectDef.imageRect.width,
+                        objectDef.imageRect.height,
+                        visProp.value.x + imageX,
+                        visProp.value.y + imageY,
+                        imageW,
+                        imageH)
 
                 state.ctx.restore()
             }
@@ -541,7 +555,8 @@ export function renderTileLayerTools(
 
             const imagePx = Defs.getPixelForTileIndex(tileset, cell.tile.tileId)
 
-            state.ctx.drawImage(
+            drawImage(
+                state,
                 image.element,
                 imagePx.x, imagePx.y,
                 tileset.gridCellWidth, tileset.gridCellHeight,
@@ -656,7 +671,8 @@ export function renderObjectLayerTools(
         state.ctx.save()
         state.ctx.globalAlpha = 0.5
 
-        state.ctx.drawImage(
+        drawImage(
+            state,
             image.element,
             objectDef.imageRect.x, objectDef.imageRect.y,
             objectDef.imageRect.width, objectDef.imageRect.height,
@@ -715,4 +731,34 @@ export function renderInteractionHandles(
         state.ctx.strokeStyle = hovering ? "#ffffff" : "#888888"
         state.ctx.strokeRect(handleX1, handleY1, handle.width, handle.height)
     }
+}
+
+
+function drawImage(
+    state: MapEditor.State,
+    image: CanvasImageSource,
+    srcX: number,
+    srcY: number,
+    srcW: number,
+    srcH: number,
+    destX: number,
+    destY: number,
+    destW: number,
+    destH: number,
+)
+{
+    // Use a margin to avoid artifacts between tiles
+    const srcMargin = 0.01
+    const destMargin = 0
+
+    state.ctx.drawImage(
+        image,
+        srcX + srcMargin,
+        srcY + srcMargin,
+        srcW - srcMargin * 2,
+        srcH - srcMargin * 2,
+        destX + destMargin,
+        destY + destMargin,
+        destW - destMargin * 2,
+        destH - destMargin * 2)
 }
