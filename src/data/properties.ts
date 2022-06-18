@@ -265,7 +265,7 @@ export function makeNewValues(defs: DefProperties): PropertyValues
 
     for (const field of defs)
     {
-        result[field.id] = makeDefaultValueOfField(field)
+        result[field.id] = makeNewValue(field)
     }
 
     return result
