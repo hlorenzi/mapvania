@@ -91,7 +91,6 @@ export async function retrieveCachedRootFolder()
     const handle =
         await IndexedDBKeyVal.get<FileSystemDirectoryHandle>("rootDirectoryHandle")
 
-    console.log(handle)
     return handle
 }
 
@@ -102,7 +101,7 @@ export async function refreshEntries()
         throw "invalid global folder handle"
 
     await refreshDirectory(global.filesystem.root, "/")
-    console.log(global.filesystem.root)
+    console.log("Filesystem.refreshEntries finished", global.filesystem.root)
 }
 
 
@@ -147,7 +146,6 @@ export async function refreshDirectory(directory: Directory, path: string)
 export async function findFile(rootRelativePath: string)
 {
     let pathComponents = rootRelativePath.split(DIRECTORY_SEPARATOR)
-    console.log(pathComponents)
 
     pathComponents = pathComponents.slice(1)
 

@@ -1,7 +1,9 @@
 import { RefreshToken } from "../util/refreshToken"
 import { global } from "../global"
 import * as Filesystem from "./filesystem"
-import { resolve } from "path"
+
+
+export const IMAGE_ELEM_ID_PREFIX = "image_"
 
 
 export interface Global
@@ -27,6 +29,20 @@ export function makeNew(refreshToken: RefreshToken): Global
         refreshToken,
         images: {},
     }
+}
+
+
+export function invalidateImages()
+{
+    for (const path of Object.keys(global.images.images))
+    {
+        const elem = document.getElementById(IMAGE_ELEM_ID_PREFIX + path)
+        if (elem)
+            document.body.removeChild(elem)
+    }
+
+    global.images.images = {}
+    global.images.refreshToken.commit()
 }
 
 
@@ -71,7 +87,7 @@ export async function loadImage(rootRelativePath: string): Promise<Image | null>
         const entry = await Filesystem.findFile(rootRelativePath)
         const file = await entry.handle.getFile()
         const bytes = await file.arrayBuffer()
-        const element = await getImageElementFromBytes(bytes)
+        const element = await getImageElementFromBytes(rootRelativePath, bytes)
 
         global.images.images[rootRelativePath] = {
             width: element.width,
@@ -91,11 +107,15 @@ export async function loadImage(rootRelativePath: string): Promise<Image | null>
 }
 
 
-export async function getImageElementFromBytes(rawData: ArrayBuffer): Promise<HTMLImageElement>
+export async function getImageElementFromBytes(
+    id: string,
+    rawData: ArrayBuffer)
+    : Promise<HTMLImageElement>
 {
     const imgElem = await new Promise<HTMLImageElement>((resolve, reject) =>
     {
         const elem = document.createElement("img")
+        elem.id = IMAGE_ELEM_ID_PREFIX + id
         elem.onload = () => resolve(elem)
         elem.onerror = () => reject()
         elem.src = "data:image/png;base64," + arrayBufferToBase64(rawData)

@@ -3,6 +3,9 @@ import styled from "styled-components"
 import { global } from "../global"
 import * as Actions from "../actions"
 import * as Editors from "../data/editors"
+import * as Filesystem from "../data/filesystem"
+import * as Images from "../data/images"
+import * as UI from "../ui"
 
 
 export function ProjectTree()
@@ -10,22 +13,40 @@ export function ProjectTree()
     const [currentDirectory, setCurrentDirectory] = React.useState(global.filesystem.root)
 
 
+    if (!global.filesystem.root.handle)
+        return <StyledRoot/>
+
+
     return <StyledRoot>
 
         <StyledHeader>
             PROJECT
 
-            <button
+            { " " }
+
+            <UI.Button
+                onClick={ async () => {
+                    await Filesystem.refreshEntries()
+                    Images.invalidateImages()
+                }}
+            >
+                🔁 Refresh
+            </UI.Button>
+
+            <UI.HorizontalBar/>
+
+            <UI.Button
                 onClick={ Actions.createDefFile.func }
             >
-                + Defs
-            </button>
+                ➕ Defs
+            </UI.Button>
 
-            <button
+            <UI.Button
                 onClick={ Actions.createMapFile.func }
             >
-                + Map
-            </button>
+                ➕ Map
+            </UI.Button>
+
         </StyledHeader>
 
         <StyledTree>

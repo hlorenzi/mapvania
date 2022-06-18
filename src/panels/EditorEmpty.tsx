@@ -3,10 +3,13 @@ import styled from "styled-components"
 import { global } from "../global"
 import * as Actions from "../actions"
 import * as Filesystem from "../data/filesystem"
+import * as ID from "../data/id"
+import * as UI from "../ui"
 
 
 export function EditorEmpty()
 {
+    const [refresh, setRefresh] = React.useState(0)
     const [hasCachedFolder, setHasCachedFolder] = React.useState(false)
 
 
@@ -30,23 +33,43 @@ export function EditorEmpty()
             <br/>
             <br/>
 
-            <button
+            <UI.Button
                 onClick={ Actions.openFolder.func }
             >
                 📁 Choose folder...
-            </button>
+            </UI.Button>
 
             { hasCachedFolder &&
                 <>
                 <br/>
                 <br/>
-                <button
+                <UI.Button
                     onClick={ Filesystem.setRootDirectoryFromCache }
                 >
-                    or reopen previous project folder.
-                </button>
+                    🔁 Reopen previous project folder
+                </UI.Button>
                 </>
             }
+            
+            <br/>
+            <br/>
+            <UI.HorizontalBar/>
+            <br/>
+
+            Set a custom ID prefix for each team member<br/>
+            working simultaneously on the project.
+
+            <br/>
+            <br/>
+
+            My ID Prefix: <UI.Input
+                value={ ID.getCurrentPrefix() }
+                onChange={ value => {
+                    ID.setCurrentPrefix(value)
+                    setRefresh(r => r + 1)
+                }}
+            />
+
             </>
         }
 
