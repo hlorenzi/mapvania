@@ -3,6 +3,7 @@ import { global } from "../global"
 import { DeepAssignable, deepAssign } from "../util/deepAssign"
 import * as Filesystem from "./filesystem"
 import * as ID from "./id"
+import * as Dev from "./dev"
 import * as Defs from "./defs"
 import * as Map from "./map"
 import * as MapSerialization from "./map_serialization"
@@ -135,7 +136,7 @@ export function openEditor(editor: Editor)
 }
 
 
-export function openEditorByFile(rootRelativePath: string)
+export async function openEditorByFile(rootRelativePath: string)
 {
     const alreadyOpenedEditorIndex = global.editors.editors
         .findIndex(e => e.rootRelativePath == rootRelativePath)
@@ -144,14 +145,15 @@ export function openEditorByFile(rootRelativePath: string)
     {
         global.editors.currentEditor = alreadyOpenedEditorIndex
         global.editors.refreshToken.commit()
-        return
     }
 
-    if (rootRelativePath.endsWith(Filesystem.DEFS_EXTENSION))
-        openEditorDefs(rootRelativePath)
+    else if (rootRelativePath.endsWith(Filesystem.DEFS_EXTENSION))
+        await openEditorDefs(rootRelativePath)
 
     else if (rootRelativePath.endsWith(Filesystem.MAP_EXTENSION))
-        openEditorMap(rootRelativePath)
+        await openEditorMap(rootRelativePath)
+
+    Dev.refreshDevFile()
 }
 
 

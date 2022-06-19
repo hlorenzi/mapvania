@@ -4,6 +4,7 @@ import * as Defs from "../data/defs"
 import * as Map from "../data/map"
 import * as Properties from "../data/properties"
 import * as Editors from "../data/editors"
+import * as Dev from "../data/dev"
 import * as UI from "../ui"
 import { global } from "../global"
 import * as MathUtils from "../util/mathUtils"
@@ -661,6 +662,7 @@ export function onMouseUp(state: State, ev: MouseEvent)
     state.onRenderWorldTool = null
     
     MapEditor.render(state)
+    Dev.refreshDevFile()
 }
 
 

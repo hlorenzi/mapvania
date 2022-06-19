@@ -2,6 +2,7 @@ import * as React from "react"
 import styled from "styled-components"
 import { global } from "../global"
 import * as Editors from "../data/editors"
+import * as Dev from "../data/dev"
 
 
 export function Tabs()
@@ -10,6 +11,7 @@ export function Tabs()
     {
         global.editors.currentEditor = i
         global.editors.refreshToken.commit()
+        Dev.refreshDevFile()
     }
 
 

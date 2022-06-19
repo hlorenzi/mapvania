@@ -6,6 +6,7 @@ import * as IndexedDBKeyVal from "idb-keyval"
 export const DIRECTORY_SEPARATOR = "/"
 export const DEFS_EXTENSION = ".defs.json"
 export const MAP_EXTENSION = ".map.json"
+export const DEV_FILENAME = "dev.json"
 
 
 export interface Global
@@ -38,7 +39,7 @@ export function makeNew(refreshToken: RefreshToken): Global
     return {
         refreshToken,
         root: {
-            rootRelativePath: "/",
+            rootRelativePath: "./",
             name: "",
             handle: undefined,
             childDirectories: [],
@@ -100,7 +101,7 @@ export async function refreshEntries()
     if (!global.filesystem.root.handle)
         throw "invalid global folder handle"
 
-    await refreshDirectory(global.filesystem.root, "/")
+    await refreshDirectory(global.filesystem.root, global.filesystem.root.rootRelativePath)
     console.log("Filesystem.refreshEntries finished", global.filesystem.root)
 }
 
@@ -152,7 +153,9 @@ export function isIgnorableFile(rootRelativePath: string)
 }
 
 
-export async function findFile(rootRelativePath: string)
+export async function findFile(
+    rootRelativePath: string,
+    create?: boolean)
 {
     let pathComponents = rootRelativePath.split(DIRECTORY_SEPARATOR)
 
@@ -171,11 +174,22 @@ export async function findFile(rootRelativePath: string)
         pathComponents = pathComponents.slice(1)
     }
 
-    const file = currentDirectory.childFiles
+    let file = currentDirectory.childFiles
         .find(f => f.name === pathComponents[0])
         
     if (!file)
-        throw ("file not found: `" + rootRelativePath + "`")
+    {
+        if (!create)
+            throw ("file not found: `" + rootRelativePath + "`")
+
+        file = {
+            rootRelativePath,
+            name: pathComponents[0],
+            handle: await currentDirectory.handle!.getFileHandle(pathComponents[0], { create: true }),
+        }
+
+        currentDirectory.childFiles.push(file)
+    }
 
     return file
 }
@@ -217,6 +231,16 @@ export async function readFileText(rootRelativePath: string)
     const fileData = await file.handle.getFile()
     const text = await fileData.text()
     return text
+}
+
+
+export async function writeFileText(rootRelativePath: string, data: string)
+{
+    const file = await findFile(rootRelativePath, true)
+    
+    const writable = await (file.handle as any).createWritable()
+    await writable.write(data)
+    await writable.close()
 }
 
 
