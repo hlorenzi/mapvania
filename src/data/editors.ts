@@ -30,6 +30,7 @@ export interface Global
         selectedObjectDefId: ID.ID
 
         showGrid: "none" | "background" | "foreground"
+        showOtherLayers: "none" | "normal" | "faded"
     }
 }
 
@@ -106,6 +107,7 @@ export function makeNew(refreshToken: RefreshToken): Global
             selectedObjectDefId: "",
 
             showGrid: "background",
+            showOtherLayers: "normal",
         }
     }
 }

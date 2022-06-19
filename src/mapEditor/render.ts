@@ -120,7 +120,23 @@ export function renderRoom(
         const layer = room.layers[layerDef.id]
         if (!layer)
             continue
-        
+
+        state.ctx.save()
+
+        if (global.editors.mapEditing.layerDefId !== Editors.LAYERDEF_ID_WORLD &&
+            global.editors.mapEditing.layerDefId !== layer.layerDefId)
+        {
+            if (global.editors.mapEditing.showOtherLayers === "none")
+            {
+                state.ctx.restore()
+                continue
+            }
+            else if (global.editors.mapEditing.showOtherLayers === "faded")
+            {
+                state.ctx.globalAlpha = 0.15
+            }
+        }
+
         if (layer.type === "tile")
         {
             const layerDef = Defs.getLayerDef(defs, layer.layerDefId)
@@ -205,6 +221,8 @@ export function renderRoom(
                     state.objectSelection.has(hoverObject.id))
             }
         }
+
+        state.ctx.restore()
     }
 
     const strongBorder = global.editors.mapEditing.layerDefId === Editors.LAYERDEF_ID_WORLD ?

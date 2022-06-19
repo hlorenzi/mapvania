@@ -125,6 +125,16 @@ export function EditorMap(props: {
         global.editors.refreshToken.commit()
     }
 
+    const toggleShowOtherLayers = () =>
+    {
+        global.editors.mapEditing.showOtherLayers =
+            global.editors.mapEditing.showOtherLayers === "none" ? "normal" :
+            global.editors.mapEditing.showOtherLayers === "normal" ? "faded" :
+            "none"
+            
+        global.editors.refreshToken.commit()
+    }
+
 
     return <UI.PanelPadding noOverflow>
 
@@ -237,6 +247,14 @@ export function EditorMap(props: {
                         global.editors.mapEditing.showGrid === "foreground" ? "Front" :
                         "Off") }
                     onClick={ toggleShowGrid }
+                />
+                <UI.Button
+                    label={
+                        "🧅 Other Layers: " +
+                        (global.editors.mapEditing.showOtherLayers === "normal" ? "Normal" :
+                        global.editors.mapEditing.showOtherLayers === "faded" ? "Faded" :
+                        "Off") }
+                    onClick={ toggleShowOtherLayers }
                 />
             </div>
 
