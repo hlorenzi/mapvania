@@ -117,11 +117,14 @@ export async function refreshDirectory(directory: Directory, path: string)
 
         if (handle.kind === "file")
         {
-            directory.childFiles.push({
-                rootRelativePath: path + name,
-                name: name,
-                handle,
-            })
+            if (!isIgnorableFile(path + name))
+            {
+                directory.childFiles.push({
+                    rootRelativePath: path + name,
+                    name: name,
+                    handle,
+                })
+            }
         }
         else if (handle.kind === "directory")
         {
@@ -140,6 +143,12 @@ export async function refreshDirectory(directory: Directory, path: string)
                 path + name + DIRECTORY_SEPARATOR)
         }
     }
+}
+
+
+export function isIgnorableFile(rootRelativePath: string)
+{
+    return rootRelativePath.endsWith(".meta")
 }
 
 
