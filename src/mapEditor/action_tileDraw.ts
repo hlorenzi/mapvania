@@ -33,7 +33,8 @@ export function setupTileDraw(state: MapEditor.State)
             return
 
 
-        if (Math.abs(state.mouse.tile.x - lastPlacedTile.x) < tileStamp.width &&
+        if (state.toolMoveWithoutSnap &&
+            Math.abs(state.mouse.tile.x - lastPlacedTile.x) < tileStamp.width &&
             Math.abs(state.mouse.tile.y - lastPlacedTile.y) < tileStamp.height)
             return
 
