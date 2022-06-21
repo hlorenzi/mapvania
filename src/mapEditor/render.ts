@@ -809,3 +809,115 @@ export function drawGrid(
 
     state.ctx.restore()
 }
+
+
+export function drawTextBox(
+    state: MapEditor.State,
+    x: number,
+    y: number,
+    anchorX: number,
+    anchorY: number,
+    text: string,
+    applyZoom?: boolean)
+{
+    const zoom = (applyZoom ? state.camera.zoom : 1)
+
+    const fontSize = 14 / zoom
+    state.ctx.font = fontSize + "px system-ui"
+
+    const lines = text.split("\n")
+
+    let textWidth = 0
+
+    for (const line of lines)
+    {
+        const measure = state.ctx.measureText(line)
+        textWidth = Math.max(textWidth, measure.width)
+    }
+
+    const lineHeight = fontSize + 2 / zoom
+    const textHeight = lineHeight * lines.length
+
+    const margin = 4 / zoom
+    const boxW = textWidth + margin * 2
+    const boxH = textHeight + margin * 2
+
+    const boxX =
+        anchorX == -1 ? -boxW :
+        anchorX == 0 ? -boxW / 2 :
+        0
+
+    const boxY =
+        anchorY == -1 ? -boxH :
+        anchorY == 0 ? -boxH / 2 :
+        0
+
+    state.ctx.fillStyle = "#000"
+    state.ctx.strokeStyle = "#fff"
+    state.ctx.lineWidth = 1
+    state.ctx.fillRect(x + boxX, y + boxY, boxW, boxH)
+    state.ctx.strokeRect(x + boxX, y + boxY, boxW, boxH)
+
+    state.ctx.fillStyle = "#fff"
+    state.ctx.textAlign = "left"
+    state.ctx.textBaseline = "top"
+
+    for (let l = 0; l < lines.length; l++)
+        state.ctx.fillText(
+            lines[l],
+            x + boxX + margin,
+            y + boxY + margin + l * lineHeight)
+}
+
+
+export function drawTextBoxAroundRect(
+    state: MapEditor.State,
+    x1: number,
+    y1: number,
+    x2: number,
+    y2: number,
+    margin: number,
+    anchorX: number,
+    anchorY: number,
+    text: string)
+{
+    margin /= state.camera.zoom
+
+    drawTextBox(
+        state,
+
+        anchorX == -1 ? x1 - margin :
+            anchorX == 1 ? x2 + margin :
+            (x1 + x2) / 2,
+
+        anchorY == -1 ? y1 - margin :
+            anchorY == 1 ? y2 + margin :
+            (y1 + y2) / 2,
+
+        anchorX,
+        anchorY,
+        text)
+}
+
+
+export function drawInfoBox(
+    state: MapEditor.State,
+    text: string)
+{
+    state.ctx.save()
+    state.ctx.resetTransform()
+
+    const margin = 16
+    const x = margin
+    const y = state.canvasHeight - margin
+
+    drawTextBox(
+        state,
+        x, y,
+        1,
+        -1,
+        text,
+        false)
+
+    state.ctx.restore()
+}

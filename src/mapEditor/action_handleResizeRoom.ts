@@ -58,6 +58,21 @@ export function setupHandleResizeRoom(state: MapEditor.State, directionX: number
             newRoomY1,
             newRoomX2 - newRoomX1,
             newRoomY2 - newRoomY1)
+
+        const newRoomXTiles = Math.floor((newRoomX1 + room.x) / defs.generalDefs.roomWidthMultiple)
+        const newRoomYTiles = Math.floor((newRoomY1 + room.y) / defs.generalDefs.roomHeightMultiple)
+        const newRoomW = newRoomX2 - newRoomX1
+        const newRoomH = newRoomY2 - newRoomY1
+        const newRoomWTiles = Math.floor(newRoomW / defs.generalDefs.roomWidthMultiple)
+        const newRoomHTiles = Math.floor(newRoomH / defs.generalDefs.roomHeightMultiple)
+
+        MapEditor.drawInfoBox(
+            state,
+            `pos: (${ newRoomX1 + room.x }, ${ newRoomY1 + room.y }) px\n` +
+            `size: (${ newRoomW }, ${ newRoomH }) px\n` +
+            `\n` +
+            `pos: (${ newRoomXTiles }, ${ newRoomYTiles }) tiles\n` +
+            `size: (${ newRoomWTiles }, ${ newRoomHTiles }) tiles`)
     }
 
     state.onMouseUp = () =>
