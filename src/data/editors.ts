@@ -39,7 +39,7 @@ export interface Global
 export const LAYERDEF_ID_MAP = "world"
 
 
-export type TileTool = "move" | "draw" | "erase" | "select"
+export type TileTool = "move" | "draw" | "fill" | "erase" | "select"
 
 
 export type Editor =

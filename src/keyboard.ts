@@ -23,6 +23,11 @@ export function useKeyboardShortcuts()
                     global.editors.mapEditing.tileTool = "draw"
                     global.editors.refreshToken.commit()
                     break
+
+                case "g":
+                    global.editors.mapEditing.tileTool = "fill"
+                    global.editors.refreshToken.commit()
+                    break
                     
                 case "e":
                     global.editors.mapEditing.tileTool = "erase"

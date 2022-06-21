@@ -1,3 +1,9 @@
+export function mod(x: number, m: number): number
+{
+    return (x % m + m) % m
+}
+
+
 export function snapRound(x: number, step: number): number
 {
     return Math.round(x / step) * step

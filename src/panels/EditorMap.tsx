@@ -195,6 +195,12 @@ export function EditorMap(props: {
                     />
 
                     <UI.Button
+                        label="💧 Fill (G)"
+                        selected={ global.editors.mapEditing.tileTool === "fill" }
+                        onClick={ () => chooseTileTool("fill") }
+                    />
+
+                    <UI.Button
                         label="❌ Erase (E)"
                         selected={ global.editors.mapEditing.tileTool === "erase" }
                         onClick={ () => chooseTileTool("erase") }

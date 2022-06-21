@@ -304,14 +304,25 @@ export function *enumerateTileFieldCells(tileField: TileField): Generator<{ tile
 }
 
 
+export function getTileFieldCenter(tileField: TileField): { x: number, y: number }
+{
+    return {
+        x: Math.floor(tileField.width / 2),
+        y: Math.floor(tileField.height / 2),
+    }
+}
+
+
 export function *enumerateTileFieldCellsCentered(tileField: TileField): Generator<{ tile: Tile | undefined, x: number, y: number }, void, void>
 {
+    const center = getTileFieldCenter(tileField)
+
     for (const tile of enumerateTileFieldCells(tileField))
     {
         yield {
             tile: tile.tile,
-            x: tile.x - Math.floor(tileField.width / 2),
-            y: tile.y - Math.floor(tileField.height / 2),
+            x: tile.x - center.x,
+            y: tile.y - center.y,
         }
     }
 }

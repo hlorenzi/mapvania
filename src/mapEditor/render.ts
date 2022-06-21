@@ -551,7 +551,8 @@ export function renderTileLayerForeground(
             editingLayerDef.gridCellWidth,
             editingLayerDef.gridCellHeight)
 
-    if (global.editors.mapEditing.tileTool === "draw" &&
+    if ((global.editors.mapEditing.tileTool === "draw" ||
+        global.editors.mapEditing.tileTool === "fill") &&
         !state.onMouseMove)
     {
         state.ctx.save()
