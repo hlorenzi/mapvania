@@ -119,6 +119,58 @@ export function setRoom(map: Map, roomId: ID.ID, room: Room): Map
 }
 
 
+export function cloneRoom(map: Map, room: Room): [Map, Room]
+{
+    let nextIDs = map.nextIDs
+
+    const [newNextIDs, clonedRoomId] = ID.getNextID(nextIDs)
+    nextIDs = newNextIDs
+
+    const clonedRoom: Room = {
+        ...room,
+        id: clonedRoomId,
+        layers: { ...room.layers },
+    }
+
+    for (const layer of Object.values(clonedRoom.layers))
+    {
+        if (layer.type == "object")
+        {
+            const newLayer: LayerObject = {
+                ...layer,
+                objects: {},
+            }
+
+            for (const obj of Object.values(layer.objects))
+            {
+                const [newNextIDs, clonedObjId] = ID.getNextID(nextIDs)
+                nextIDs = newNextIDs
+
+                const newObject: Obj = {
+                    ...obj,
+                    id: clonedObjId,
+                }
+
+                newLayer.objects[newObject.id] = newObject
+            }
+
+            clonedRoom.layers[newLayer.layerDefId] = newLayer
+        }
+    }
+    
+    const newMap = {
+        ...map,
+        nextIDs,
+        rooms: {
+            ...map.rooms,
+            [clonedRoom.id]: clonedRoom,
+        }
+    }
+
+    return [newMap, clonedRoom]
+}
+
+
 export function getRoomLayer(map: Map, roomId: ID.ID, layerDefId: ID.ID): Layer | undefined
 {
     const room = getRoom(map, roomId)

@@ -7,7 +7,7 @@ import { global } from "../global"
 import * as MathUtils from "../util/mathUtils"
 
 
-export function setupWorldSelect(state: MapEditor.State)
+export function setupRoomSelect(state: MapEditor.State)
 {
     const editor = (global.editors.editors[state.editorIndex] as Editors.EditorMap)
     
@@ -43,7 +43,7 @@ export function setupWorldSelect(state: MapEditor.State)
         }
     }
 
-    state.onRenderWorldTool = () =>
+    state.onRenderMapTool = () =>
     {
         const tx1 = Math.min(rect.x1, rect.x2)
         const tx2 = Math.max(rect.x1, rect.x2)

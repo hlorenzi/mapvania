@@ -6,7 +6,7 @@ import { global } from "../global"
 import * as MathUtils from "../util/mathUtils"
 
 
-export function setupWorldMove(state: MapEditor.State)
+export function setupRoomMove(state: MapEditor.State)
 {
     const editor = (global.editors.editors[state.editorIndex] as Editors.EditorMap)
     const defs = editor.defs
@@ -48,7 +48,7 @@ export function setupWorldMove(state: MapEditor.State)
         }
     }
 
-    state.onRenderWorldTool = () =>
+    state.onRenderMapTool = () =>
     {
     }
 

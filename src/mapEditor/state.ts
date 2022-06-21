@@ -24,7 +24,7 @@ export interface State
     onMouseMove: null | ((state: State) => void)
     onMouseUp: null | ((state: State) => void)
     onRenderRoomTool: null | ((state: State) => void)
-    onRenderWorldTool: null | ((state: State) => void)
+    onRenderMapTool: null | ((state: State) => void)
 
     toolMoveWithoutSnap: boolean
     toolAddToList: boolean
@@ -86,7 +86,7 @@ export function createState(editorIndex: number, roomId: ID.ID): State
         onMouseMove: null,
         onMouseUp: null,
         onRenderRoomTool: null,
-        onRenderWorldTool: null,
+        onRenderMapTool: null,
 
         toolMoveWithoutSnap: false,
         toolAddToList: false,
@@ -471,7 +471,7 @@ export function onMouseDown(state: State, ev: MouseEvent)
     }
     else
     {
-        if (global.editors.mapEditing.layerDefId === Editors.LAYERDEF_ID_WORLD)
+        if (global.editors.mapEditing.layerDefId === Editors.LAYERDEF_ID_MAP)
         {
             const hoverRoom = Object.values(map.rooms)
                 .find(r => MathUtils.rectContains(r, state.mouse.pos))
@@ -496,16 +496,18 @@ export function onMouseDown(state: State, ev: MouseEvent)
             if (global.editors.mapEditing.tileTool === "move")
             {
                 if (!hoverRoom)
-                    MapEditor.setupWorldSelect(state)
+                    MapEditor.setupRoomSelect(state)
+                else if (ev.altKey)
+                    MapEditor.setupRoomClone(state)
                 else
-                    MapEditor.setupWorldMove(state)
+                    MapEditor.setupRoomMove(state)
             }
 
             else if (global.editors.mapEditing.tileTool === "draw")
-                MapEditor.setupWorldDraw(state)
+                MapEditor.setupRoomDraw(state)
 
             else if (global.editors.mapEditing.tileTool === "select")
-                MapEditor.setupWorldSelect(state)
+                MapEditor.setupRoomSelect(state)
         }
         else
         {
@@ -659,7 +661,7 @@ export function onMouseUp(state: State, ev: MouseEvent)
     state.onMouseMove = null
     state.onMouseUp = null
     state.onRenderRoomTool = null
-    state.onRenderWorldTool = null
+    state.onRenderMapTool = null
     
     MapEditor.render(state)
     Dev.refreshDevFile()
@@ -948,7 +950,7 @@ export function eraseRoomSelection(state: State)
 {
     const editor = (global.editors.editors[state.editorIndex] as Editors.EditorMap)
 
-    if (global.editors.mapEditing.layerDefId !== Editors.LAYERDEF_ID_WORLD)
+    if (global.editors.mapEditing.layerDefId !== Editors.LAYERDEF_ID_MAP)
         return
 
     const newRooms: Map.Map["rooms"] = {}

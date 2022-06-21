@@ -6,7 +6,7 @@ import * as Editors from "../data/editors"
 import { global } from "../global"
 
 
-export function setupWorldDraw(state: MapEditor.State)
+export function setupRoomDraw(state: MapEditor.State)
 {
     const editor = (global.editors.editors[state.editorIndex] as Editors.EditorMap)
     const defs = editor.defs
@@ -25,7 +25,7 @@ export function setupWorldDraw(state: MapEditor.State)
         stageRect.tile2 = state.mouse.tile
     }
 
-    state.onRenderWorldTool = () =>
+    state.onRenderMapTool = () =>
     {
         state.ctx.strokeStyle = "#4f0"
 

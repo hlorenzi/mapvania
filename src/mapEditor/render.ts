@@ -80,13 +80,13 @@ export function render(state: MapEditor.State)
         state.ctx.restore()
     }
     
-    renderWorldLayerTools(state, defs, editingLayerDef)
+    renderMapLayerTools(state, defs, editingLayerDef)
     renderInteractionHandles(state)
 
-    if (state.onRenderWorldTool)
+    if (state.onRenderMapTool)
     {
         state.ctx.save()
-        state.onRenderWorldTool(state)
+        state.onRenderMapTool(state)
         state.ctx.restore()
     }
 
@@ -123,7 +123,7 @@ export function renderRoom(
 
         state.ctx.save()
 
-        if (global.editors.mapEditing.layerDefId !== Editors.LAYERDEF_ID_WORLD &&
+        if (global.editors.mapEditing.layerDefId !== Editors.LAYERDEF_ID_MAP &&
             global.editors.mapEditing.layerDefId !== layer.layerDefId)
         {
             if (global.editors.mapEditing.showOtherLayers === "none")
@@ -225,7 +225,7 @@ export function renderRoom(
         state.ctx.restore()
     }
 
-    const strongBorder = global.editors.mapEditing.layerDefId === Editors.LAYERDEF_ID_WORLD ?
+    const strongBorder = global.editors.mapEditing.layerDefId === Editors.LAYERDEF_ID_MAP ?
         state.roomSelection.has(room.id) :
         room.id === state.roomId
 
@@ -411,7 +411,7 @@ export function renderWorldLayerBkg(
     defs: Defs.Defs,
     editingLayerDef: Defs.DefLayer | undefined)
 {
-    if (editingLayerDef || global.editors.mapEditing.layerDefId !== Editors.LAYERDEF_ID_WORLD)
+    if (editingLayerDef || global.editors.mapEditing.layerDefId !== Editors.LAYERDEF_ID_MAP)
         return
 
     if (global.editors.mapEditing.showGrid === "none")
@@ -463,12 +463,12 @@ export function renderWorldLayerBkg(
 }
     
 
-export function renderWorldLayerTools(
+export function renderMapLayerTools(
     state: MapEditor.State,
     defs: Defs.Defs,
     editingLayerDef: Defs.DefLayer | undefined)
 {
-    if (editingLayerDef || global.editors.mapEditing.layerDefId !== Editors.LAYERDEF_ID_WORLD)
+    if (editingLayerDef || global.editors.mapEditing.layerDefId !== Editors.LAYERDEF_ID_MAP)
         return
         
     state.ctx.save()

@@ -36,7 +36,7 @@ export interface Global
 }
 
 
-export const LAYERDEF_ID_WORLD = "world"
+export const LAYERDEF_ID_MAP = "world"
 
 
 export type TileTool = "move" | "draw" | "erase" | "select"
@@ -91,7 +91,7 @@ export function makeNew(refreshToken: RefreshToken): Global
         currentEditor: -1,
 
         mapEditing: {
-            layerDefId: LAYERDEF_ID_WORLD,
+            layerDefId: LAYERDEF_ID_MAP,
 
             tileTool: "move",
             tileToolBeforeKeyToggle: "move",

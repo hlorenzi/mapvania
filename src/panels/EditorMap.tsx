@@ -164,7 +164,7 @@ export function EditorMap(props: {
                 backgroundColor: "#111",
             }}>
 
-                { global.editors.mapEditing.layerDefId === Editors.LAYERDEF_ID_WORLD &&
+                { global.editors.mapEditing.layerDefId === Editors.LAYERDEF_ID_MAP &&
                     <>
                     <UI.Button
                         label="📐 Move (M)"

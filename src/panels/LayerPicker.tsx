@@ -35,7 +35,7 @@ export function LayerPicker(props: {
 
     const layerItems = [
         {
-            id: Editors.LAYERDEF_ID_WORLD,
+            id: Editors.LAYERDEF_ID_MAP,
             label: "🗺️ Map",
         },
         ...editor.defs.layerDefs.map(layerDef => ({
