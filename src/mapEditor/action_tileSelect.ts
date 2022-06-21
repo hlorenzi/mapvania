@@ -34,4 +34,9 @@ export function setupTileSelect(state: MapEditor.State)
 
         state.rectSelection!.tile2 = state.mouse.tile
     }
+
+    state.onMouseUp = () =>
+    {
+        MapEditor.copyTileSelection(state)
+    }
 }
