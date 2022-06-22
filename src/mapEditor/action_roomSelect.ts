@@ -57,9 +57,4 @@ export function setupRoomSelect(state: MapEditor.State)
             tx2 - tx1,
             ty2 - ty1)
     }
-
-    state.onMouseUp = () =>
-    {
-        global.editors.refreshToken.commit()
-    }
 }

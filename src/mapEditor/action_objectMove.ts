@@ -26,32 +26,49 @@ export function setupObjectMove(state: MapEditor.State)
     if (!layer || layer.type !== "object")
         return
     
-    const objectsOrig = layer.objects
+    const originalMap = editor.map
+    const originalObjects = layer.objects
 
 
     state.onMouseMove = () =>
     {
-        const newObjects = { ...objectsOrig }
+        let hadChanges = false
+
+        const newObjects = { ...originalObjects }
 
         for (const objectId of state.objectSelection)
         {
-            const originalObject = objectsOrig[objectId]
+            const originalObject = originalObjects[objectId]
             if (!originalObject)
                 continue
 
-            const newObject = {
-                ...originalObject,
-                x: Math.round(originalObject.x + state.mouseDownDelta.posInRoom.x),
-                y: Math.round(originalObject.y + state.mouseDownDelta.posInRoom.y),
-            }
+            let newX = Math.round(originalObject.x + state.mouseDownDelta.posInRoom.x)
+            let newY = Math.round(originalObject.y + state.mouseDownDelta.posInRoom.y)
 
             if (!state.toolMoveWithoutSnap)
             {
-                newObject.x = MathUtils.snapRound(newObject.x, layerDef.gridCellWidth)
-                newObject.y = MathUtils.snapRound(newObject.y, layerDef.gridCellHeight)
+                newX = MathUtils.snapRound(newX, layerDef.gridCellWidth)
+                newY = MathUtils.snapRound(newY, layerDef.gridCellHeight)
+            }
+
+            if (originalObject.x == newX && originalObject.y == newY)
+                continue
+
+            hadChanges = true
+
+            const newObject = {
+                ...originalObject,
+                x: newX,
+                y: newY,
             }
 
             newObjects[objectId] = newObject
+        }
+
+        if (!hadChanges)
+        {
+            editor.map = originalMap
+            return
         }
 
         const newLayer: Map.LayerObject = {
@@ -64,10 +81,5 @@ export function setupObjectMove(state: MapEditor.State)
             state.roomId,
             global.editors.mapEditing.layerDefId,
             newLayer)
-    }
-
-    state.onMouseUp = () =>
-    {
-        global.editors.refreshToken.commit()
     }
 }

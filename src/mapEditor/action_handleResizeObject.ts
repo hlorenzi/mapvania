@@ -14,7 +14,6 @@ export function setupHandleResizeObject(
     directionY: number)
 {
     const editor = (global.editors.editors[state.editorIndex] as Editors.EditorMap)
-    const room = editor.map.rooms[state.roomId]
 
     const layer = Map.getRoomLayer(
         editor.map,
@@ -35,6 +34,8 @@ export function setupHandleResizeObject(
     const objectDef = Defs.getObjectDef(editor.defs, object.objectDefId)
     if (!objectDef)
         return
+
+    const originalMap = editor.map
 
 
     state.onMouseMove = () =>
@@ -89,12 +90,23 @@ export function setupHandleResizeObject(
 
         const newWidth = newX2 - newX1
         const newHeight = newY2 - newY1
+        const newX = newX1 + (newWidth * objectDef.pivotPercent.x)
+        const newY = newY1 + (newHeight * objectDef.pivotPercent.y)
+
+        if (object.x == newX &&
+            object.y == newY &&
+            object.width == newWidth &&
+            object.height == newHeight)
+        {
+            editor.map = originalMap
+            return
+        }
 
         const newObject = {
             ...object,
-            x: newX1 + (newWidth * objectDef.pivotPercent.x),
+            x: newX,
             width: newWidth,
-            y: newY1 + (newHeight * objectDef.pivotPercent.y),
+            y: newY,
             height: newHeight,
         }
 
@@ -104,7 +116,5 @@ export function setupHandleResizeObject(
             global.editors.mapEditing.layerDefId,
             objectId,
             newObject)
-            
-        global.editors.refreshToken.commit()
     }
 }

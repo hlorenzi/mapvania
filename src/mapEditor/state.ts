@@ -520,12 +520,6 @@ export function onMouseDown(state: State, ev: MouseEvent)
             }
             else
             {
-                editor.map = Map.ensureRoomLayer(
-                    editor.defs,
-                    editor.map,
-                    state.roomId,
-                    global.editors.mapEditing.layerDefId)
-                    
                 if (editingLayerDef && editingLayerDef.type === "tile")
                 {
                     if (global.editors.mapEditing.tileTool === "draw")
@@ -540,9 +534,7 @@ export function onMouseDown(state: State, ev: MouseEvent)
                     else if (global.editors.mapEditing.tileTool === "select")
                         MapEditor.setupTileSelect(state)
                 }
-                else if (
-                    editingLayerDef && editingLayerDef.type === "object" &&
-                    layer && layer.type === "object")
+                else if (editingLayerDef && editingLayerDef.type === "object")
                 {
                     const hoverObject = getObjectAt(state, state.mouse.posInRoom)
                     
@@ -666,6 +658,7 @@ export function onMouseUp(state: State, ev: MouseEvent)
     state.onRenderRoomTool = null
     state.onRenderMapTool = null
     
+    global.editors.refreshToken.commit()
     MapEditor.render(state)
     Dev.refreshDevFile()
 }
@@ -702,6 +695,7 @@ export function onKey(state: State, ev: KeyboardEvent, down: boolean)
             if (down && ev.ctrlKey)
             {
                 copyTileSelection(state)
+                global.editors.mapEditing.tileTool = "draw"
                 state.rectSelection = null
                 MapEditor.render(state)
                 ev.preventDefault()
@@ -714,6 +708,7 @@ export function onKey(state: State, ev: KeyboardEvent, down: boolean)
                 copyTileSelection(state)
                 eraseTileSelection(state)
                 Editors.historyAdd(state.editorIndex)
+                global.editors.mapEditing.tileTool = "draw"
                 state.rectSelection = null
                 MapEditor.render(state)
                 ev.preventDefault()
@@ -805,7 +800,6 @@ export function copyTileSelection(state: State)
 
     global.editors.mapEditing.tileStamp = tileField
     global.editors.mapEditing.tilesetStampSet.clear()
-    global.editors.mapEditing.tileTool = "draw"
     global.editors.refreshToken.commit()
 }
 

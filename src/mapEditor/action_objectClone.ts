@@ -26,7 +26,7 @@ export function setupObjectClone(state: MapEditor.State)
     if (!layer || layer.type !== "object")
         return
     
-    const objectsOrig = layer.objects
+    const originalObjects = layer.objects
 
 
     state.onMouseMove = () =>
@@ -47,7 +47,7 @@ export function setupObjectClone(state: MapEditor.State)
 
         for (const objectId of originalSelection)
         {
-            const originalObject = objectsOrig[objectId]
+            const originalObject = originalObjects[objectId]
             if (!originalObject)
                 continue
 

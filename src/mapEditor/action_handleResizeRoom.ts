@@ -85,7 +85,5 @@ export function setupHandleResizeRoom(state: MapEditor.State, directionX: number
             borderDisplacements.top,
             room.width - borderDisplacements.left + borderDisplacements.right,
             room.height - borderDisplacements.top + borderDisplacements.bottom)
-
-        global.editors.refreshToken.commit()
     }
 }

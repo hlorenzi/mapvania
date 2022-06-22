@@ -66,7 +66,5 @@ export function setupRoomDraw(state: MapEditor.State)
             ...editor.map,
             nextIDs: nextIDs,
         }
-
-        global.editors.refreshToken.commit()
     }
 }

@@ -50,9 +50,4 @@ export function setupTileErase(state: MapEditor.State)
             global.editors.mapEditing.layerDefId,
             layer)
     }
-
-    state.onMouseUp = () =>
-    {
-        global.editors.refreshToken.commit()
-    }
 }

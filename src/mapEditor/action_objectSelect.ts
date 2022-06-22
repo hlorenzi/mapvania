@@ -16,9 +16,6 @@ export function setupObjectSelect(state: MapEditor.State)
         state.roomId,
         global.editors.mapEditing.layerDefId)
 
-    if (!layer || layer.type !== "object")
-        return
-
     const rect = {
         x1: state.mouse.posInRoom.x,
         y1: state.mouse.posInRoom.y,
@@ -44,6 +41,10 @@ export function setupObjectSelect(state: MapEditor.State)
         }
 
         state.objectSelection.clear()
+        
+        if (!layer || layer.type !== "object")
+            return
+
         for (const object of Object.values(layer.objects))
         {
             if (MathUtils.rectOverlaps(rectWH, MapEditor.getObjectRect(state, object)))
@@ -64,10 +65,5 @@ export function setupObjectSelect(state: MapEditor.State)
             ty1,
             tx2 - tx1,
             ty2 - ty1)
-    }
-
-    state.onMouseUp = () =>
-    {
-        global.editors.refreshToken.commit()
     }
 }

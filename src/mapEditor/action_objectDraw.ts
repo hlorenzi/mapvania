@@ -19,6 +19,12 @@ export function setupObjectDraw(state: MapEditor.State)
     if (!layerDef)
         return
 
+    editor.map = Map.ensureRoomLayer(
+        editor.defs,
+        editor.map,
+        state.roomId,
+        global.editors.mapEditing.layerDefId)
+        
     let layer = Map.getRoomLayer(
         editor.map,
         state.roomId,
@@ -66,5 +72,4 @@ export function setupObjectDraw(state: MapEditor.State)
     MapEditor.setupObjectMove(state)
 
     global.editors.mapEditing.tileTool = "move"
-    global.editors.refreshToken.commit()
 }

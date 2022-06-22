@@ -188,9 +188,4 @@ export function setupHandleVisibleProperty(
                 
         global.editors.refreshToken.commit()
     }
-
-    state.onMouseUp = () =>
-    {
-        global.editors.refreshToken.commit()
-    }
 }

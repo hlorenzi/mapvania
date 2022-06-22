@@ -438,6 +438,12 @@ export function resizeRoom(
     : Map
 {
     const room = map.rooms[roomId]
+    
+    if (xOffsetInPx == 0 &&
+        yOffsetInPx == 0 &&
+        room.width == newWidthInPx &&
+        room.height == newHeightInPx)
+        return map
 
     const newLayers: typeof room.layers = {}
 

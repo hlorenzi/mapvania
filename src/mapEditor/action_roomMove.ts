@@ -10,50 +10,56 @@ export function setupRoomMove(state: MapEditor.State)
 {
     const editor = (global.editors.editors[state.editorIndex] as Editors.EditorMap)
     const defs = editor.defs
-    const map = editor.map
 
     
-    const roomsOrig = map.rooms
+    const originalMap = editor.map
+    const originalRooms = editor.map.rooms
 
 
     state.onMouseMove = () =>
     {
-        const newRooms = {...map.rooms}
+        let hadChanges = false
+
+        const newRooms = { ...editor.map.rooms }
 
         for (const room of Object.values(newRooms))
         {
             if (!state.roomSelection.has(room.id))
                 continue
 
-            const roomOrig = roomsOrig[room.id]
+            const originalRoom = originalRooms[room.id]
+
+            const newX = MathUtils.snapRound(
+                originalRoom.x +
+                    defs.generalDefs.roomWidthMultiple * state.mouseDownDelta.tile.x,
+                defs.generalDefs.roomWidthMultiple)
+
+            const newY = MathUtils.snapRound(
+                originalRoom.y +
+                    defs.generalDefs.roomHeightMultiple * state.mouseDownDelta.tile.y,
+                    defs.generalDefs.roomHeightMultiple)
+
+            if (originalRoom.x == newX && originalRoom.y == newY)
+                continue
+
+            hadChanges = true
 
             newRooms[room.id] = {
                 ...room,
-                
-                x: MathUtils.snapRound(
-                    roomOrig.x +
-                        defs.generalDefs.roomWidthMultiple * state.mouseDownDelta.tile.x,
-                    defs.generalDefs.roomWidthMultiple),
-
-                y: MathUtils.snapRound(
-                    roomOrig.y +
-                        defs.generalDefs.roomHeightMultiple * state.mouseDownDelta.tile.y,
-                        defs.generalDefs.roomHeightMultiple),
+                x: newX,
+                y: newY,
             }
+        }
+
+        if (!hadChanges)
+        {
+            editor.map = originalMap
+            return
         }
 
         editor.map = {
             ...editor.map,
             rooms: newRooms,
         }
-    }
-
-    state.onRenderMapTool = () =>
-    {
-    }
-
-    state.onMouseUp = () =>
-    {
-        global.editors.refreshToken.commit()
     }
 }
