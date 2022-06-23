@@ -49,6 +49,12 @@ export function render(state: MapEditor.State)
             continue
         }
 
+        if (!isRectVisible(
+                state,
+                room.x, room.y,
+                room.width, room.height))
+            continue
+
         state.ctx.save()
         state.ctx.translate(room.x, room.y)
     
@@ -143,32 +149,80 @@ export function renderRoom(
             if (!layerDef)
                 continue
 
-            for (const cell of Map.enumerateTileFieldCells(layer.tileField))
+            let drawX1 = layer.tileField.width - 1
+            let drawX2 = 0
+            
+            let drawY1 = layer.tileField.height - 1
+            let drawY2 = 0
+
+            for (let x = 0; x < layer.tileField.width; x++)
             {
-                if (!cell.tile)
-                    continue
-
-                const tileset = Defs.getTileset(defs, cell.tile.tilesetDefId)
-                if (!tileset)
-                    continue
-
-                const image = Images.getImageLazy(tileset.imageSrc)
-                if (!image)
-                    continue
-
-                const imagePx = Defs.getPixelForTileIndex(tileset, cell.tile.tileId)
-
-                drawImage(
+                if (isRectVisible(
                     state,
-                    image.element,
-                    imagePx.x,
-                    imagePx.y,
-                    tileset.gridCellWidth,
-                    tileset.gridCellHeight,
-                    cell.x * layerDef.gridCellWidth,
-                    cell.y * layerDef.gridCellHeight,
+                    room.x + x * layerDef.gridCellWidth,
+                    room.y,
                     layerDef.gridCellWidth,
-                    layerDef.gridCellHeight)
+                    room.height))
+                {
+                    drawX1 = Math.min(drawX1, x)
+                    drawX2 = Math.max(drawX2, x)
+                }
+            }
+
+            for (let y = 0; y < layer.tileField.height; y++)
+            {
+                if (isRectVisible(
+                    state,
+                    room.x,
+                    room.y + y * layerDef.gridCellHeight,
+                    room.width,
+                    layerDef.gridCellHeight))
+                {
+                    drawY1 = Math.min(drawY1, y)
+                    drawY2 = Math.max(drawY2, y)
+                }
+            }
+
+            let cachedTilesetDefId = ""
+            let cachedTileset: Defs.DefTileset | undefined = undefined
+            let cachedImage: Images.Image | undefined = undefined
+
+            for (let y = drawY1; y <= drawY2; y++)
+            {
+                for (let x = drawX1; x <= drawX2; x++)
+                {
+                    const tile = layer.tileField.tiles[y * layer.tileField.width + x]
+                    if (!tile)
+                        continue
+
+                    if (tile.tilesetDefId != cachedTilesetDefId)
+                    {
+                        cachedTilesetDefId = tile.tilesetDefId
+                        cachedTileset = Defs.getTileset(defs, tile.tilesetDefId)
+
+                        if (!cachedTileset)
+                            continue
+
+                        cachedImage = Images.getImageLazy(cachedTileset.imageSrc)
+                    }
+                    
+                    if (!cachedTileset || !cachedImage)
+                        continue
+
+                    const imagePx = Defs.getPixelForTileIndex(cachedTileset, tile.tileId)
+
+                    drawImage(
+                        state,
+                        cachedImage.element,
+                        imagePx.x,
+                        imagePx.y,
+                        cachedTileset.gridCellWidth,
+                        cachedTileset.gridCellHeight,
+                        x * layerDef.gridCellWidth,
+                        y * layerDef.gridCellHeight,
+                        layerDef.gridCellWidth,
+                        layerDef.gridCellHeight)
+                }
             }
         }
 
@@ -745,6 +799,41 @@ export function renderInteractionHandles(
         state.ctx.strokeStyle = hovering ? "#ffffff" : "#888888"
         state.ctx.strokeRect(handleX1, handleY1, handle.width, handle.height)
     }
+}
+
+
+export function positionXToScreen(state: MapEditor.State, x: number)
+{
+    return x * state.camera.zoom +
+        (Math.floor(state.canvasWidth / 2 - state.camera.pos.x) + 0.5)
+}
+
+
+export function positionYToScreen(state: MapEditor.State, y: number)
+{
+    return y * state.camera.zoom +
+        (Math.floor(state.canvasHeight / 2 - state.camera.pos.y) + 0.5)
+}
+
+
+export function isRectVisible(
+    state: MapEditor.State,
+    x: number,
+    y: number,
+    width: number,
+    height: number)
+{
+    const margin = 0
+
+    const screenX1 = positionXToScreen(state, x)
+    const screenX2 = positionXToScreen(state, x + width)
+    const screenY1 = positionYToScreen(state, y)
+    const screenY2 = positionYToScreen(state, y + height)
+
+    return (screenX2 >= margin &&
+        screenX1 < state.canvasWidth - margin &&
+        screenY2 >= margin &&
+        screenY1 < state.canvasHeight - margin)
 }
 
 
