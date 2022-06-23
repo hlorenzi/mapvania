@@ -54,13 +54,7 @@ export function EditorMap(props: {
         const onMouseMove = (ev: MouseEvent) => MapEditor.onMouseMove(editor.mapEditor, ev)
         const onMouseUp = (ev: MouseEvent) => MapEditor.onMouseUp(editor.mapEditor, ev)
         const onMouseWheel = (ev: WheelEvent) => MapEditor.onMouseWheel(editor.mapEditor, ev)
-        const onKeyDown = (ev: KeyboardEvent) =>
-        {
-            if (document.activeElement && document.activeElement.tagName === "INPUT")
-                return
-            
-            MapEditor.onKey(editor.mapEditor, ev, true)
-        }
+        const onKeyDown = (ev: KeyboardEvent) => MapEditor.onKey(editor.mapEditor, ev, true)
         const onKeyUp = (ev: KeyboardEvent) => MapEditor.onKey(editor.mapEditor, ev, false)
 
         onResize()

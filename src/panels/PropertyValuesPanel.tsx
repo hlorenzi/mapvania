@@ -1,4 +1,5 @@
 import * as React from "react"
+import CodeEditor from "react-simple-code-editor"
 import styled from "styled-components"
 import * as ID from "../data/id"
 import * as Defs from "../data/defs"
@@ -186,19 +187,68 @@ export function FieldString(props: {
         (accum, x) => x !== null && x == accum ? accum : null,
         props.values[0] as string)
 
+    const hasNewlines = !value ? false : value.indexOf("\n") >= 0
+
+    const [codeEditorOpen, setCodeEditorOpen] = React.useState(hasNewlines)
+
     const modify = (newValue: string) =>
         props.modifyValue(old => newValue)
 
+
     return <>
-        <UI.Cell justifyStretch>
-            <UI.Input
-                value={ !props.enabled ? " " : value ?? "" }
-                placeholder={ value === null ? "- multiple values -" : "" }
-                onChange={ modify }
-                disabled={ !props.enabled }
-                fullWidth
-            />
-        </UI.Cell>
+        { !codeEditorOpen ?
+            <UI.Cell justifyStretch>
+                <div style={{
+                    display: "grid",
+                    gridTemplate: "auto / 1fr auto",
+                    width: "100%",
+                }}>
+                    <UI.Input
+                        value={ !props.enabled ? " " : value ?? "" }
+                        placeholder={ value === null ? "- multiple values -" : "" }
+                        onChange={ modify }
+                        disabled={ !props.enabled || hasNewlines }
+                        fullWidth
+                    />
+
+                    <UI.Button
+                        label="⏬"
+                        onClick={ () => setCodeEditorOpen(o => !o) }
+                    />
+                </div>
+            </UI.Cell>
+        :
+            <>
+                <UI.Cell justifyEnd>
+                    <UI.Button
+                        label="⏫"
+                        onClick={ () => setCodeEditorOpen(o => !o) }
+                    />
+                </UI.Cell>
+                <UI.Cell span={ 4 } justifyStretch>
+                    <div style={{
+                        width: "100%",
+                        maxHeight: "50vh",
+                        overflowY: "auto",
+                    }}>
+                        <CodeEditor
+                            value={ !props.enabled ? " " : value ?? "" }
+                            placeholder={ value === null ? "- multiple values -" : "" }
+                            onValueChange={ modify }
+                            highlight={ c => c }
+                            disabled={ !props.enabled }
+                            padding={ 6 }
+                            style={{
+                                border: 0,
+                                backgroundColor: "#2d2d2d",
+                                fontFamily: "monospace",
+                                fontSize: "1.2em",
+                                lineHeight: "1.35em",
+                        }}/>
+                    </div>
+                </UI.Cell>
+            </>
+        }
     </>
 }
 

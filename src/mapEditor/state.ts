@@ -687,6 +687,11 @@ export function onMouseWheel(state: State, ev: WheelEvent)
 
 export function onKey(state: State, ev: KeyboardEvent, down: boolean)
 {
+    if (document.activeElement &&
+        (document.activeElement.tagName === "INPUT" ||
+        document.activeElement.tagName === "TEXTAREA"))
+        return
+    
     const key = ev.key.toLowerCase()
 
     switch (key)

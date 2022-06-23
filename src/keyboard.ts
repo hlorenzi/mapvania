@@ -10,6 +10,11 @@ export function useKeyboardShortcuts()
     {
         const onKeyDown = (ev: KeyboardEvent) =>
         {
+            if (document.activeElement &&
+                (document.activeElement.tagName === "INPUT" ||
+                document.activeElement.tagName === "TEXTAREA"))
+                return
+
             const key = ev.key.toLowerCase()
 
             switch (key)
@@ -72,6 +77,11 @@ export function useKeyboardShortcuts()
 
         const onKeyUp = (ev: KeyboardEvent) =>
         {
+            if (document.activeElement &&
+                (document.activeElement.tagName === "INPUT" ||
+                document.activeElement.tagName === "TEXTAREA"))
+                return
+            
             const key = ev.key.toLowerCase()
 
             switch (key)

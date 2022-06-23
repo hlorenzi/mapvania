@@ -22,6 +22,7 @@
     "@types/react": "^17.0.34",
     "@types/react-dom": "^17.0.11",
     "@types/styled-components": "^5.1.15",
+    "@types/wicg-file-system-access": "^2020.9.4",
     "babel-loader": "^8.2.3",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
@@ -31,8 +32,7 @@
     "webpack-cli": "^4.9.1"
   },
   "dependencies": {
-    "@hlorenzi/react-dockable": "^0.1.1",
-    "@types/wicg-file-system-access": "^2020.9.4",
-    "idb-keyval": "^6.1.0"
+    "idb-keyval": "^6.1.0",
+    "react-simple-code-editor": "^0.11.2"
   }
 }
