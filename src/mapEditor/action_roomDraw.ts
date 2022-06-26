@@ -34,11 +34,26 @@ export function setupRoomDraw(state: MapEditor.State)
         const ty1 = Math.min(stageRect.tile1.y, stageRect.tile2.y)
         const ty2 = Math.max(stageRect.tile1.y, stageRect.tile2.y)
 
+        const newRoomXTiles = tx1
+        const newRoomYTiles = ty1
+        const newRoomWTiles = tx2 - tx1 + 1
+        const newRoomHTiles = ty2 - ty1 + 1
+        const newRoomX = tx1 * defs.generalDefs.roomHeightMultiple
+        const newRoomY = ty1 * defs.generalDefs.roomHeightMultiple
+        const newRoomW = newRoomWTiles * defs.generalDefs.roomWidthMultiple
+        const newRoomH = newRoomHTiles * defs.generalDefs.roomHeightMultiple
+
         state.ctx.strokeRect(
-            tx1 * defs.generalDefs.roomWidthMultiple,
-            ty1 * defs.generalDefs.roomHeightMultiple,
-            (tx2 - tx1 + 1) * defs.generalDefs.roomWidthMultiple,
-            (ty2 - ty1 + 1) * defs.generalDefs.roomHeightMultiple)
+            newRoomX, newRoomY,
+            newRoomW, newRoomH)
+            
+        MapEditor.drawInfoBox(
+            state,
+            `pos: (${ newRoomX }, ${ newRoomY }) px\n` +
+            `size: (${ newRoomW }, ${ newRoomH }) px\n` +
+            `\n` +
+            `pos: (${ newRoomXTiles }, ${ newRoomYTiles }) tiles\n` +
+            `size: (${ newRoomWTiles }, ${ newRoomHTiles }) tiles`)
     }
 
     state.onMouseUp = () =>
@@ -60,6 +75,10 @@ export function setupRoomDraw(state: MapEditor.State)
 
             layers: {},
         }
+
+        editor.mapEditor.roomSelection.clear()
+        editor.mapEditor.roomSelection.add(newRoomId)
+        editor.mapEditor.roomId = newRoomId
 
         editor.map = Map.setRoom(map, newRoomId, newRoom)
         editor.map = {
