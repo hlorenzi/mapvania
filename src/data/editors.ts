@@ -20,9 +20,9 @@ export interface Global
     {
         layerDefId: ID.ID
     
-        tileTool: TileTool
-        tileToolBeforeKeyToggle: TileTool
-        tileToolKeyToggled: boolean
+        tool: Tool
+        toolBeforeKeyToggle: Tool
+        toolKeyToggled: boolean
     
         tilesetDefId: ID.ID
         tilesetStampSet: Set<number>
@@ -39,7 +39,7 @@ export interface Global
 export const LAYERDEF_ID_MAP = "world"
 
 
-export type TileTool = "move" | "draw" | "fill" | "erase" | "select"
+export type Tool = "move" | "draw" | "fill" | "erase" | "select"
 
 
 export type Editor =
@@ -93,9 +93,9 @@ export function makeNew(refreshToken: RefreshToken): Global
         mapEditing: {
             layerDefId: LAYERDEF_ID_MAP,
 
-            tileTool: "move",
-            tileToolBeforeKeyToggle: "move",
-            tileToolKeyToggled: false,
+            tool: "move",
+            toolBeforeKeyToggle: "move",
+            toolKeyToggled: false,
         
             tilesetDefId: "",
             tilesetStampSet: new Set<number>(),

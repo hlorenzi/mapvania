@@ -493,7 +493,7 @@ export function onMouseDown(state: State, ev: MouseEvent)
                 state.roomId = hoverRoom.id
             }
 
-            if (global.editors.mapEditing.tileTool === "move")
+            if (global.editors.mapEditing.tool === "move")
             {
                 if (!hoverRoom)
                     MapEditor.setupRoomSelect(state)
@@ -503,10 +503,10 @@ export function onMouseDown(state: State, ev: MouseEvent)
                     MapEditor.setupRoomMove(state)
             }
 
-            else if (global.editors.mapEditing.tileTool === "draw")
+            else if (global.editors.mapEditing.tool === "draw")
                 MapEditor.setupRoomDraw(state)
 
-            else if (global.editors.mapEditing.tileTool === "select")
+            else if (global.editors.mapEditing.tool === "select")
                 MapEditor.setupRoomSelect(state)
         }
         else
@@ -522,16 +522,16 @@ export function onMouseDown(state: State, ev: MouseEvent)
             {
                 if (editingLayerDef && editingLayerDef.type === "tile")
                 {
-                    if (global.editors.mapEditing.tileTool === "draw")
+                    if (global.editors.mapEditing.tool === "draw")
                         MapEditor.setupTileDraw(state)
 
-                    else if (global.editors.mapEditing.tileTool === "fill")
+                    else if (global.editors.mapEditing.tool === "fill")
                         MapEditor.setupTileFill(state)
 
-                    else if (global.editors.mapEditing.tileTool === "erase")
+                    else if (global.editors.mapEditing.tool === "erase")
                         MapEditor.setupTileErase(state)
 
-                    else if (global.editors.mapEditing.tileTool === "select")
+                    else if (global.editors.mapEditing.tool === "select")
                         MapEditor.setupTileSelect(state)
                 }
                 else if (editingLayerDef && editingLayerDef.type === "object")
@@ -552,7 +552,7 @@ export function onMouseDown(state: State, ev: MouseEvent)
                             state.objectSelection.add(hoverObject.id)
                     }
 
-                    if (global.editors.mapEditing.tileTool === "move")
+                    if (global.editors.mapEditing.tool === "move")
                     {
                         if (!hoverObject)
                             MapEditor.setupObjectSelect(state)
@@ -562,10 +562,10 @@ export function onMouseDown(state: State, ev: MouseEvent)
                             MapEditor.setupObjectMove(state)
                     }
 
-                    else if (global.editors.mapEditing.tileTool === "draw")
+                    else if (global.editors.mapEditing.tool === "draw")
                         MapEditor.setupObjectDraw(state)
 
-                    else if (global.editors.mapEditing.tileTool === "select")
+                    else if (global.editors.mapEditing.tool === "select")
                         MapEditor.setupObjectSelect(state)
                 }
             }
@@ -700,7 +700,7 @@ export function onKey(state: State, ev: KeyboardEvent, down: boolean)
             if (down && ev.ctrlKey)
             {
                 copyTileSelection(state)
-                global.editors.mapEditing.tileTool = "draw"
+                global.editors.mapEditing.tool = "draw"
                 state.rectSelection = null
                 MapEditor.render(state)
                 ev.preventDefault()
@@ -713,7 +713,7 @@ export function onKey(state: State, ev: KeyboardEvent, down: boolean)
                 copyTileSelection(state)
                 eraseTileSelection(state)
                 Editors.historyAdd(state.editorIndex)
-                global.editors.mapEditing.tileTool = "draw"
+                global.editors.mapEditing.tool = "draw"
                 state.rectSelection = null
                 MapEditor.render(state)
                 ev.preventDefault()

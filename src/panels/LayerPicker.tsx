@@ -17,8 +17,17 @@ export function LayerPicker(props: {
 
     const chooseLayer = (id: ID.ID) =>
     {
+        const prevLayerDef = Defs.getLayerDef(editor.defs, global.editors.mapEditing.layerDefId)
+        const newLayerDef = Defs.getLayerDef(editor.defs, id)
+
         global.editors.mapEditing.layerDefId = id
-        global.editors.mapEditing.tileTool = "move"
+
+        if (!prevLayerDef || !newLayerDef ||
+            prevLayerDef.type !== newLayerDef.type)
+        {
+            global.editors.mapEditing.tool = "move"
+        }
+
         editor.mapEditor.roomSelection.clear()
         editor.mapEditor.objectSelection.clear()
         global.editors.refreshToken.commit()

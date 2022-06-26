@@ -527,7 +527,7 @@ export function renderMapLayerTools(
         
     state.ctx.save()
 
-    if (global.editors.mapEditing.tileTool === "draw" &&
+    if (global.editors.mapEditing.tool === "draw" &&
         !state.onMouseMove)
     {
         state.ctx.save()
@@ -605,8 +605,8 @@ export function renderTileLayerForeground(
             editingLayerDef.gridCellWidth,
             editingLayerDef.gridCellHeight)
 
-    if ((global.editors.mapEditing.tileTool === "draw" ||
-        global.editors.mapEditing.tileTool === "fill") &&
+    if ((global.editors.mapEditing.tool === "draw" ||
+        global.editors.mapEditing.tool === "fill") &&
         !state.onMouseMove)
     {
         state.ctx.save()
@@ -639,7 +639,7 @@ export function renderTileLayerForeground(
 
         state.ctx.restore()
     }
-    else if (global.editors.mapEditing.tileTool === "erase")
+    else if (global.editors.mapEditing.tool === "erase")
     {
         state.ctx.save()
         state.ctx.strokeStyle = "#f40"
@@ -711,7 +711,7 @@ export function renderObjectLayerForeground(
             editingLayerDef.gridCellWidth,
             editingLayerDef.gridCellHeight)
             
-    if (global.editors.mapEditing.tileTool === "draw" &&
+    if (global.editors.mapEditing.tool === "draw" &&
         !state.onMouseMove)
     {
         const objectDef = Defs.getObjectDef(defs, global.editors.mapEditing.selectedObjectDefId)

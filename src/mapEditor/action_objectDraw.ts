@@ -71,5 +71,5 @@ export function setupObjectDraw(state: MapEditor.State)
     
     MapEditor.setupObjectMove(state)
 
-    global.editors.mapEditing.tileTool = "move"
+    global.editors.mapEditing.tool = "move"
 }

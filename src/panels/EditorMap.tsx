@@ -103,9 +103,9 @@ export function EditorMap(props: {
     }, [refreshByEditors, global.editors.refreshToken.refreshValue])
 
 
-    const chooseTileTool = (tool: Editors.TileTool) =>
+    const chooseTool = (tool: Editors.Tool) =>
     {
-        global.editors.mapEditing.tileTool = tool
+        global.editors.mapEditing.tool = tool
         global.editors.refreshToken.commit()
     }
 
@@ -162,20 +162,20 @@ export function EditorMap(props: {
                     <>
                     <UI.Button
                         label="📐 Move (M)"
-                        selected={ global.editors.mapEditing.tileTool === "move" }
-                        onClick={ () => chooseTileTool("move") }
+                        selected={ global.editors.mapEditing.tool === "move" }
+                        onClick={ () => chooseTool("move") }
                     />
 
                     <UI.Button
                         label="✒️ Draw (B)"
-                        selected={ global.editors.mapEditing.tileTool === "draw" }
-                        onClick={ () => chooseTileTool("draw") }
+                        selected={ global.editors.mapEditing.tool === "draw" }
+                        onClick={ () => chooseTool("draw") }
                     />
 
                     <UI.Button
                         label="✂️ Select (Shift)"
-                        selected={ global.editors.mapEditing.tileTool === "select" }
-                        onClick={ () => chooseTileTool("select") }
+                        selected={ global.editors.mapEditing.tool === "select" }
+                        onClick={ () => chooseTool("select") }
                     />
                     </>
                 }
@@ -184,26 +184,26 @@ export function EditorMap(props: {
                     <>
                     <UI.Button
                         label="✒️ Draw (B)"
-                        selected={ global.editors.mapEditing.tileTool === "draw" }
-                        onClick={ () => chooseTileTool("draw") }
+                        selected={ global.editors.mapEditing.tool === "draw" }
+                        onClick={ () => chooseTool("draw") }
                     />
 
                     <UI.Button
                         label="💧 Fill (G)"
-                        selected={ global.editors.mapEditing.tileTool === "fill" }
-                        onClick={ () => chooseTileTool("fill") }
+                        selected={ global.editors.mapEditing.tool === "fill" }
+                        onClick={ () => chooseTool("fill") }
                     />
 
                     <UI.Button
                         label="❌ Erase (E)"
-                        selected={ global.editors.mapEditing.tileTool === "erase" }
-                        onClick={ () => chooseTileTool("erase") }
+                        selected={ global.editors.mapEditing.tool === "erase" }
+                        onClick={ () => chooseTool("erase") }
                     />
 
                     <UI.Button
                         label="✂️ Select (Shift)"
-                        selected={ global.editors.mapEditing.tileTool === "select" }
-                        onClick={ () => chooseTileTool("select") }
+                        selected={ global.editors.mapEditing.tool === "select" }
+                        onClick={ () => chooseTool("select") }
                     />
                     </>
                 }
@@ -212,20 +212,20 @@ export function EditorMap(props: {
                     <>
                     <UI.Button
                         label="📐 Move (M)"
-                        selected={ global.editors.mapEditing.tileTool === "move" }
-                        onClick={ () => chooseTileTool("move") }
+                        selected={ global.editors.mapEditing.tool === "move" }
+                        onClick={ () => chooseTool("move") }
                     />
 
                     <UI.Button
                         label="✒️ Draw (B)"
-                        selected={ global.editors.mapEditing.tileTool === "draw" }
-                        onClick={ () => chooseTileTool("draw") }
+                        selected={ global.editors.mapEditing.tool === "draw" }
+                        onClick={ () => chooseTool("draw") }
                     />
 
                     <UI.Button
                         label="✂️ Select (Shift)"
-                        selected={ global.editors.mapEditing.tileTool === "select" }
-                        onClick={ () => chooseTileTool("select") }
+                        selected={ global.editors.mapEditing.tool === "select" }
+                        onClick={ () => chooseTool("select") }
                     />
                     </>
                 }

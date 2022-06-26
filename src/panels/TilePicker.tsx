@@ -82,7 +82,7 @@ export function TilePicker(props: {
                     }
                 }
                 
-                global.editors.mapEditing.tileTool = "draw"
+                global.editors.mapEditing.tool = "draw"
                 global.editors.refreshToken.commit()
             }
         }

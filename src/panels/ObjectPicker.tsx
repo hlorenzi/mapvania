@@ -19,7 +19,7 @@ export function ObjectPicker(props: {
     const chooseObject = (id: ID.ID) =>
     {
         global.editors.mapEditing.selectedObjectDefId = id
-        global.editors.mapEditing.tileTool = "draw"
+        global.editors.mapEditing.tool = "draw"
         global.editors.refreshToken.commit()
     }
 
