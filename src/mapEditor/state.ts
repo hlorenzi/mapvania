@@ -886,7 +886,7 @@ export function getObjectRect(state: State, obj: Map.Obj): MathUtils.RectWH
 }
 
 
-export function getObjectAt(state: State, pos: MathUtils.Point)
+export function getObjectAt(state: State, pos: MathUtils.Point): Map.Obj | undefined
 {
     const editor = (global.editors.editors[state.editorIndex] as Editors.EditorMap)
 
@@ -896,15 +896,17 @@ export function getObjectAt(state: State, pos: MathUtils.Point)
         global.editors.mapEditing.layerDefId)
     
     if (!layer || layer.type !== "object")
-        return
+        return undefined
+
+    let lastObjAt: Map.Obj | undefined = undefined
 
     for (const obj of Object.values(layer.objects))
     {
         if (MathUtils.rectContains(getObjectRect(state, obj), pos))
-            return obj
+            lastObjAt = obj
     }
 
-    return undefined
+    return lastObjAt
 }
 
 
