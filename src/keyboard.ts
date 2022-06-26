@@ -10,12 +10,23 @@ export function useKeyboardShortcuts()
     {
         const onKeyDown = (ev: KeyboardEvent) =>
         {
+            const key = ev.key.toLowerCase()
+     
+            switch (key)
+            {
+                case "s":
+                    if (ev.ctrlKey)
+                    {
+                        ev.preventDefault()
+                        Actions.save.func()
+                    }
+                    return
+            }
+
             if (document.activeElement &&
                 (document.activeElement.tagName === "INPUT" ||
                 document.activeElement.tagName === "TEXTAREA"))
                 return
-
-            const key = ev.key.toLowerCase()
 
             switch (key)
             {
@@ -47,14 +58,6 @@ export function useKeyboardShortcuts()
                     }
                     global.editors.mapEditing.tileTool = "select"
                     global.editors.refreshToken.commit()
-                    break
-                    
-                case "s":
-                    if (ev.ctrlKey)
-                    {
-                        ev.preventDefault()
-                        Actions.save.func()
-                    }
                     break
                     
                 case "z":
