@@ -107,6 +107,7 @@ export function EditorMap(props: {
     {
         global.editors.mapEditing.tool = tool
         global.editors.refreshToken.commit()
+        Editors.render(props.editorIndex)
     }
 
     const toggleShowGrid = () =>
@@ -117,6 +118,7 @@ export function EditorMap(props: {
             "none"
             
         global.editors.refreshToken.commit()
+        Editors.render(props.editorIndex)
     }
 
     const toggleShowOtherLayers = () =>
@@ -127,6 +129,7 @@ export function EditorMap(props: {
             "none"
             
         global.editors.refreshToken.commit()
+        Editors.render(props.editorIndex)
     }
 
 

@@ -374,7 +374,7 @@ export function undo(editorIndex: number)
         
         editor.historyPointer -= 1
         editor.map = editor.history[editor.historyPointer].map
-        MapEditor.render(editor.mapEditor)
+        render(editorIndex)
         global.editors.refreshToken.commit()
     }
 }
@@ -390,7 +390,17 @@ export function redo(editorIndex: number)
         
         editor.historyPointer += 1
         editor.map = editor.history[editor.historyPointer].map
-        MapEditor.render(editor.mapEditor)
+        render(editorIndex)
         global.editors.refreshToken.commit()
+    }
+}
+
+
+export function render(editorIndex: number)
+{
+    const editor = global.editors.editors[editorIndex]
+    if (editor.type === "map")
+    {
+        MapEditor.render(editor.mapEditor)
     }
 }
