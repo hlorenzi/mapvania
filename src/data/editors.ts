@@ -321,6 +321,8 @@ export async function saveEditorMap(editorIndex: number)
     {
         const editorData = global.editors.editors[editorIndex] as EditorMap
 
+        historyAdd(editorIndex)
+
         const serMap = MapSerialization.serialize(editorData.defs, editorData.map)
         const serMapText = Filesystem.stringify(serMap)
 
@@ -347,7 +349,7 @@ export function historyAdd(editorIndex: number, tag?: string)
     if (editor.type === "map")
     {
         if (editor.history.length > 0 &&
-            editor.history[editor.history.length - 1].map === editor.map)
+            editor.history[editor.historyPointer].map === editor.map)
             return
         
         editor.history = editor.history.slice(0, editor.historyPointer + 1)

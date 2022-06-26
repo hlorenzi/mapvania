@@ -450,6 +450,8 @@ export function onMouseDown(state: State, ev: MouseEvent)
     if (state.onMouseMove)
         return
 
+    Editors.historyAdd(state.editorIndex)
+
     state.mouseDownOrigin =
     {
         posRaw: state.mouse.posRaw,
