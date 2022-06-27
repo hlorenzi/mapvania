@@ -9,6 +9,7 @@ import { global } from "../global"
 import { PropertyDefsPanel } from "./PropertyDefsPanel"
 import styled from "styled-components"
 import { DeepAssignable } from "../util/deepAssign"
+import { ObjectInheritanceList } from "./ObjectInheritanceList"
 
 
 export function DefsObjects(props: {
@@ -33,6 +34,7 @@ export function DefsObjects(props: {
     const curObjectIndex = defs.objectDefs.findIndex(o => o.id === curObjectId)
     const curObject = defs.objectDefs.find(o => o.id === curObjectId)
     const curObjectImg = Images.getImageLazy(curObject?.imageSrc ?? "")
+    const [curTab, setCurTab] = React.useState(0)
 
 
     const setObject = (objectDef: Defs.DefObject) =>
@@ -257,156 +259,183 @@ export function DefsObjects(props: {
                 paddingRight: "0.25em",
                 marginBottom: "10em",
         }}>
+            <UI.TabGroup
+                value={ curTab }
+                onChange={ setCurTab }
+                labels={[
+                    "Appearance",
+                    "Properties",
+                ]}/>
             
-            <UI.Grid template="auto auto" fullHeight>
+            { curTab === 0 &&
+                <UI.Grid template="auto auto">
 
-                <UI.Cell justifyEnd>
-                    Name
-                </UI.Cell>
+                    <UI.Cell justifyEnd>
+                        Name
+                    </UI.Cell>
 
-                <UI.Cell justifyStretch>
-                    <UI.Input
-                        value={ curObject.name }
-                        onChange={ (value) => modifyObject({ name: value }) }
-                        fullWidth
-                    />
-                </UI.Cell>
+                    <UI.Cell justifyStretch>
+                        <UI.Input
+                            value={ curObject.name }
+                            onChange={ (value) => modifyObject({ name: value }) }
+                            fullWidth
+                        />
+                    </UI.Cell>
 
-                <UI.Cell span={ 2 } justifyCenter>
-                </UI.Cell>
-                
-                <UI.Cell span={ 2 } justifyEnd>
-                    <UI.Button
-                        label="🔼"
-                        onClick={ moveUp }
-                    />
+                    <UI.Cell justifyEnd>
+                        ID
+                    </UI.Cell>
 
-                    <UI.Button
-                        label="🔽"
-                        onClick={ moveDown }
-                    />
+                    <UI.Cell justifyStart>
+                        { curObject.id }
+                    </UI.Cell>
+                    
+                    <UI.Cell span={ 2 } justifyEnd>
+                        <UI.Button
+                            label="🔼"
+                            onClick={ moveUp }
+                        />
 
-                    <UI.Button
-                        label="❌ Delete"
-                        onClick={ deleteCurObject }
-                    />
-                </UI.Cell>
+                        <UI.Button
+                            label="🔽"
+                            onClick={ moveDown }
+                        />
 
-                <UI.Cell span={ 2 } divider/>
+                        <UI.Button
+                            label="❌ Delete"
+                            onClick={ deleteCurObject }
+                        />
+                    </UI.Cell>
 
-                <UI.Cell span={ 2 } justifyCenter>
-                    <UI.Button
-                        label="⛰️ Load Image..."
-                        onClick={ loadImage }
-                    />
-                </UI.Cell>
-                
-                <UI.Cell justifyEnd>
-                    Image Rect
-                </UI.Cell>
+                    <UI.Cell span={ 2 } divider/>
 
-                <UI.Cell>
-                    <UI.Input
-                        number
-                        value={ curObject.imageRect.x }
-                        onChangeNumber={ (value) => modifyObject({ imageRect: { x: value } }) }
-                    />
-                    { " × " }
-                    <UI.Input
-                        number
-                        value={ curObject.imageRect.y }
-                        onChangeNumber={ (value) => modifyObject({ imageRect: { y: value } }) }
-                    />
-                    { " px (x, y)" }
-                    <br/>
-                    <UI.Input
-                        number
-                        value={ curObject.imageRect.width }
-                        onChangeNumber={ (value) => modifyObject({ imageRect: { width: value } }) }
-                    />
-                    { " × " }
-                    <UI.Input
-                        number
-                        value={ curObject.imageRect.height }
-                        onChangeNumber={ (value) => modifyObject({ imageRect: { height: value } }) }
-                    />
-                    { " px (size)" }
-                </UI.Cell>
+                    <UI.Cell span={ 2 } justifyCenter>
+                        <UI.Button
+                            label="⛰️ Load Image..."
+                            onClick={ loadImage }
+                        />
+                    </UI.Cell>
+                    
+                    <UI.Cell justifyEnd>
+                        Image Rect
+                    </UI.Cell>
 
-                <UI.Cell span={ 2 } divider/>
+                    <UI.Cell>
+                        <UI.Input
+                            number
+                            value={ curObject.imageRect.x }
+                            onChangeNumber={ (value) => modifyObject({ imageRect: { x: value } }) }
+                        />
+                        { " × " }
+                        <UI.Input
+                            number
+                            value={ curObject.imageRect.y }
+                            onChangeNumber={ (value) => modifyObject({ imageRect: { y: value } }) }
+                        />
+                        { " px (x, y)" }
+                        <br/>
+                        <UI.Input
+                            number
+                            value={ curObject.imageRect.width }
+                            onChangeNumber={ (value) => modifyObject({ imageRect: { width: value } }) }
+                        />
+                        { " × " }
+                        <UI.Input
+                            number
+                            value={ curObject.imageRect.height }
+                            onChangeNumber={ (value) => modifyObject({ imageRect: { height: value } }) }
+                        />
+                        { " px (size)" }
+                    </UI.Cell>
 
-                <UI.Cell justifyEnd>
-                    Pivot
-                </UI.Cell>
+                    <UI.Cell span={ 2 } divider/>
 
-                <UI.Cell>
-                    <UI.Input
-                        number
-                        value={ curObject.pivotPercent.x * 100 }
-                        onChangeNumber={ (value) => modifyObject({ pivotPercent: { x: value / 100 } }) }
-                    />
-                    { " × " }
-                    <UI.Input
-                        number
-                        value={ curObject.pivotPercent.y * 100 }
-                        onChangeNumber={ (value) => modifyObject({ pivotPercent: { y: value / 100 } }) }
-                    />
-                    { " % of size" }
-                </UI.Cell>
-                
-                <UI.Cell justifyEnd>
-                    Interaction Rect
-                </UI.Cell>
+                    <UI.Cell justifyEnd>
+                        Pivot
+                    </UI.Cell>
 
-                <UI.Cell>
-                    <UI.Input
-                        number
-                        value={ curObject.interactionRect.x }
-                        onChangeNumber={ (value) => modifyObject({ interactionRect: { x: value } }) }
-                    />
-                    { " × " }
-                    <UI.Input
-                        number
-                        value={ curObject.interactionRect.y }
-                        onChangeNumber={ (value) => modifyObject({ interactionRect: { y: value } }) }
-                    />
-                    { " px (x, y)" }
-                    <br/>
-                    <UI.Input
-                        number
-                        value={ curObject.interactionRect.width }
-                        onChangeNumber={ (value) => modifyObject({ interactionRect: { width: value } }) }
-                    />
-                    { " × " }
-                    <UI.Input
-                        number
-                        value={ curObject.interactionRect.height }
-                        onChangeNumber={ (value) => modifyObject({ interactionRect: { height: value } }) }
-                    />
-                    { " px (size)" }
-                </UI.Cell>
+                    <UI.Cell>
+                        <UI.Input
+                            number
+                            value={ curObject.pivotPercent.x * 100 }
+                            onChangeNumber={ (value) => modifyObject({ pivotPercent: { x: value / 100 } }) }
+                        />
+                        { " × " }
+                        <UI.Input
+                            number
+                            value={ curObject.pivotPercent.y * 100 }
+                            onChangeNumber={ (value) => modifyObject({ pivotPercent: { y: value / 100 } }) }
+                        />
+                        { " % of size" }
+                    </UI.Cell>
+                    
+                    <UI.Cell justifyEnd>
+                        Interaction Rect
+                    </UI.Cell>
 
-                <UI.Cell justifyEnd>
-                    Resizable
-                </UI.Cell>
+                    <UI.Cell>
+                        <UI.Input
+                            number
+                            value={ curObject.interactionRect.x }
+                            onChangeNumber={ (value) => modifyObject({ interactionRect: { x: value } }) }
+                        />
+                        { " × " }
+                        <UI.Input
+                            number
+                            value={ curObject.interactionRect.y }
+                            onChangeNumber={ (value) => modifyObject({ interactionRect: { y: value } }) }
+                        />
+                        { " px (x, y)" }
+                        <br/>
+                        <UI.Input
+                            number
+                            value={ curObject.interactionRect.width }
+                            onChangeNumber={ (value) => modifyObject({ interactionRect: { width: value } }) }
+                        />
+                        { " × " }
+                        <UI.Input
+                            number
+                            value={ curObject.interactionRect.height }
+                            onChangeNumber={ (value) => modifyObject({ interactionRect: { height: value } }) }
+                        />
+                        { " px (size)" }
+                    </UI.Cell>
 
-                <UI.Cell>
-                    <UI.Checkbox
-                        value={ curObject.resizeable }
-                        onChange={ (value) => modifyObject({ resizeable: value }) }
-                    />
-                </UI.Cell>
+                    <UI.Cell justifyEnd>
+                        Resizable
+                    </UI.Cell>
 
-                <UI.Cell span={ 2 } divider/>
+                    <UI.Cell>
+                        <UI.Checkbox
+                            value={ curObject.resizeable }
+                            onChange={ (value) => modifyObject({ resizeable: value }) }
+                        />
+                    </UI.Cell>
 
-                <UI.Cell span={ 2 } justifyStretch>
-                    <PropertyDefsPanel
-                        defProperties={ curObject.properties }
-                        setDefProperties={ (value) => setObject({ ...curObject, properties: value }) }
-                    />
-                </UI.Cell>
+                </UI.Grid>
+            }
 
-            </UI.Grid>
+            { curTab === 1 &&
+                <UI.Grid template="auto auto">
+
+                    <UI.Cell span={ 2 } justifyStretch>
+                        <ObjectInheritanceList
+                            value={ curObject.inheritPropertiesFromObjectDefs }
+                            onChange={ (value) => setObject({ ...curObject, inheritPropertiesFromObjectDefs: value }) }
+                        />
+                    </UI.Cell>
+
+                    <UI.Cell span={ 2 } divider/>
+
+                    <UI.Cell span={ 2 } justifyStretch>
+                        <PropertyDefsPanel
+                            defProperties={ curObject.properties }
+                            setDefProperties={ (value) => setObject({ ...curObject, properties: value }) }
+                        />
+                    </UI.Cell>
+
+                </UI.Grid>
+            }
 
         </div> }
 

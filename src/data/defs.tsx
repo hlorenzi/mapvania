@@ -97,6 +97,7 @@ export interface DefObject
     pivotPercent: MathUtils.Point
     interactionRect: MathUtils.RectWH
 
+    inheritPropertiesFromObjectDefs: ID.ID[]
     properties: Properties.DefProperties
 }
 
@@ -126,6 +127,7 @@ export function makeNewObjectDef(): DefObject
         resizeable: false,
         pivotPercent: { x: 0, y: 0 },
         interactionRect: { x: 0, y: 0, width: 16, height: 16 },
+        inheritPropertiesFromObjectDefs: [],
         properties: [],
     }
 }
@@ -145,7 +147,14 @@ export function stringify(defs: Defs): string
 export function parse(data: string): Defs
 {
     const json = JSON.parse(data)
-    return { ...makeNew(), ...(json as Defs) }
+    const defs = { ...makeNew(), ...(json as Defs) }
+
+    defs.objectDefs = defs.objectDefs.map(o => ({
+        ...o,
+        inheritPropertiesFromObjectDefs: o.inheritPropertiesFromObjectDefs ?? [],
+    }))
+
+    return defs
 }
 
 
@@ -173,9 +182,26 @@ export function getObjectDef(defs: Defs, objectDefId: ID.ID)
 }
 
 
-export function getObjectPropertyDefs(defs: Defs, objectDef: DefObject)
+export function getObjectPropertyDefs(
+    defs: Defs,
+    objectDef: DefObject)
+    : Properties.DefProperties
 {
-    return objectDef.properties
+    if (objectDef.inheritPropertiesFromObjectDefs.length == 0)
+        return objectDef.properties
+
+    const properties: Properties.DefProperties = []
+    for (const id of objectDef.inheritPropertiesFromObjectDefs)
+    {
+        const inheritedObjectDef = getObjectDef(defs, id)
+        if (!inheritedObjectDef)
+            continue
+
+        properties.push(...getObjectPropertyDefs(defs, inheritedObjectDef))
+    }
+
+    properties.push(...objectDef.properties)
+    return properties
 }
 
 

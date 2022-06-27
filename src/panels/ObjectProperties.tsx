@@ -108,31 +108,28 @@ export function ObjectProperties(props: {
                     padding: "1em",
                     overflowY: "auto",
                 }}>
+                    <UI.Cell justifyEnd style={{ alignSelf: "center" }}>
 
-                    { objectSelection.length > 1 &&
-                        <UI.Cell span={ 2 } justifyStart>
-                        {
-                            objectSelection.length +
-                            " objects selected"
+                        { objectDefs.length == 1 ?
+                            Defs.getObjectDefIconElement(objectDefs[0]) :
+                            null
                         }
-                        </UI.Cell>
-                    }
 
-                    { objectSelection.length == 1 &&
-                        <UI.Cell span={ 2 } justifyStart>
-                        {
-                            "ID: " + objectSelection[0]
-                        }
-                        </UI.Cell>
-                    }
+                    </UI.Cell>
 
-                    { objectDefs.length == 1 &&
-                        <UI.Cell span={ 2 } justifyStart>
-                        {
-                            "Type: " + objectDefs[0].name
+                    <UI.Cell justifyStart style={{ alignSelf: "center" }}>
+
+                        { objectDefs.length == 1 ?
+                            objectDefs[0].name + " — " :
+                            null
                         }
-                        </UI.Cell>
-                    }
+
+                        { objectSelection.length == 1 ?
+                            "ID: " + objectSelection[0] :
+                            objectSelection.length + " objects selected"
+                        }
+
+                    </UI.Cell>
 
                     <UI.Cell span={ 2 } divider/>
 

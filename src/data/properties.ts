@@ -164,14 +164,14 @@ export function makeDefFieldOfType(id: string, type: DefField["type"]): DefField
         case "point": return {
             ...common,
             type: "point",
-            relative: false,
+            relative: true,
             showGhost: false,
         }
 
         case "rect": return {
             ...common,
             type: "rect",
-            relative: false,
+            relative: true,
         }
 
         case "choice": return {
