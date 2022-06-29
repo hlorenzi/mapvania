@@ -96,7 +96,7 @@ export function DefsTileAttributes(props: {
 
         <UI.Cell>
             <UI.Button
-                label="+ Tile Attribute"
+                label="➕ Tile Attribute"
                 onClick={ create }
             />
         </UI.Cell>

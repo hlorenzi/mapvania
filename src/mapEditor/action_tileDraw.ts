@@ -10,6 +10,7 @@ export function setupTileDraw(state: MapEditor.State)
 {
     const editor = (global.editors.editors[state.editorIndex] as Editors.EditorMap)
     const tileStamp = global.editors.mapEditing.tileStamp
+    const brush = Defs.getTileBrushDef(editor.defs, global.editors.mapEditing.tileBrushDefId)
 
     
     let lastPlacedTile = { x: -100000, y: -100000 }
@@ -33,36 +34,99 @@ export function setupTileDraw(state: MapEditor.State)
             return
 
 
-        if (state.toolMoveWithoutSnap &&
-            Math.abs(state.mouse.tile.x - lastPlacedTile.x) < tileStamp.width &&
-            Math.abs(state.mouse.tile.y - lastPlacedTile.y) < tileStamp.height)
-            return
-
-        for (const cell of Map.enumerateTileFieldCellsCentered(tileStamp))
+        const setTile = (l: Map.LayerTile, cell: { x: number, y: number }, tile: Map.Tile | undefined) =>
         {
-            const mouseCell = {
-                x: state.mouse.tile.x + cell.x,
-                y: state.mouse.tile.y + cell.y,
-            }
-
-            const cellIndex = Map.getTileFieldCellIndexForCell(layer.tileField, mouseCell)
+            const cellIndex = Map.getTileFieldCellIndexForCell(l.tileField, cell)
             if (cellIndex === undefined)
-                continue
+                return l
 
-            layer = {
-                ...layer,
+            return {
+                ...l,
                 tileField: {
-                    ...layer.tileField,
+                    ...l.tileField,
                     tiles: [
-                        ...layer.tileField.tiles.slice(0, cellIndex),
-                        cell.tile,
-                        ...layer.tileField.tiles.slice(cellIndex + 1),
+                        ...l.tileField.tiles.slice(0, cellIndex),
+                        tile,
+                        ...l.tileField.tiles.slice(cellIndex + 1),
                     ]
                 }
             }
         }
 
-        lastPlacedTile = state.mouse.tile
+
+        if (!brush)
+        {
+            if (state.toolMoveWithoutSnap &&
+                Math.abs(state.mouse.tile.x - lastPlacedTile.x) < tileStamp.width &&
+                Math.abs(state.mouse.tile.y - lastPlacedTile.y) < tileStamp.height)
+                return
+
+            for (const cell of Map.enumerateTileFieldCellsCentered(tileStamp))
+            {
+                const mouseCell = {
+                    x: state.mouse.tile.x + cell.x,
+                    y: state.mouse.tile.y + cell.y,
+                }
+
+                layer = setTile(layer, mouseCell, cell.tile)
+            }
+
+            lastPlacedTile = state.mouse.tile
+        }
+
+        else
+        {
+            const defaultTileIndex = Defs.getTileBrushDefaultTile(editor.defs, brush)
+            if (defaultTileIndex === undefined)
+                return
+
+            const defaultTile: Map.Tile = {
+                tilesetDefId: brush.tilesetDefId,
+                tileId: defaultTileIndex,
+            }
+            
+            layer = setTile(layer, state.mouse.tile, defaultTile)
+
+            for (let cx = -1; cx <= 1; cx++)
+            for (let cy = -1; cy <= 1; cy++)
+            {
+                const cell = {
+                    x: state.mouse.tile.x + cx,
+                    y: state.mouse.tile.y + cy,
+                }
+
+                const neighborTileIndex = Map.getTileFieldCellIndexForCell(
+                    layer.tileField,
+                    cell)
+
+                if (neighborTileIndex === undefined)
+                    continue
+
+                const neighborTile = layer.tileField.tiles[neighborTileIndex]
+                if (neighborTile === undefined ||
+                    neighborTile.tilesetDefId !== defaultTile.tilesetDefId)
+                    continue
+
+                if (!Defs.isTileInTileBrush(editor.defs, brush, neighborTile.tileId))
+                    continue
+
+                const modifiedTileIndex = Map.getBrushTileDecisionAt(
+                    editor.defs,
+                    brush,
+                    layer.tileField,
+                    cell)
+
+                if (modifiedTileIndex === undefined)
+                    continue
+
+                const modifiedTile: Map.Tile = {
+                    tilesetDefId: brush.tilesetDefId,
+                    tileId: modifiedTileIndex,
+                }
+                
+                layer = setTile(layer, cell, modifiedTile)
+            }
+        }
         
         editor.map = Map.setRoomLayer(
             editor.map,

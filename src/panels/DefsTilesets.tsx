@@ -258,7 +258,7 @@ export function DefsTilesets(props: {
 
         <UI.Cell>
             <UI.Button
-                label="+ Tileset"
+                label="➕ Tileset"
                 onClick={ createTileset }
             />
         </UI.Cell>
@@ -293,7 +293,12 @@ export function DefsTilesets(props: {
                     />
                 </UI.Cell>
 
-                <UI.Cell span={ 2 } justifyCenter>
+                <UI.Cell justifyEnd>
+                    ID
+                </UI.Cell>
+
+                <UI.Cell justifyStart>
+                    { curTileset.id }
                 </UI.Cell>
                 
                 <UI.Cell span={ 2 } justifyEnd>

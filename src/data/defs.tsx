@@ -14,6 +14,7 @@ export interface Defs
     layerDefs: DefLayer[]
     tilesetDefs: DefTileset[]
     tileAttributeDefs: DefTileAttribute[]
+    tileBrushDefs: DefTileBrush[]
     objectDefs: DefObject[]
 }
 
@@ -85,6 +86,35 @@ export interface DefTileAttribute
 }
 
 
+export interface DefTileBrush
+{
+    id: ID.ID
+    name: string
+
+    tilesetDefId: ID.ID
+
+    tiles: {
+        [stringifiedTileIndex: string]: {
+            type: BrushTileType
+            connections: [
+                boolean, boolean, boolean,
+                boolean, boolean, boolean,
+                boolean, boolean, boolean,
+            ]
+            neighbors: [
+                BrushTileType,
+                BrushTileType,
+                BrushTileType,
+                BrushTileType,
+            ]
+        }
+    }
+}
+
+
+export type BrushTileType = "rect" | "diagUL" | "diagUR" | "diagDL" | "diagDR"
+
+
 export interface DefObject
 {
     id: ID.ID
@@ -113,6 +143,7 @@ export function makeNew(): Defs
         layerDefs: [],
         tilesetDefs: [],
         tileAttributeDefs: [],
+        tileBrushDefs: [],
         objectDefs: [],
     }
 }
@@ -149,6 +180,8 @@ export function parse(data: string): Defs
     const json = JSON.parse(data)
     const defs = { ...makeNew(), ...(json as Defs) }
 
+    defs.tileBrushDefs = defs.tileBrushDefs ?? []
+
     defs.objectDefs = defs.objectDefs.map(o => ({
         ...o,
         inheritPropertiesFromObjectDefs: o.inheritPropertiesFromObjectDefs ?? [],
@@ -173,6 +206,12 @@ export function getTileset(defs: Defs, tilesetDefId: ID.ID)
 export function getTileAttributeDef(defs: Defs, tileAttributeDefId: ID.ID)
 {
     return defs.tileAttributeDefs.find(a => a.id === tileAttributeDefId)
+}
+
+
+export function getTileBrushDef(defs: Defs, tileBrushDefId: ID.ID)
+{
+    return defs.tileBrushDefs.find(b => b.id === tileBrushDefId)
 }
 
 
@@ -297,6 +336,190 @@ export function setTileAttributesForTile(
 }
 
 
+export function getTileBrushData(
+    brush: DefTileBrush,
+    tileIndex: number)
+    : DefTileBrush["tiles"][number]
+{
+    const data = brush.tiles[tileIndex.toString()]
+    if (data === undefined)
+        return {
+            type: "rect",
+            connections: [
+                false, false, false,
+                false, false, false,
+                false, false, false,
+            ],
+            neighbors: [
+                "rect",
+                "rect",
+                "rect",
+                "rect",
+            ]
+        }
+        
+    return data
+}
+
+
+export function setTileBrushData(
+    brush: DefTileBrush,
+    tileIndex: number,
+    data: DefTileBrush["tiles"][number])
+    : DefTileBrush
+{
+    const key = tileIndex.toString()
+
+    const tiles = {
+        ...brush.tiles,
+        [key]: data,
+    }
+
+    if (data.connections.every(c => !c))
+        delete tiles[key]
+
+    return {
+        ...brush,
+        tiles,
+    }
+}
+
+
+export function getTileBrushDefaultTile(
+    defs: Defs,
+    brush: DefTileBrush)
+    : number | undefined
+{
+    for (const key of Object.keys(brush.tiles))
+        return parseInt(key)
+
+    return undefined
+}
+
+
+export function isTileInTileBrush(
+    defs: Defs,
+    brush: DefTileBrush,
+    tileIndex: number)
+    : boolean
+{
+    const data = getTileBrushData(brush, tileIndex)
+    if (data === undefined)
+        return false
+
+    return data.connections.some(c => c)
+}
+
+
+export function getMatchingTileInTileBrush(
+    defs: Defs,
+    brush: DefTileBrush,
+    connections: DefTileBrush["tiles"][string]["connections"])
+    : number | undefined
+{
+    const matches: { score: number, tileIndex: number }[] = []
+
+    for (const [key, value] of Object.entries(brush.tiles))
+    {
+        // Prioritize 4-way connection
+        if ([1, 3, 5, 7].some(c => connections[c] !== value.connections[c]))
+            continue
+
+        let score = 0
+
+        for (const c of [0, 2, 6, 8])
+        {
+            if (connections[c] === value.connections[c])
+                score++
+        }
+
+        const tileIndex = parseInt(key)
+        matches.push({
+            score,
+            tileIndex,
+        })
+    }
+
+    if (matches.length == 0)
+        return undefined
+
+    matches.sort((a, b) => b.score - a.score)
+    return matches[0].tileIndex
+}
+
+
+export type DefsAssetListKey =
+    "layerDefs" |
+    "tilesetDefs" |
+    "tileAttributeDefs" |
+    "tileBrushDefs" |
+    "objectDefs"
+
+
+export function setAssetDef<T extends DefsAssetListKey>(
+    defs: Defs,
+    listName: T,
+    index: number,
+    asset: Defs[T][number])
+    : Defs
+{
+    return {
+        ...defs,
+        [listName]: [
+            ...defs[listName].slice(0, index),
+            asset,
+            ...defs[listName].slice(index + 1),
+        ]
+    }
+}
+
+
+export function removeAssetDef<T extends DefsAssetListKey>(
+    defs: Defs,
+    listName: T,
+    index: number)
+    : Defs
+{
+    return {
+        ...defs,
+        [listName]: [
+            ...defs[listName].slice(0, index),
+            ...defs[listName].slice(index + 1),
+        ]
+    }
+}
+
+
+export function moveAssetDef<T extends DefsAssetListKey>(
+    defs: Defs,
+    listName: T,
+    index: number,
+    newIndex: number)
+    : Defs
+{
+    if (newIndex < 0 || newIndex > defs[listName].length - 1)
+        return defs
+
+    let item = defs[listName][index]
+    
+    let list = [
+        ...defs[listName].slice(0, index),
+        ...defs[listName].slice(index + 1),
+    ]
+
+    list = [
+        ...list.slice(0, newIndex),
+        item,
+        ...list.slice(newIndex),
+    ]
+
+    return {
+        ...defs,
+        [listName]: list,
+    }
+}
+
+
 export function getTilesetDefIconElement(tilesetDef: DefTileset): React.ReactNode | null
 {
     const image = Images.getImageLazy(tilesetDef.imageSrc)
@@ -332,6 +555,16 @@ export function getTileAttributeDefIconElement(tileAttributeDef: DefTileAttribut
     }}>
         { tileAttributeDef.label }
     </div>
+}
+
+
+export function getTileBrushDefIconElement(defs: Defs, tileBrushDef: DefTileBrush): React.ReactNode | null
+{
+    const tileset = getTileset(defs, tileBrushDef.tilesetDefId)
+    if (!tileset)
+        return null
+    
+    return getTilesetDefIconElement(tileset)
 }
 
 

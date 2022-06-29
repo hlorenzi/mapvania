@@ -28,7 +28,9 @@ export interface Global
         tilesetStampSet: Set<number>
         tileStamp: Map.TileField
 
-        selectedObjectDefId: ID.ID
+        tileBrushDefId: ID.ID
+
+        objectDefId: ID.ID
 
         showGrid: "none" | "background" | "foreground"
         showOtherLayers: "none" | "normal" | "faded"
@@ -105,12 +107,30 @@ export function makeNew(refreshToken: RefreshToken): Global
                 height: 0,
             },
 
-            selectedObjectDefId: "",
+            tileBrushDefId: "",
+
+            objectDefId: "",
 
             showGrid: "background",
             showOtherLayers: "normal",
         }
     }
+}
+
+
+export function assignEditorDefs(
+    editorIndex: number,
+    defs: Defs.Defs)
+{
+    global.editors.editors = [
+        ...global.editors.editors.slice(0, editorIndex),
+        {
+            ...global.editors.editors[editorIndex],
+            defs,
+        },
+        ...global.editors.editors.slice(editorIndex + 1),
+    ]
+    global.editors.refreshToken.commit()
 }
 
 

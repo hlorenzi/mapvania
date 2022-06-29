@@ -10,7 +10,7 @@ import * as MathUtils from "../util/mathUtils"
 export function setupObjectDraw(state: MapEditor.State)
 {
     const editor = (global.editors.editors[state.editorIndex] as Editors.EditorMap)
-    const objectDefId = global.editors.mapEditing.selectedObjectDefId
+    const objectDefId = global.editors.mapEditing.objectDefId
     
     const layerDef = Defs.getLayerDef(
         editor.defs,

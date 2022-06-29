@@ -18,7 +18,7 @@ export function ObjectPicker(props: {
 
     const chooseObject = (id: ID.ID) =>
     {
-        global.editors.mapEditing.selectedObjectDefId = id
+        global.editors.mapEditing.objectDefId = id
         global.editors.mapEditing.tool = "draw"
         global.editors.refreshToken.commit()
     }
@@ -51,7 +51,7 @@ export function ObjectPicker(props: {
 
                 <UI.List
                     is2D
-                    value={ global.editors.mapEditing.selectedObjectDefId }
+                    value={ global.editors.mapEditing.objectDefId }
                     onChange={ chooseObject }
                     items={ items }
                 />

@@ -361,6 +361,54 @@ export function resizeTileField(
 }
 
 
+export function getBrushTileDecisionAt(
+    defs: Defs.Defs,
+    brush: Defs.DefTileBrush,
+    tileField: TileField,
+    cell: { x: number, y: number })
+    : number | undefined
+{
+    const cellIndex = getTileFieldCellIndexForCell(
+        tileField,
+        cell)
+
+    if (cellIndex === undefined)
+        return undefined
+
+    const tile = tileField.tiles[cellIndex]
+    if (!tile)
+        return undefined
+
+    const connections: Defs.DefTileBrush["tiles"][string]["connections"] = [
+        false, false, false,
+        false, false, false,
+        false, false, false,
+    ]
+
+    for (let cx = -1; cx <= 1; cx++)
+    for (let cy = -1; cy <= 1; cy++)
+    {
+        const neighborCell = { x: cell.x + cx, y: cell.y + cy }
+        const neighborCellIndex = getTileFieldCellIndexForCell(
+            tileField,
+            neighborCell)
+
+        if (neighborCellIndex === undefined)
+            continue
+
+        const neighborTile = tileField.tiles[neighborCellIndex]
+        if (!neighborTile || neighborTile.tilesetDefId !== tile.tilesetDefId)
+            continue
+
+        if (Defs.isTileInTileBrush(defs, brush, neighborTile.tileId))
+            connections[(cx + 1) + (cy + 1) * 3] = true
+    }
+
+    return Defs.getMatchingTileInTileBrush(defs, brush, connections) ??
+        Defs.getTileBrushDefaultTile(defs, brush)
+}
+
+
 export function getRoomObject(
     map: Map,
     roomId: ID.ID,

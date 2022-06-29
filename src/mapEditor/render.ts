@@ -612,29 +612,61 @@ export function renderTileLayerForeground(
         state.ctx.save()
         state.ctx.globalAlpha = 0.5
 
-        for (const cell of Map.enumerateTileFieldCellsCentered(global.editors.mapEditing.tileStamp))
+        const brush = Defs.getTileBrushDef(defs, global.editors.mapEditing.tileBrushDefId)
+        if (brush)
         {
-            if (!cell.tile)
-                continue
+            for (const _ of [0])
+            {
+                const tileIndex = Defs.getTileBrushDefaultTile(defs, brush)
+                if (tileIndex === undefined)
+                    continue
 
-            const tileset = Defs.getTileset(defs, cell.tile.tilesetDefId)
-            if (!tileset)
-                continue
+                const tileset = Defs.getTileset(defs, brush.tilesetDefId)
+                if (!tileset)
+                    continue
 
-            const image = Images.getImageLazy(tileset.imageSrc)
-            if (!image)
-                continue
+                const image = Images.getImageLazy(tileset.imageSrc)
+                if (!image)
+                    continue
 
-            const imagePx = Defs.getPixelForTileIndex(tileset, cell.tile.tileId)
+                const imagePx = Defs.getPixelForTileIndex(tileset, tileIndex)
 
-            drawImage(
-                state,
-                image.element,
-                imagePx.x, imagePx.y,
-                tileset.gridCellWidth, tileset.gridCellHeight,
-                (state.mouse.tile.x + cell.x) * editingLayerDef.gridCellWidth,
-                (state.mouse.tile.y + cell.y) * editingLayerDef.gridCellHeight,
-                editingLayerDef.gridCellWidth, editingLayerDef.gridCellHeight)
+                drawImage(
+                    state,
+                    image.element,
+                    imagePx.x, imagePx.y,
+                    tileset.gridCellWidth, tileset.gridCellHeight,
+                    state.mouse.tile.x * editingLayerDef.gridCellWidth,
+                    state.mouse.tile.y * editingLayerDef.gridCellHeight,
+                    editingLayerDef.gridCellWidth, editingLayerDef.gridCellHeight)
+            }
+        }
+        else
+        {
+            for (const cell of Map.enumerateTileFieldCellsCentered(global.editors.mapEditing.tileStamp))
+            {
+                if (!cell.tile)
+                    continue
+
+                const tileset = Defs.getTileset(defs, cell.tile.tilesetDefId)
+                if (!tileset)
+                    continue
+
+                const image = Images.getImageLazy(tileset.imageSrc)
+                if (!image)
+                    continue
+
+                const imagePx = Defs.getPixelForTileIndex(tileset, cell.tile.tileId)
+
+                drawImage(
+                    state,
+                    image.element,
+                    imagePx.x, imagePx.y,
+                    tileset.gridCellWidth, tileset.gridCellHeight,
+                    (state.mouse.tile.x + cell.x) * editingLayerDef.gridCellWidth,
+                    (state.mouse.tile.y + cell.y) * editingLayerDef.gridCellHeight,
+                    editingLayerDef.gridCellWidth, editingLayerDef.gridCellHeight)
+            }
         }
 
         state.ctx.restore()
@@ -714,7 +746,7 @@ export function renderObjectLayerForeground(
     if (global.editors.mapEditing.tool === "draw" &&
         !state.onMouseMove)
     {
-        const objectDef = Defs.getObjectDef(defs, global.editors.mapEditing.selectedObjectDefId)
+        const objectDef = Defs.getObjectDef(defs, global.editors.mapEditing.objectDefId)
         if (!objectDef)
             return
 

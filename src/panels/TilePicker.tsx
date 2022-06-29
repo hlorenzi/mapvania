@@ -18,6 +18,8 @@ export function TilePicker(props: {
     const curTileset = defs.tilesetDefs.find(t => t.id === global.editors.mapEditing.tilesetDefId)
     const curTilesetImg = Images.getImageLazy(curTileset?.imageSrc ?? "")
 
+    const [tab, setTab] = React.useState(global.editors.mapEditing.tileBrushDefId ? 1 : 0)
+
 
     React.useEffect(() =>
     {
@@ -33,6 +35,7 @@ export function TilePicker(props: {
     const chooseTilesetId = (tilesetId: ID.ID) =>
     {
         global.editors.mapEditing.tilesetDefId = tilesetId
+        global.editors.mapEditing.tileBrushDefId = ""
         global.editors.refreshToken.commit()
     }
 
@@ -44,6 +47,7 @@ export function TilePicker(props: {
 
         const onMouseDown = (state: UI.ImageViewState) =>
         {
+            global.editors.mapEditing.tileBrushDefId = ""
             global.editors.mapEditing.tilesetStampSet.clear()
 
             let originTileIndex: number | undefined = undefined
@@ -106,6 +110,21 @@ export function TilePicker(props: {
     }, [curTileset])
 
 
+    const brushItems = defs.tileBrushDefs.map(tileBrushDef => ({
+        id: tileBrushDef.id,
+        label: tileBrushDef.name,
+        icon: Defs.getTileBrushDefIconElement(defs, tileBrushDef),
+    }))
+
+
+    const chooseBrush = (brushId: ID.ID) =>
+    {
+        global.editors.mapEditing.tilesetDefId = ""
+        global.editors.mapEditing.tileBrushDefId = brushId
+        global.editors.refreshToken.commit()
+    }
+
+
     return <div style={{
         height: "100%",
         minHeight: "0",
@@ -122,26 +141,48 @@ export function TilePicker(props: {
                 height: "100%",
                 minHeight: "0",
 
-                gridTemplate: "auto 1fr / 1fr",
+                gridTemplate: "auto auto 1fr / 1fr",
+                justifyItems: "start",
             }}>
-
-                <UI.Select
-                    value={ global.editors.mapEditing.tilesetDefId }
-                    onChange={ (value) => chooseTilesetId(value) }
-                >
-                    { defs.tilesetDefs.map(tilesetDef =>
-                        <option key={ tilesetDef.id } value={ tilesetDef.id }>
-                            { "🌲 " + tilesetDef.name }
-                        </option>
-                    )}
-                </UI.Select>
-
-                <UI.ImageView
-                    key={ global.editors.mapEditing.tilesetDefId }
-                    imageData={ curTilesetImg?.element }
-                    onRender={ imageViewHandlers?.onRender }
-                    onMouseDown={ imageViewHandlers?.onMouseDown }
+                <UI.TabGroup
+                    value={ tab }
+                    onChange={ setTab }
+                    labels={[
+                        "Tilesets",
+                        "Brushes",
+                    ]}
                 />
+
+                { tab === 0 &&
+                    <>
+                    <UI.Select
+                        value={ global.editors.mapEditing.tilesetDefId }
+                        onChange={ chooseTilesetId }
+                    >
+                        { defs.tilesetDefs.map(tilesetDef =>
+                            <option key={ tilesetDef.id } value={ tilesetDef.id }>
+                                { "🌲 " + tilesetDef.name }
+                            </option>
+                        )}
+                    </UI.Select>
+
+                    <UI.ImageView
+                        key={ global.editors.mapEditing.tilesetDefId }
+                        imageData={ curTilesetImg?.element }
+                        onRender={ imageViewHandlers?.onRender }
+                        onMouseDown={ imageViewHandlers?.onMouseDown }
+                    />
+                    </>
+                }
+
+                { tab === 1 &&
+                    <UI.List
+                        is2D
+                        value={ global.editors.mapEditing.tileBrushDefId }
+                        onChange={ chooseBrush }
+                        items={ brushItems }
+                    />
+                }
 
             </div>
         

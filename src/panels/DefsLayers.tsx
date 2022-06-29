@@ -140,12 +140,12 @@ export function DefsLayers(props: {
 
         <UI.Cell>
             <UI.Button
-                label="+ Tile Layer"
+                label="➕ Tile Layer"
                 onClick={ createTileLayer }
             />
 
             <UI.Button
-                label="+ Object Layer"
+                label="➕ Object Layer"
                 onClick={ createObjectLayer }
             />
         </UI.Cell>

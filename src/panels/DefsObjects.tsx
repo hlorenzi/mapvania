@@ -232,7 +232,7 @@ export function DefsObjects(props: {
 
         <UI.Cell>
             <UI.Button
-                label="+ Object"
+                label="➕ Object"
                 onClick={ createObject }
             />
         </UI.Cell>
