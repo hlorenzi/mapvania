@@ -11,9 +11,13 @@ export function setupTileFill(state: MapEditor.State)
 {
     const editor = (global.editors.editors[state.editorIndex] as Editors.EditorMap)
     const tileStamp = global.editors.mapEditing.tileStamp
-
+    const brush = Defs.getTileBrushDef(editor.defs, global.editors.mapEditing.tileBrushDefId)
+    
     
     state.rectSelection = null
+
+    if (brush)
+        return
 
     state.onMouseMove = () =>
     {

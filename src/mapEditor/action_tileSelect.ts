@@ -37,6 +37,9 @@ export function setupTileSelect(state: MapEditor.State)
 
     state.onMouseUp = () =>
     {
+        global.editors.mapEditing.tileBrushDefId = ""
+        global.editors.mapEditing.tool = "draw"
+        global.editors.mapEditing.toolBeforeKeyToggle = "draw"
         MapEditor.copyTileSelection(state)
     }
 }
