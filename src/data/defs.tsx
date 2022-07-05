@@ -385,11 +385,37 @@ export function setTileBrushData(
 }
 
 
+export function getTileBrushTopmostLeftmostTile(
+    defs: Defs,
+    brush: DefTileBrush)
+    : number | undefined
+{
+    let lowestIndex = undefined
+    for (const key of Object.keys(brush.tiles))
+    {
+        const index = parseInt(key)
+        if (lowestIndex === undefined || index < lowestIndex)
+            lowestIndex = index
+    }
+
+    return lowestIndex
+}
+
+
 export function getTileBrushDefaultTile(
     defs: Defs,
     brush: DefTileBrush)
     : number | undefined
 {
+    const tile = getMatchingTileInTileBrush(
+        defs, brush,
+        [false, false, false,
+        false, true, false,
+        false, false, false])
+
+    if (tile !== undefined)
+        return tile
+
     for (const key of Object.keys(brush.tiles))
         return parseInt(key)
 
@@ -563,8 +589,34 @@ export function getTileBrushDefIconElement(defs: Defs, tileBrushDef: DefTileBrus
     const tileset = getTileset(defs, tileBrushDef.tilesetDefId)
     if (!tileset)
         return null
+
+    const topmostLeftmostTile = getTileBrushTopmostLeftmostTile(defs, tileBrushDef)
+    if (topmostLeftmostTile === undefined)
+        return null
+
+    const tilePx = getPixelForTileIndex(tileset, topmostLeftmostTile)
     
-    return getTilesetDefIconElement(tileset)
+    const image = Images.getImageLazy(tileset.imageSrc)
+    if (!image)
+        return <span/>
+
+    return <div style={{
+        objectFit: "contain",
+        display: "inline-block",
+    }}>
+        <div style={{
+            width: Math.min(48, tileset.width - tilePx.x) + "px",
+            height: Math.min(48, tileset.height - tilePx.y) + "px",
+            overflow: "hidden",
+        }}>
+            <img
+                src={ image.element.src }
+                style={{
+                    marginLeft: (-tilePx.x) + "px",
+                    marginTop: (-tilePx.y) + "px",
+            }}/>
+        </div>
+    </div>
 }
 
 

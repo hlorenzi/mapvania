@@ -121,6 +121,7 @@ export function TilePicker(props: {
     {
         global.editors.mapEditing.tilesetDefId = ""
         global.editors.mapEditing.tileBrushDefId = brushId
+        global.editors.mapEditing.tool = "draw"
         global.editors.refreshToken.commit()
     }
 

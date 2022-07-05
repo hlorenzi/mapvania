@@ -81,8 +81,9 @@ const StyledList2DItem = styled.button<{
     selected: boolean,
 }>`
     display: block;
-    width: 5em;
-    height: 5em;
+    width: 5.7em;
+    height: 6em;
+    flex-grow: 1;
 
     border: 0;
     outline: none;
@@ -122,7 +123,7 @@ const StyledListInner = styled.div`
 
 const StyledList2DInner = styled.div`
     display: grid;
-    grid-template: 3.5em 1fr / 1fr;
+    grid-template: 1fr auto / 1fr;
     width: 100%;
     height: 100%;
 
