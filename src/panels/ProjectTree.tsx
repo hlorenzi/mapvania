@@ -27,7 +27,9 @@ export function ProjectTree()
             <UI.Button
                 onClick={ async () => {
                     await Filesystem.refreshEntries()
+                    await Editors.refreshDefsForOpenEditors()
                     Images.invalidateImages()
+                    global.editors.refreshToken.commit()
                 }}
             >
                 🔁 Refresh

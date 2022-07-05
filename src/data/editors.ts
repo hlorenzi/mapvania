@@ -69,6 +69,7 @@ export interface EditorMap extends EditorCommon
 {
     type: "map"
     defs: Defs.Defs
+    defsSerialized: string
     defsRootRelativePath: string
     map: Map.Map
     lastSavedMap: Map.Map
@@ -264,24 +265,7 @@ export async function saveEditorDefs(editorIndex: number)
 
         editorData.lastSavedDefs = editorData.defs
 
-        // Refresh maps for open editors
-        for (const editor of global.editors.editors)
-        {
-            if (editor.type === "map" &&
-                editor.defsRootRelativePath === editorData.rootRelativePath)
-            {
-                const serializedMap = MapSerialization.serialize(
-                    editor.defs,
-                    editor.map)
-
-                const reloadedMap = MapSerialization.deserialize(
-                    editorData.defs,
-                    serializedMap)
-
-                editor.defs = editorData.defs
-                editor.map = reloadedMap
-            }
-        }
+        await refreshDefsForOpenEditors()
 
         global.editors.refreshToken.commit()
     }
@@ -316,6 +300,7 @@ export async function openEditorMap(rootRelativePath: string)
             name: rootRelativePath,
             rootRelativePath,
             defs,
+            defsSerialized: defsText,
             defsRootRelativePath: defsFile.rootRelativePath,
             map,
             lastSavedMap: map,
@@ -361,6 +346,38 @@ export async function saveEditorMap(editorIndex: number)
     {
         console.error(e)
         window.alert("An error occurred saving the file!\n\n" + e)
+    }
+}
+
+
+export async function refreshDefsForOpenEditors()
+{
+    for (const editor of global.editors.editors)
+    {
+        if (editor.type === "map")
+        {
+            const defsFile = await Filesystem.findNearestDefsFile(editor.defsRootRelativePath)
+            if (!defsFile)
+                continue
+            
+            const defsText = await Filesystem.readFileText(defsFile.rootRelativePath)
+            if (defsText == editor.defsSerialized)
+                continue
+            
+            const defs = Defs.parse(defsText)
+    
+            const serializedMap = MapSerialization.serialize(
+                editor.defs,
+                editor.map)
+
+            const reloadedMap = MapSerialization.deserialize(
+                defs,
+                serializedMap)
+
+            editor.defs = defs
+            editor.defsSerialized = defsText
+            editor.map = reloadedMap
+        }
     }
 }
 
