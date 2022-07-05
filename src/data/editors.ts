@@ -29,6 +29,7 @@ export interface Global
         tileStamp: Map.TileField
 
         tileBrushDefId: ID.ID
+        tileBrushEdgeBehavior: "none" | "connectAlways"
 
         objectDefId: ID.ID
 
@@ -108,6 +109,7 @@ export function makeNew(refreshToken: RefreshToken): Global
             },
 
             tileBrushDefId: "",
+            tileBrushEdgeBehavior: "none",
 
             objectDefId: "",
 

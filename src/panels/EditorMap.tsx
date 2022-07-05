@@ -132,6 +132,16 @@ export function EditorMap(props: {
         Editors.render(props.editorIndex)
     }
 
+    const toggleTileBrushEdgeBehavior = () =>
+    {
+        global.editors.mapEditing.tileBrushEdgeBehavior =
+            global.editors.mapEditing.tileBrushEdgeBehavior === "none" ? "connectAlways" :
+            "none"
+            
+        global.editors.refreshToken.commit()
+        Editors.render(props.editorIndex)
+    }
+
 
     return <UI.PanelPadding noOverflow>
 
@@ -258,6 +268,14 @@ export function EditorMap(props: {
                         global.editors.mapEditing.showOtherLayers === "faded" ? "Faded" :
                         "Off") }
                     onClick={ toggleShowOtherLayers }
+                />
+                <br/>
+                <UI.Button
+                    label={
+                        "🖌️ Brush at Edges: " +
+                        (global.editors.mapEditing.tileBrushEdgeBehavior === "connectAlways" ? "Connect to OoB" :
+                        "Ignore") }
+                    onClick={ toggleTileBrushEdgeBehavior }
                 />
             </div>
 

@@ -2,6 +2,7 @@ import * as ID from "./id"
 import * as Defs from "./defs"
 import * as MathUtils from "../util/mathUtils"
 import * as Properties from "./properties"
+import { global } from "../global"
 
 
 export interface Map
@@ -394,7 +395,12 @@ export function getBrushTileDecisionAt(
             neighborCell)
 
         if (neighborCellIndex === undefined)
+        {
+            if (global.editors.mapEditing.tileBrushEdgeBehavior === "connectAlways")
+                connections[(cx + 1) + (cy + 1) * 3] = true
+
             continue
+        }
 
         const neighborTile = tileField.tiles[neighborCellIndex]
         if (!neighborTile || neighborTile.tilesetDefId !== tile.tilesetDefId)
