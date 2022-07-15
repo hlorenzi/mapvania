@@ -8,7 +8,6 @@ const StyledTabGroupLayout = styled.div`
     grid-auto-flow: column;
     justify-content: center;
 
-    margin-bottom: 1em;
     border-bottom: 1px solid var(--dockable-panelInactiveBorder);
 `
 

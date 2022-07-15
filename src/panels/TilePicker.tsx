@@ -142,7 +142,8 @@ export function TilePicker(props: {
                 height: "100%",
                 minHeight: "0",
 
-                gridTemplate: "auto auto 1fr / 1fr",
+                display: "grid",
+                gridTemplate: "auto 1fr / 1fr",
                 justifyItems: "start",
             }}>
                 <UI.TabGroup
@@ -155,25 +156,31 @@ export function TilePicker(props: {
                 />
 
                 { tab === 0 &&
-                    <>
-                    <UI.Select
-                        value={ global.editors.mapEditing.tilesetDefId }
-                        onChange={ chooseTilesetId }
-                    >
-                        { defs.tilesetDefs.map(tilesetDef =>
-                            <option key={ tilesetDef.id } value={ tilesetDef.id }>
-                                { "🌲 " + tilesetDef.name }
-                            </option>
-                        )}
-                    </UI.Select>
+                    <div style={{
+                        width: "100%",
+                        height: "100%",
+                        minHeight: 0,
+                        display: "grid",
+                        gridTemplate: "auto 1fr / 1fr",
+                    }}>
+                        <UI.Select
+                            value={ global.editors.mapEditing.tilesetDefId }
+                            onChange={ chooseTilesetId }
+                        >
+                            { defs.tilesetDefs.map(tilesetDef =>
+                                <option key={ tilesetDef.id } value={ tilesetDef.id }>
+                                    { "🌲 " + tilesetDef.name }
+                                </option>
+                            )}
+                        </UI.Select>
 
-                    <UI.ImageView
-                        key={ global.editors.mapEditing.tilesetDefId }
-                        imageData={ curTilesetImg?.element }
-                        onRender={ imageViewHandlers?.onRender }
-                        onMouseDown={ imageViewHandlers?.onMouseDown }
-                    />
-                    </>
+                        <UI.ImageView
+                            key={ global.editors.mapEditing.tilesetDefId }
+                            imageData={ curTilesetImg?.element }
+                            onRender={ imageViewHandlers?.onRender }
+                            onMouseDown={ imageViewHandlers?.onMouseDown }
+                        />
+                    </div>
                 }
 
                 { tab === 1 &&

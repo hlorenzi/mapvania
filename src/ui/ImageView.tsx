@@ -21,7 +21,7 @@ export interface ImageViewState
     },
     camera: {
         pos: { x: number, y: number },
-        zoom: 1,
+        zoom: number,
     }
 }
 
@@ -56,6 +56,24 @@ export function ImageView(props: {
             zoom: 1,
         }
     })
+
+
+    React.useEffect(() =>
+    {
+        if (!props.imageData)
+            return
+        
+        const canvas = refCanvas.current
+        if (!canvas)
+            return
+
+        state.current.camera.pos = { x: 0, y: 0 }
+        state.current.camera.zoom = Math.min(
+            4,
+            (canvas.clientWidth - 32) / props.imageData.width,
+            (canvas.clientHeight - 32)/ props.imageData.height)
+
+    }, [props.imageData, props.imageData?.width, props.imageData?.height])
 
 
     React.useEffect(() =>
@@ -218,17 +236,11 @@ export function ImageView(props: {
         }
         
 
-        const resizeObserver = new ResizeObserver(entries =>
-        {
-            //window.dispatchEvent(new Event("resize"))
-        })
-
         canvas.addEventListener("mousedown", onMouseDown)
         window.addEventListener("mousemove", onMouseMove)
         window.addEventListener("mouseup", onMouseUp)
         canvas.addEventListener("wheel", onMouseWheel)
         canvas.addEventListener("contextmenu", onContextMenu)
-        resizeObserver.observe(canvas)
 
         return () =>
         {
@@ -237,7 +249,6 @@ export function ImageView(props: {
             window.removeEventListener("mouseup", onMouseUp)
             canvas.removeEventListener("wheel", onMouseWheel)
             canvas.removeEventListener("contextmenu", onContextMenu)
-            resizeObserver.unobserve(canvas)
         }
 
     }, [props.imageData, props.onMouseDown, props.onRender])

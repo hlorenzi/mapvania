@@ -12,7 +12,7 @@ const StyledList = styled.div`
     height: 100%;
 
     overflow-x: hidden;
-    overflow-y: auto;
+    overflow-y: scroll;
 
     box-sizing: border-box;
     border: 1px solid var(--dockable-panelInactiveBorder);
@@ -68,7 +68,7 @@ const StyledList2D = styled.div`
     height: 100%;
 
     overflow-x: hidden;
-    overflow-y: auto;
+    overflow-y: scroll;
 
     box-sizing: border-box;
     border: 1px solid var(--dockable-panelInactiveBorder);

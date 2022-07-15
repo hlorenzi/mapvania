@@ -11,6 +11,7 @@ const StyledGrid = styled.div<{
     fullHeight: boolean,
 }>`
     width: 100%;
+    min-height: 0;
     display: grid;
 
     ${ props => props.maxWidth ? `max-width: ${ props.maxWidth };` : `` }
@@ -19,7 +20,6 @@ const StyledGrid = styled.div<{
         `
             height: 100%;
             max-height: 100%;
-            min-height: 0;
             
         ` : `` }
 
