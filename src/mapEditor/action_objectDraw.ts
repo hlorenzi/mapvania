@@ -33,6 +33,10 @@ export function setupObjectDraw(state: MapEditor.State)
     if (!layer || layer.type !== "object")
         return
 
+    const objectDef = Defs.getObjectDef(editor.defs, objectDefId)
+    if (!objectDef)
+        return
+
     const [nextIDs, newObjectId] = ID.getNextID(editor.map.nextIDs)
 
     const newObject: Map.Obj = {

@@ -4,11 +4,13 @@ import * as Defs from "../data/defs"
 import * as Filesystem from "../data/filesystem"
 import * as Editors from "../data/editors"
 import * as Images from "../data/images"
+import * as Hierarchy from "../data/hierarchy"
 import * as UI from "../ui"
 import { global } from "../global"
 import { PropertyDefsPanel } from "./PropertyDefsPanel"
 import styled from "styled-components"
 import { DeepAssignable } from "../util/deepAssign"
+import { useCachedState } from "../util/useCachedState"
 import { ObjectInheritanceList } from "./ObjectInheritanceList"
 
 
@@ -30,7 +32,8 @@ export function DefsObjects(props: {
         })
     }
 
-    const [curObjectId, setCurObjectId] = React.useState<ID.ID>("")
+    const [listState, setListState] = useCachedState("DefsObjectsListState", UI.makeHierarchicalListState())
+    const curObjectId = listState.lastSelectedId
     const curObjectIndex = defs.objectDefs.findIndex(o => o.id === curObjectId)
     const curObject = defs.objectDefs.find(o => o.id === curObjectId)
     const curObjectImg = Images.getImageLazy(curObject?.imageSrc ?? "")
@@ -62,67 +65,20 @@ export function DefsObjects(props: {
     }
 
 
-    const createObject = () =>
+    const create = () =>
     {
         const [newNextIDs, newID] = ID.getNextID(defs.nextIDs)
 
         const objectDef = Defs.makeNewObjectDef()
         objectDef.id = newID
-        objectDef.name = "object_" + (defs.objectDefs.length + 1)
+        objectDef.name = "object_" + newID
 
         modify(
         {
             nextIDs: newNextIDs,
-            objectDefs: { [defs.objectDefs.length]:
-                {
-                    ...objectDef,
-                    id: newID,
-                }
-            },
         })
 
-        setCurObjectId(newID)
-    }
-
-
-    const deleteCurObject = () =>
-    {
-        modify(
-        {
-            objectDefs: defs.objectDefs.filter(o => o.id !== curObjectId),
-        })
-    }
-
-
-    const moveUp = () =>
-    {
-        if (curObjectIndex <= 0)
-            return
-            
-        modify({
-            objectDefs: [
-                ...defs.objectDefs.slice(0, curObjectIndex - 1),
-                curObject!,
-                defs.objectDefs[curObjectIndex - 1],
-                ...defs.objectDefs.slice(curObjectIndex + 1),
-            ],
-        })
-    }
-
-
-    const moveDown = () =>
-    {
-        if (curObjectIndex >= defs.objectDefs.length - 1)
-            return
-
-        modify({
-            objectDefs: [
-                ...defs.objectDefs.slice(0, curObjectIndex),
-                defs.objectDefs[curObjectIndex + 1],
-                curObject!,
-                ...defs.objectDefs.slice(curObjectIndex + 2),
-            ],
-        })
+        return objectDef
     }
 
 
@@ -228,27 +184,16 @@ export function DefsObjects(props: {
     }, [curObject, curObjectImg])
 
 
-    return <UI.Grid template="15em 30em 1fr" templateRows="auto 1fr" fullHeight alignStart>
+    return <UI.Grid template="15em 30em 1fr" templateRows="1fr" fullHeight alignStart>
 
-        <UI.Cell>
-            <UI.Button
-                label="➕ Object"
-                onClick={ createObject }
-            />
-        </UI.Cell>
-
-        <UI.Cell/>
-
-        <UI.Cell/>
-
-        <UI.List
-            value={ curObjectId }
-            onChange={ setCurObjectId }
-            items={ defs.objectDefs.map(objectDef => ({
-                id: objectDef.id,
-                label: objectDef.name,
-                icon: Defs.getObjectDefIconElement(objectDef),
-            }))}
+        <UI.HierarchicalList<Defs.DefObject>
+            items={ defs.objectDefs }
+            setItems={ (newItems) => modify({ objectDefs: newItems }) }
+            createItem={ create }
+            state={ listState }
+            setState={ setListState }
+            getItemIcon={ item => Defs.getObjectDefIconElement(item) }
+            getItemLabel={ item => item.name }
         />
 
         { curObject && <div key={ curObject.id }
@@ -266,6 +211,8 @@ export function DefsObjects(props: {
                     "Appearance",
                     "Properties",
                 ]}/>
+
+            <br/>
             
             { curTab === 0 &&
                 <UI.Grid template="auto auto">
@@ -283,28 +230,23 @@ export function DefsObjects(props: {
                     </UI.Cell>
 
                     <UI.Cell justifyEnd>
+                        Folder
+                    </UI.Cell>
+
+                    <UI.Cell justifyStretch>
+                        <UI.Input
+                            value={ Hierarchy.stringifyFolder(curObject.folder) }
+                            onChange={ (value) => modifyObject({ folder: Hierarchy.parseFolder(value) }) }
+                            fullWidth
+                        />
+                    </UI.Cell>
+
+                    <UI.Cell justifyEnd>
                         ID
                     </UI.Cell>
 
                     <UI.Cell justifyStart>
                         { curObject.id }
-                    </UI.Cell>
-                    
-                    <UI.Cell span={ 2 } justifyEnd>
-                        <UI.Button
-                            label="🔼"
-                            onClick={ moveUp }
-                        />
-
-                        <UI.Button
-                            label="🔽"
-                            onClick={ moveDown }
-                        />
-
-                        <UI.Button
-                            label="❌ Delete"
-                            onClick={ deleteCurObject }
-                        />
                     </UI.Cell>
 
                     <UI.Cell span={ 2 } divider/>

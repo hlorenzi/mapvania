@@ -10,13 +10,14 @@ import { DefsTilesets } from "./DefsTilesets"
 import { DefsTileAttributes } from "./DefsTileAttributes"
 import { DefsTileBrushes } from "./DefsTileBrushes"
 import { DefsObjects } from "./DefsObjects"
+import { useCachedState } from "../util/useCachedState"
 
 
 export function EditorDefs(props: {
     editorIndex: number,
 })
 {
-    const [tab, setTab] = React.useState(0)
+    const [tab, setTab] = useCachedState("EditorDefsTabIndex", 0)
 
 
     return <UI.PanelPadding>

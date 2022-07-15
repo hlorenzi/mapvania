@@ -7,6 +7,7 @@ import * as ID from "../data/id"
 import * as Images from "../data/images"
 import * as UI from "../ui"
 import { global } from "../global"
+import { useCachedState } from "../util/useCachedState"
 
 
 export function ObjectPicker(props: {
@@ -14,6 +15,7 @@ export function ObjectPicker(props: {
 })
 {
     const editor = global.editors.editors[props.editorIndex] as Editors.EditorMap
+    const [state, setState] = useCachedState("ObjectPickerListState", UI.makeHierarchicalListState())
 
 
     const chooseObject = (id: ID.ID) =>
@@ -24,15 +26,7 @@ export function ObjectPicker(props: {
     }
 
 
-    const items = React.useMemo(() =>
-    {
-        return editor.defs.objectDefs.map(objectDef => ({
-            id: objectDef.id,
-            label: objectDef.name,
-            icon: Defs.getObjectDefIconElement(objectDef),
-        }))
-
-    }, [])
+    
 
 
     return <div style={{
@@ -49,11 +43,15 @@ export function ObjectPicker(props: {
 
             <UI.Grid template="1fr" templateRows="1fr">
 
-                <UI.List
+                <UI.HierarchicalList<Defs.DefObject>
                     is2D
+                    items={ editor.defs.objectDefs }
                     value={ global.editors.mapEditing.objectDefId }
                     onChange={ chooseObject }
-                    items={ items }
+                    state={ state }
+                    setState={ setState }
+                    getItemIcon={ item => Defs.getObjectDefIconElement(item) }
+                    getItemLabel={ item => item.name }
                 />
 
             </UI.Grid>

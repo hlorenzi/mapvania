@@ -1,6 +1,7 @@
 import * as React from "react"
 import { RefreshToken } from "../util/refreshToken"
 import * as ID from "./id"
+import * as Hierarchy from "./hierarchy"
 import * as Images from "./images"
 import * as Properties from "./properties"
 import { global } from "../global"
@@ -15,7 +16,7 @@ export interface Defs
     tilesetDefs: DefTileset[]
     tileAttributeDefs: DefTileAttribute[]
     tileBrushDefs: DefTileBrush[]
-    objectDefs: DefObject[]
+    objectDefs: Hierarchy.Items<DefObject>
 }
 
 
@@ -119,6 +120,7 @@ export interface DefObject
 {
     id: ID.ID
     name: string
+    folder: Hierarchy.FolderId
 
     imageSrc: string
     imageRect: MathUtils.RectWH
@@ -148,11 +150,13 @@ export function makeNew(): Defs
     }
 }
 
+
 export function makeNewObjectDef(): DefObject
 {
     return {
         id: "",
         name: "",
+        folder: [],
         imageSrc: "",
         imageRect: { x: 0, y: 0, width: 0, height: 0 },
         resizeable: false,
@@ -184,6 +188,7 @@ export function parse(data: string): Defs
 
     defs.objectDefs = defs.objectDefs.map(o => ({
         ...o,
+        folder: o.folder ?? [],
         inheritPropertiesFromObjectDefs: o.inheritPropertiesFromObjectDefs ?? [],
     }))
 
