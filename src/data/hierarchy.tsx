@@ -14,7 +14,7 @@ export const FOLDER_SEPARATOR = "/"
 export interface Item
 {
     id: string
-    folder: FolderId
+    folder?: FolderId
 }
 
 
@@ -90,12 +90,12 @@ export function getItemsAndSubfoldersAt<T extends Item>(
 
     for (const item of allItems)
     {
-        if (isSameFolder(folder, item.folder))
+        if (isSameFolder(folder, item.folder ?? []))
             items.push(item)
 
         // FIXME: flattens recursive folder hierarchy
-        else if (isSubFolder(folder, item.folder))
-            subfoldersSet.add(item.folder.join(FOLDER_SEPARATOR))
+        else if (isSubFolder(folder, item.folder ?? []))
+            subfoldersSet.add(stringifyFolder(item.folder ?? []))
     }
 
     const subfoldersJoined = [...subfoldersSet]

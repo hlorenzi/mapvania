@@ -7,6 +7,7 @@ import * as Images from "../data/images"
 import * as MapEditor from "../mapEditor"
 import * as UI from "../ui"
 import { global } from "../global"
+import { useCachedState } from "../util/useCachedState"
 
 
 export function TilePicker(props: {
@@ -15,12 +16,18 @@ export function TilePicker(props: {
 {
     const defs = (global.editors.editors[props.editorIndex] as Editors.EditorMap).defs
     
+    const [brushListState, setBrushListState] = useCachedState(
+        "TilePickerBrushListState",
+        UI.makeHierarchicalListState())
+
+    const [tab, setTab] = useCachedState(
+        "TilePickerTab",
+        0)
+        
     const curTileset = defs.tilesetDefs.find(t => t.id === global.editors.mapEditing.tilesetDefId)
     const curTilesetImg = Images.getImageLazy(curTileset?.imageSrc ?? "")
 
-    const [tab, setTab] = React.useState(global.editors.mapEditing.tileBrushDefId ? 1 : 0)
-
-
+    
     React.useEffect(() =>
     {
         if (!curTileset && defs.tilesetDefs.length > 0)
@@ -110,13 +117,6 @@ export function TilePicker(props: {
     }, [curTileset])
 
 
-    const brushItems = defs.tileBrushDefs.map(tileBrushDef => ({
-        id: tileBrushDef.id,
-        label: tileBrushDef.name,
-        icon: Defs.getTileBrushDefIconElement(defs, tileBrushDef),
-    }))
-
-
     const chooseBrush = (brushId: ID.ID) =>
     {
         global.editors.mapEditing.tilesetDefId = ""
@@ -184,11 +184,15 @@ export function TilePicker(props: {
                 }
 
                 { tab === 1 &&
-                    <UI.List
+                    <UI.HierarchicalList<Defs.DefTileBrush>
                         is2D
+                        items={ defs.tileBrushDefs }
                         value={ global.editors.mapEditing.tileBrushDefId }
                         onChange={ chooseBrush }
-                        items={ brushItems }
+                        getItemIcon={ item => Defs.getTileBrushDefIconElement(defs, item) }
+                        getItemLabel={ item => item.name }
+                        state={ brushListState }
+                        setState={ setBrushListState }
                     />
                 }
 

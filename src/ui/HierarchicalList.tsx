@@ -53,8 +53,12 @@ const StyledList = styled.div<{
     border-radius: 0;
 
     ${ props => !props.is2D ? "" : `
-        display: flex;
-        flex-wrap: wrap;
+        display: grid;
+        grid-template: auto / repeat(5, 1fr);
+        align-content: start;
+        align-items: start;
+        justify-items: start;
+        justify-content: stretch;
     `}
 `
 
@@ -376,15 +380,21 @@ export function HierarchicalList<T extends Hierarchy.Item>(props: {
             </StyledHeader>
         }
         
-        <StyledHeader>
+        { !props.setItems &&
+            props.state.currentFolder.length === 0 &&
+            !("isFolder" in currentItemsAndSubfolders[0]) ?
+            <div/>
+        :
+            <StyledHeader>
 
-            <Button
-                label="◀"
-                onClick={ onMoveUpOneFolderLevel }
-            />
-            { " 📁 " + props.state.currentFolder.join("/") + "/" }
+                <Button
+                    label="◀"
+                    onClick={ onMoveUpOneFolderLevel }
+                />
+                { " 📁 " + props.state.currentFolder.join("/") + "/" }
 
-        </StyledHeader>
+            </StyledHeader>
+        }
 
         <StyledList
             is2D={ !!props.is2D }
