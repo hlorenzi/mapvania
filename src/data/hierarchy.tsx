@@ -135,7 +135,7 @@ export function getRangeOfIdsBetween<T extends Item>(
 }
 
 
-export function moveItems<T extends Item>(
+export function shiftItems<T extends Item>(
     allItems: Items<T>,
     folder: FolderId,
     idsToMove: Set<string>,
@@ -198,6 +198,42 @@ export function moveItems<T extends Item>(
         moveToIndex = allItemsWithSelectionDeleted.findIndex(
             item => item.id === localItems[Math.min(localItems.length - 1, bottomostIndex + 1)].id) + 1
     }
+
+    return [
+        ...allItemsWithSelectionDeleted.slice(0, moveToIndex),
+        ...itemsToMove,
+        ...allItemsWithSelectionDeleted.slice(moveToIndex),
+    ]
+}
+
+
+export function moveItems<T extends Item>(
+    allItems: Items<T>,
+    folder: FolderId,
+    idsToMove: Set<string>,
+    moveBeforeId: string)
+    : Items<T>
+{
+    if (allItems.length === 0)
+        return allItems
+
+    if (idsToMove.size === 0)
+        return allItems
+
+    const localItems = getItemsAndSubfoldersAt(allItems, folder)
+        .filter(item => !("isFolder" in item))
+
+    if (localItems.length === 0)
+        return allItems
+
+    const itemsToMove = allItems.filter(item => idsToMove.has(item.id))
+    const allItemsWithSelectionDeleted = allItems.filter(item => !idsToMove.has(item.id))
+
+    const moveToIndex = allItemsWithSelectionDeleted.findIndex(
+        item => item.id === moveBeforeId)
+
+    if (moveToIndex < 0)
+        return allItems
 
     return [
         ...allItemsWithSelectionDeleted.slice(0, moveToIndex),

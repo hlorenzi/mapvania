@@ -567,6 +567,7 @@ export function getTilesetDefIconElement(tilesetDef: DefTileset): React.ReactNod
             overflow: "hidden",
         }}>
             <img
+                draggable="false"
                 src={ image.element.src }
                 style={{
                     marginLeft: (-tilesetDef.gridOffsetX) + "px",
@@ -615,6 +616,7 @@ export function getTileBrushDefIconElement(defs: Defs, tileBrushDef: DefTileBrus
             overflow: "hidden",
         }}>
             <img
+                draggable="false"
                 src={ image.element.src }
                 style={{
                     marginLeft: (-tilePx.x) + "px",
@@ -641,6 +643,7 @@ export function getObjectDefIconElement(objectDef: DefObject): React.ReactNode |
             overflow: "hidden",
         }}>
             <img
+                draggable="false"
                 src={ image.element.src }
                 style={{
                     marginLeft: (-objectDef.imageRect.x) + "px",

@@ -66,11 +66,16 @@ const StyledList = styled.div<{
 const StyledListItem = styled.button<{
     is2D: boolean,
     selected: boolean,
+    dragOver: boolean,
 }>`
     display: block;
     width: 100%;
 
-    border: 0;
+    border: 2px solid transparent;
+    ${ props => !props.dragOver ? "" : `
+        border-top: 2px solid #0088ff;
+    `}
+
     outline: none;
     
     appearance: button;
@@ -91,6 +96,7 @@ const StyledListItem = styled.button<{
         width: 5.7em;
         height: 6em;
         flex-grow: 1;
+        border: 0;
         padding: 0;
         text-align: center;
     `}
@@ -188,6 +194,9 @@ export function HierarchicalList<T extends Hierarchy.Item>(props: {
     , [props.items, props.state.currentFolder.join(Hierarchy.FOLDER_SEPARATOR)])
 
 
+    const [curDragOverId, setCurDragOverId] = React.useState("")
+
+
     const onSelectItem = (id: string, ctrlSelect: boolean, shiftSelect: boolean) =>
     {
         if (props.onChange)
@@ -216,7 +225,7 @@ export function HierarchicalList<T extends Hierarchy.Item>(props: {
                     selectedIds.add(id)
             }
             
-            else
+            else if (!selectedIds.has(id))
             {
                 selectedIds.clear()
                 selectedIds.add(id)
@@ -263,21 +272,21 @@ export function HierarchicalList<T extends Hierarchy.Item>(props: {
 
     const onMoveUp = () =>
     {
-        props.setItems?.(Hierarchy.moveItems(
+        props.setItems?.(Hierarchy.shiftItems(
             props.items,
             props.state.currentFolder,
             props.state.selectedIds,
-            -1))        
+            -1))
     }
 
 
     const onMoveDown = () =>
     {
-        props.setItems?.(Hierarchy.moveItems(
+        props.setItems?.(Hierarchy.shiftItems(
             props.items,
             props.state.currentFolder,
             props.state.selectedIds,
-            1))        
+            1))
     }
 
 
@@ -301,6 +310,46 @@ export function HierarchicalList<T extends Hierarchy.Item>(props: {
     }
 
 
+    const onDragStart = (ev: React.DragEvent<HTMLButtonElement>, id: string) =>
+    {
+        onSelectItem(id, ev.ctrlKey, ev.shiftKey)
+    }
+
+
+    const onDragOver = (ev: React.DragEvent<HTMLButtonElement>, id: string) =>
+    {
+        ev.preventDefault()
+        setCurDragOverId(id)
+    }
+
+
+    const onDrop = (ev: React.DragEvent<HTMLButtonElement>, id: string) =>
+    {
+        setCurDragOverId("")
+
+        props.setItems?.(Hierarchy.moveItems(
+            props.items,
+            props.state.currentFolder,
+            props.state.selectedIds,
+            id))
+    }
+
+
+    // Handle drag
+    React.useEffect(() =>
+    {
+        const onDragEnd = (ev: DragEvent) =>
+        {
+            setCurDragOverId("")
+        }
+
+        document.addEventListener("dragend", onDragEnd)
+        return () => document.removeEventListener("dragend", onDragEnd)
+
+    }, [props.setState, scrollParentRef.current])
+
+
+    // Set selected id from outside value
     React.useEffect(() =>
     {
         if (props.value === undefined)
@@ -410,7 +459,9 @@ export function HierarchicalList<T extends Hierarchy.Item>(props: {
                         is2D={ !!props.is2D }
                         onClick={ ev => onSelectItem(item.id, ev.ctrlKey, ev.shiftKey) }
                         onDoubleClick={ () => onEnterFolder(item.folder) }
+                        onDragOver={ ev => onDragOver(ev, item.id) }
                         selected={ props.state.selectedIds.has(item.id) }
+                        dragOver={ curDragOverId === item.id }
                     >
                         <StyledListInner is2D={ !!props.is2D }>
                             <div>📁</div>
@@ -426,7 +477,12 @@ export function HierarchicalList<T extends Hierarchy.Item>(props: {
                         key={ item.id }
                         is2D={ !!props.is2D }
                         onClick={ ev => onSelectItem(item.id, ev.ctrlKey, ev.shiftKey) }
+                        draggable="true"
+                        onDragStart={ ev => onDragStart(ev, item.id) }
+                        onDragOver={ ev => onDragOver(ev, item.id) }
+                        onDrop={ ev => onDrop(ev, item.id) }
                         selected={ props.state.selectedIds.has(item.id) }
+                        dragOver={ curDragOverId === item.id }
                     >
                         <StyledListInner is2D={ !!props.is2D }>
                             <div>{ props.getItemIcon(item) }</div>
