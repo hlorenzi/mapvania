@@ -12,10 +12,10 @@ export interface Defs
 {
     nextIDs: ID.NextIDs
     generalDefs: DefGeneral
-    layerDefs: DefLayer[]
-    tilesetDefs: DefTileset[]
-    tileAttributeDefs: DefTileAttribute[]
-    tileBrushDefs: DefTileBrush[]
+    layerDefs: Hierarchy.Items<DefLayer>
+    tilesetDefs: Hierarchy.Items<DefTileset>
+    tileAttributeDefs: Hierarchy.Items<DefTileAttribute>
+    tileBrushDefs: Hierarchy.Items<DefTileBrush>
     objectDefs: Hierarchy.Items<DefObject>
 }
 
@@ -58,6 +58,7 @@ export interface DefTileset
 {
     id: ID.ID
     name: string
+    folder: Hierarchy.FolderId,
 
     imageSrc: string
 
@@ -91,6 +92,7 @@ export interface DefTileBrush
 {
     id: ID.ID
     name: string
+    folder: Hierarchy.FolderId
 
     tilesetDefId: ID.ID
 
@@ -151,11 +153,66 @@ export function makeNew(): Defs
 }
 
 
-export function makeNewObjectDef(): DefObject
+export function makeNewLayerDef(id: ID.ID): DefLayer
 {
     return {
-        id: "",
-        name: "",
+        id,
+        name: "layer_" + id,
+        type: "tile",
+        gridCellWidth: 16,
+        gridCellHeight: 16,
+    }
+}
+
+
+export function makeNewTilesetDef(id: ID.ID): DefTileset
+{
+    return {
+        id,
+        name: "tileset_" + id,
+        folder: [],
+        imageSrc: "",
+        width: 0,
+        height: 0,
+        gridCellWidth: 16,
+        gridCellHeight: 16,
+        gridGapX: 0,
+        gridGapY: 0,
+        gridOffsetX: 0,
+        gridOffsetY: 0,
+        tileAttributes: [],
+    }
+}
+
+
+export function makeNewTileAttributeDef(id: ID.ID): DefTileAttribute
+{
+    return {
+        id,
+        name: "attribute_" + id,
+        label: "A",
+        color: "#ffffff",
+    }
+}
+
+
+export function makeNewTileBrushDef(id: ID.ID): DefTileBrush
+{
+    return {
+        id,
+        name: "brush_" + id,
+        folder: [],
+        tilesetDefId: "",
+        tiles: {},
+    }
+}
+
+
+export function makeNewObjectDef(id: ID.ID): DefObject
+{
+    return {
+        id,
+        name: "object_" + id,
         folder: [],
         imageSrc: "",
         imageRect: { x: 0, y: 0, width: 0, height: 0 },
@@ -184,7 +241,17 @@ export function parse(data: string): Defs
     const json = JSON.parse(data)
     const defs = { ...makeNew(), ...(json as Defs) }
 
+    defs.tilesetDefs = defs.tilesetDefs.map(t => ({
+        ...t,
+        folder: t.folder ?? [],
+    }))
+
     defs.tileBrushDefs = defs.tileBrushDefs ?? []
+
+    defs.tileBrushDefs = defs.tileBrushDefs.map(b => ({
+        ...b,
+        folder: b.folder ?? [],
+    }))
 
     defs.objectDefs = defs.objectDefs.map(o => ({
         ...o,
@@ -479,75 +546,11 @@ export function getMatchingTileInTileBrush(
 }
 
 
-export type DefsAssetListKey =
-    "layerDefs" |
-    "tilesetDefs" |
-    "tileAttributeDefs" |
-    "tileBrushDefs" |
-    "objectDefs"
-
-
-export function setAssetDef<T extends DefsAssetListKey>(
-    defs: Defs,
-    listName: T,
-    index: number,
-    asset: Defs[T][number])
-    : Defs
+export function getLayerDefIconElement(layerDef: DefLayer): React.ReactNode | null
 {
-    return {
-        ...defs,
-        [listName]: [
-            ...defs[listName].slice(0, index),
-            asset,
-            ...defs[listName].slice(index + 1),
-        ]
-    }
-}
-
-
-export function removeAssetDef<T extends DefsAssetListKey>(
-    defs: Defs,
-    listName: T,
-    index: number)
-    : Defs
-{
-    return {
-        ...defs,
-        [listName]: [
-            ...defs[listName].slice(0, index),
-            ...defs[listName].slice(index + 1),
-        ]
-    }
-}
-
-
-export function moveAssetDef<T extends DefsAssetListKey>(
-    defs: Defs,
-    listName: T,
-    index: number,
-    newIndex: number)
-    : Defs
-{
-    if (newIndex < 0 || newIndex > defs[listName].length - 1)
-        return defs
-
-    let item = defs[listName][index]
-    
-    let list = [
-        ...defs[listName].slice(0, index),
-        ...defs[listName].slice(index + 1),
-    ]
-
-    list = [
-        ...list.slice(0, newIndex),
-        item,
-        ...list.slice(newIndex),
-    ]
-
-    return {
-        ...defs,
-        [listName]: list,
-    }
+    return layerDef.type == "tile" ? "🧱" :
+        layerDef.type == "object" ? "🍎" :
+        "?"
 }
 
 

@@ -17,14 +17,18 @@ export function TilePicker(props: {
     const defs = (global.editors.editors[props.editorIndex] as Editors.EditorMap).defs
     
     const [brushListState, setBrushListState] = useCachedState(
-        "TilePickerBrushListState",
+        "TilePicker_BrushListState",
         UI.makeHierarchicalListState())
 
+    const [selectedTileset, setSelectedTileset] = useCachedState(
+        "TilePicker_SelectedTileset",
+        "")
+
     const [tab, setTab] = useCachedState(
-        "TilePickerTab",
+        "TilePicker_Tab",
         0)
         
-    const curTileset = defs.tilesetDefs.find(t => t.id === global.editors.mapEditing.tilesetDefId)
+    const curTileset = defs.tilesetDefs.find(t => t.id === (global.editors.mapEditing.tilesetDefId || selectedTileset))
     const curTilesetImg = Images.getImageLazy(curTileset?.imageSrc ?? "")
 
     
@@ -41,7 +45,9 @@ export function TilePicker(props: {
 
     const chooseTilesetId = (tilesetId: ID.ID) =>
     {
+        setSelectedTileset(tilesetId)
         global.editors.mapEditing.tilesetDefId = tilesetId
+        global.editors.mapEditing.tilesetStampSet.clear()
         global.editors.mapEditing.tileBrushDefId = ""
         global.editors.refreshToken.commit()
     }
@@ -120,6 +126,7 @@ export function TilePicker(props: {
     const chooseBrush = (brushId: ID.ID) =>
     {
         global.editors.mapEditing.tilesetDefId = ""
+        global.editors.mapEditing.tilesetStampSet.clear()
         global.editors.mapEditing.tileBrushDefId = brushId
         global.editors.mapEditing.tool = "draw"
         global.editors.refreshToken.commit()
@@ -164,7 +171,7 @@ export function TilePicker(props: {
                         gridTemplate: "auto 1fr / 1fr",
                     }}>
                         <UI.Select
-                            value={ global.editors.mapEditing.tilesetDefId }
+                            value={ global.editors.mapEditing.tilesetDefId || selectedTileset }
                             onChange={ chooseTilesetId }
                         >
                             { defs.tilesetDefs.map(tilesetDef =>

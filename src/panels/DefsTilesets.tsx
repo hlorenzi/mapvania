@@ -4,10 +4,12 @@ import * as Defs from "../data/defs"
 import * as Filesystem from "../data/filesystem"
 import * as Editors from "../data/editors"
 import * as Images from "../data/images"
+import * as Hierarchy from "../data/hierarchy"
 import * as UI from "../ui"
 import { global } from "../global"
 import styled from "styled-components"
 import { DeepAssignable } from "../util/deepAssign"
+import { useCachedState } from "../util/useCachedState"
 
 
 export function DefsTilesets(props: {
@@ -15,14 +17,12 @@ export function DefsTilesets(props: {
 })
 {
     const defs = global.editors.editors[props.editorIndex].defs
-    const modify = (newDefs: DeepAssignable<Defs.Defs>) =>
-    {
-        Editors.deepAssignEditor(props.editorIndex, {
-            defs: newDefs,
-        })
-    }
+    
+    const [listState, setListState] = useCachedState(
+        "DefsTilesets_ListState",
+        UI.makeHierarchicalListState())
 
-    const [curTilesetId, setCurTilesetId] = React.useState<ID.ID>("")
+    const curTilesetId = listState.lastSelectedId
     const [curTileAttrbId, setCurTileAttrbId] = React.useState<ID.ID>("")
 
     const curTilesetIndex = defs.tilesetDefs.findIndex(t => t.id === curTilesetId)
@@ -30,93 +30,39 @@ export function DefsTilesets(props: {
     const curTilesetImg = Images.getImageLazy(curTileset?.imageSrc ?? "")
     
 
-    const modifyTileset = (tilesetDef: DeepAssignable<Defs.DefTileset>) =>
+    const setDefs = (fn: (old: Defs.Defs) => Defs.Defs) =>
     {
-        if (curTilesetIndex < 0)
-            return
-
-        modify({ tilesetDefs: { [curTilesetIndex]: tilesetDef }})
+        Editors.assignEditorDefs(props.editorIndex, fn)
     }
 
 
-    const createTileset = () =>
+    const set = (tilesetDef: Defs.DefTileset) =>
     {
-        const [newNextIDs, newID] = ID.getNextID(defs.nextIDs)
-
-        const tilesetDef: Defs.DefTileset =
-        {
-            id: newID,
-            name: "tileset_" + (defs.tilesetDefs.length + 1),
-            imageSrc: "",
-            width: 0,
-            height: 0,
-            gridCellWidth: 16,
-            gridCellHeight: 16,
-            gridGapX: 0,
-            gridGapY: 0,
-            gridOffsetX: 0,
-            gridOffsetY: 0,
-            tileAttributes: [],
-        }
-
-        modify(
-        {
-            nextIDs: newNextIDs,
-            tilesetDefs: { [defs.tilesetDefs.length]:
-                {
-                    ...tilesetDef,
-                    id: newID,
-                }
-            },
-        })
-
-        setCurTilesetId(newID)
+        setDefs(defs => ({
+            ...defs,
+            tilesetDefs: Hierarchy.setItem(
+                defs.tilesetDefs,
+                curTilesetIndex,
+                tilesetDef),
+        }))
     }
 
 
-    const deleteCurTileset = () =>
+    const create = () =>
     {
-        modify(
-        {
-            tilesetDefs: defs.tilesetDefs.filter(l => l.id !== curTilesetId),
-        })
-    }
+        const [nextIds, id] = ID.getNextID(defs.nextIDs)
+        const tilesetDef = Defs.makeNewTilesetDef(id)
 
-
-    const moveUp = () =>
-    {
-        if (curTilesetIndex <= 0)
-            return
-            
-        modify({
-            tilesetDefs: [
-                ...defs.tilesetDefs.slice(0, curTilesetIndex - 1),
-                curTileset!,
-                defs.tilesetDefs[curTilesetIndex - 1],
-                ...defs.tilesetDefs.slice(curTilesetIndex + 1),
-            ],
-        })
-    }
-
-
-    const moveDown = () =>
-    {
-        if (curTilesetIndex >= defs.tilesetDefs.length - 1)
-            return
-
-        modify({
-            tilesetDefs: [
-                ...defs.tilesetDefs.slice(0, curTilesetIndex),
-                defs.tilesetDefs[curTilesetIndex + 1],
-                curTileset!,
-                ...defs.tilesetDefs.slice(curTilesetIndex + 2),
-            ],
-        })
+        setDefs(defs => ({ ...defs, nextIDs: nextIds }))
+        return tilesetDef
     }
 
 
     const loadTilesetImage = async () =>
     {
+        if (!curTileset)
+            return
+
         const imageRootRelativePath = await Filesystem.showImagePicker()
         if (!imageRootRelativePath)
             return
@@ -125,13 +71,11 @@ export function DefsTilesets(props: {
         if (!image)
             return
 
-        modify(
-        {
-            tilesetDefs: { [curTilesetIndex]: {
-                imageSrc: imageRootRelativePath,
-                width: image.width,
-                height: image.height,
-            } },
+        set({
+            ...curTileset,
+            imageSrc: imageRootRelativePath,
+            width: image.width,
+            height: image.height,
         })
     }
 
@@ -242,7 +186,8 @@ export function DefsTilesets(props: {
                 tileIndex,
                 [...attrbs])
 
-            modifyTileset({
+            set({
+                ...curTileset,
                 tileAttributes: curAttrbs,
             })
         }
@@ -254,27 +199,16 @@ export function DefsTilesets(props: {
     }
 
 
-    return <UI.Grid template="15em 25em 1fr" templateRows="auto 1fr" fullHeight alignStart>
+    return <UI.Grid template="15em 25em 1fr" templateRows="1fr" fullHeight alignStart>
 
-        <UI.Cell>
-            <UI.Button
-                label="➕ Tileset"
-                onClick={ createTileset }
-            />
-        </UI.Cell>
-
-        <UI.Cell/>
-
-        <UI.Cell/>
-
-        <UI.List
-            value={ curTilesetId }
-            onChange={ setCurTilesetId }
-            items={ defs.tilesetDefs.map(tilesetDef => ({
-                id: tilesetDef.id,
-                label: tilesetDef.name,
-                icon: Defs.getTilesetDefIconElement(tilesetDef),
-            }))}
+        <UI.HierarchicalList<Defs.DefTileset>
+            items={ defs.tilesetDefs }
+            setItems={ fn => setDefs(defs => ({ ...defs, tilesetDefs: fn(defs.tilesetDefs) })) }
+            createItem={ create }
+            state={ listState }
+            setState={ setListState }
+            getItemIcon={ item => Defs.getTilesetDefIconElement(item) }
+            getItemLabel={ item => item.name }
         />
 
         { curTileset && <UI.Grid template="1fr" templateRows="auto 1fr" fullHeight key={ curTileset.id }>
@@ -288,7 +222,19 @@ export function DefsTilesets(props: {
                 <UI.Cell justifyStretch>
                     <UI.Input
                         value={ curTileset.name }
-                        onChange={ (value) => modifyTileset({ name: value }) }
+                        onChange={ (value) => set({ ...curTileset, name: value }) }
+                        fullWidth
+                    />
+                </UI.Cell>
+
+                <UI.Cell justifyEnd>
+                    Folder
+                </UI.Cell>
+
+                <UI.Cell justifyStretch>
+                    <UI.Input
+                        value={ Hierarchy.stringifyFolder(curTileset.folder) }
+                        onChange={ (value) => set({ ...curTileset, folder: Hierarchy.parseFolder(value) }) }
                         fullWidth
                     />
                 </UI.Cell>
@@ -299,23 +245,6 @@ export function DefsTilesets(props: {
 
                 <UI.Cell justifyStart>
                     { curTileset.id }
-                </UI.Cell>
-                
-                <UI.Cell span={ 2 } justifyEnd>
-                    <UI.Button
-                        label="🔼"
-                        onClick={ moveUp }
-                    />
-
-                    <UI.Button
-                        label="🔽"
-                        onClick={ moveDown }
-                    />
-
-                    <UI.Button
-                        label="❌ Delete"
-                        onClick={ deleteCurTileset }
-                    />
                 </UI.Cell>
 
                 <UI.Cell span={ 2 } divider/>
@@ -337,13 +266,13 @@ export function DefsTilesets(props: {
                     <UI.Input
                         number
                         value={ curTileset.gridCellWidth }
-                        onChangeNumber={ (value) => modifyTileset({ gridCellWidth: value }) }
+                        onChangeNumber={ (value) => set({ ...curTileset, gridCellWidth: value }) }
                     />
                     { " × " }
                     <UI.Input
                         number
                         value={ curTileset.gridCellHeight }
-                        onChangeNumber={ (value) => modifyTileset({ gridCellHeight: value }) }
+                        onChangeNumber={ (value) => set({ ...curTileset, gridCellHeight: value }) }
                     />
                     { " px" }
                 </UI.Cell>
@@ -356,13 +285,13 @@ export function DefsTilesets(props: {
                     <UI.Input
                         number
                         value={ curTileset.gridGapX }
-                        onChangeNumber={ (value) => modifyTileset({ gridGapX: value }) }
+                        onChangeNumber={ (value) => set({ ...curTileset, gridGapX: value }) }
                     />
                     { " × " }
                     <UI.Input
                         number
                         value={ curTileset.gridGapY }
-                        onChangeNumber={ (value) => modifyTileset({ gridGapY: value }) }
+                        onChangeNumber={ (value) => set({ ...curTileset, gridGapY: value }) }
                     />
                     { " px" }
                 </UI.Cell>
@@ -376,13 +305,13 @@ export function DefsTilesets(props: {
                     <UI.Input
                         number
                         value={ curTileset.gridOffsetX }
-                        onChangeNumber={ (value) => modifyTileset({ gridOffsetX: value }) }
+                        onChangeNumber={ (value) => set({ ...curTileset, gridOffsetX: value }) }
                     />
                     { " × " }
                     <UI.Input
                         number
                         value={ curTileset.gridOffsetY }
-                        onChangeNumber={ (value) => modifyTileset({ gridOffsetY: value }) }
+                        onChangeNumber={ (value) => set({ ...curTileset, gridOffsetY: value }) }
                     />
                     { " px" }
                 </UI.Cell>

@@ -123,13 +123,13 @@ export function makeNew(refreshToken: RefreshToken): Global
 
 export function assignEditorDefs(
     editorIndex: number,
-    defs: Defs.Defs)
+    fn: (old: Defs.Defs) => Defs.Defs)
 {
     global.editors.editors = [
         ...global.editors.editors.slice(0, editorIndex),
         {
             ...global.editors.editors[editorIndex],
-            defs,
+            defs: fn(global.editors.editors[editorIndex].defs),
         },
         ...global.editors.editors.slice(editorIndex + 1),
     ]

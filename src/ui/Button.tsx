@@ -35,6 +35,7 @@ const StyledButton = styled.button<{
 
 export function Button(props: {
     label?: React.ReactNode,
+    title?: string,
     children?: React.ReactNode,
     onClick?: React.MouseEventHandler<HTMLButtonElement>,
     onMouseDown?: React.MouseEventHandler<HTMLButtonElement>,
@@ -47,6 +48,7 @@ export function Button(props: {
     return <StyledButton
         onClick={ props.onClick }
         onMouseDown={ props.onMouseDown }
+        title={ props.title }
         disabled={ props.disabled }
         selected={ !!props.selected }
         fullWidth={ !!props.fullWidth }

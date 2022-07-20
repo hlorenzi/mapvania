@@ -9,7 +9,6 @@ import * as UI from "../ui"
 import { global } from "../global"
 import { PropertyDefsPanel } from "./PropertyDefsPanel"
 import styled from "styled-components"
-import { DeepAssignable } from "../util/deepAssign"
 import { useCachedState } from "../util/useCachedState"
 import { ObjectInheritanceList } from "./ObjectInheritanceList"
 
@@ -19,71 +18,54 @@ export function DefsObjects(props: {
 })
 {
     const defs = global.editors.editors[props.editorIndex].defs
-    const set = (newDefs: Defs.Defs) =>
-    {
-        global.editors.editors[props.editorIndex].defs = newDefs
-        global.editors.refreshToken.commit()
-    }
+    
+    const [listState, setListState] = useCachedState(
+        "DefsObjects_ListState",
+        UI.makeHierarchicalListState())
+        
+    const [curTab, setCurTab] = useCachedState(
+        "DefsObjects_TabIndex",
+        0)
 
-    const modify = (newDefs: DeepAssignable<Defs.Defs>) =>
-    {
-        Editors.deepAssignEditor(props.editorIndex, {
-            defs: newDefs,
-        })
-    }
-
-    const [listState, setListState] = useCachedState("DefsObjectsListState", UI.makeHierarchicalListState())
     const curObjectId = listState.lastSelectedId
     const curObjectIndex = defs.objectDefs.findIndex(o => o.id === curObjectId)
     const curObject = defs.objectDefs.find(o => o.id === curObjectId)
     const curObjectImg = Images.getImageLazy(curObject?.imageSrc ?? "")
-    const [curTab, setCurTab] = React.useState(0)
 
 
-    const setObject = (objectDef: Defs.DefObject) =>
+    const setDefs = (fn: (old: Defs.Defs) => Defs.Defs) =>
     {
-        if (curObjectIndex < 0)
-            return
-
-        set({
-            ...defs,
-            objectDefs: [
-                ...defs.objectDefs.slice(0, curObjectIndex),
-                objectDef,
-                ...defs.objectDefs.slice(curObjectIndex + 1),
-            ],
-        })
+        Editors.assignEditorDefs(props.editorIndex, fn)
     }
 
 
-    const modifyObject = (objectDef: DeepAssignable<Defs.DefObject>) =>
+    const set = (objectDef: Defs.DefObject) =>
     {
-        if (curObjectIndex < 0)
-            return
-
-        modify({ objectDefs: { [curObjectIndex]: objectDef }})
+        setDefs(defs => ({
+            ...defs,
+            objectDefs: Hierarchy.setItem(
+                defs.objectDefs,
+                curObjectIndex,
+                objectDef),
+        }))
     }
 
 
     const create = () =>
     {
-        const [newNextIDs, newID] = ID.getNextID(defs.nextIDs)
+        const [nextIds, id] = ID.getNextID(defs.nextIDs)
+        const objectDef = Defs.makeNewObjectDef(id)
 
-        const objectDef = Defs.makeNewObjectDef()
-        objectDef.id = newID
-        objectDef.name = "object_" + newID
-
-        modify(
-        {
-            nextIDs: newNextIDs,
-        })
-
+        setDefs(defs => ({ ...defs, nextIDs: nextIds }))
         return objectDef
     }
 
 
     const loadImage = async () =>
     {
+        if (!curObject)
+            return
+
         const imageRootRelativePath = await Filesystem.showImagePicker()
         if (!imageRootRelativePath)
             return
@@ -92,23 +74,21 @@ export function DefsObjects(props: {
         if (!image)
             return
 
-        modify(
-        {
-            objectDefs: { [curObjectIndex]: {
-                imageSrc: imageRootRelativePath,
-                imageRect: {
-                    x: 0,
-                    y: 0,
-                    width: image.width,
-                    height: image.height,
-                },
-                interactionRect: {
-                    x: 0,
-                    y: 0,
-                    width: image.width,
-                    height: image.height,
-                },
-            } },
+        set({
+            ...curObject,
+            imageSrc: imageRootRelativePath,
+            imageRect: {
+                x: 0,
+                y: 0,
+                width: image.width,
+                height: image.height,
+            },
+            interactionRect: {
+                x: 0,
+                y: 0,
+                width: image.width,
+                height: image.height,
+            },
         })
     }
 
@@ -188,7 +168,7 @@ export function DefsObjects(props: {
 
         <UI.HierarchicalList<Defs.DefObject>
             items={ defs.objectDefs }
-            setItems={ (newItems) => modify({ objectDefs: newItems }) }
+            setItems={ fn => setDefs(defs => ({ ...defs, objectDefs: fn(defs.objectDefs) })) }
             createItem={ create }
             state={ listState }
             setState={ setListState }
@@ -224,7 +204,7 @@ export function DefsObjects(props: {
                     <UI.Cell justifyStretch>
                         <UI.Input
                             value={ curObject.name }
-                            onChange={ (value) => modifyObject({ name: value }) }
+                            onChange={ (value) => set({ ...curObject, name: value }) }
                             fullWidth
                         />
                     </UI.Cell>
@@ -236,7 +216,7 @@ export function DefsObjects(props: {
                     <UI.Cell justifyStretch>
                         <UI.Input
                             value={ Hierarchy.stringifyFolder(curObject.folder) }
-                            onChange={ (value) => modifyObject({ folder: Hierarchy.parseFolder(value) }) }
+                            onChange={ (value) => set({ ...curObject, folder: Hierarchy.parseFolder(value) }) }
                             fullWidth
                         />
                     </UI.Cell>
@@ -266,26 +246,26 @@ export function DefsObjects(props: {
                         <UI.Input
                             number
                             value={ curObject.imageRect.x }
-                            onChangeNumber={ (value) => modifyObject({ imageRect: { x: value } }) }
+                            onChangeNumber={ (value) => set({ ...curObject, imageRect: { ...curObject.imageRect, x: value } }) }
                         />
                         { " × " }
                         <UI.Input
                             number
                             value={ curObject.imageRect.y }
-                            onChangeNumber={ (value) => modifyObject({ imageRect: { y: value } }) }
+                            onChangeNumber={ (value) => set({ ...curObject, imageRect: { ...curObject.imageRect, y: value } }) }
                         />
                         { " px (x, y)" }
                         <br/>
                         <UI.Input
                             number
                             value={ curObject.imageRect.width }
-                            onChangeNumber={ (value) => modifyObject({ imageRect: { width: value } }) }
+                            onChangeNumber={ (value) => set({ ...curObject, imageRect: { ...curObject.imageRect, width: value } }) }
                         />
                         { " × " }
                         <UI.Input
                             number
                             value={ curObject.imageRect.height }
-                            onChangeNumber={ (value) => modifyObject({ imageRect: { height: value } }) }
+                            onChangeNumber={ (value) => set({ ...curObject, imageRect: { ...curObject.imageRect, height: value } }) }
                         />
                         { " px (size)" }
                     </UI.Cell>
@@ -300,13 +280,13 @@ export function DefsObjects(props: {
                         <UI.Input
                             number
                             value={ curObject.pivotPercent.x * 100 }
-                            onChangeNumber={ (value) => modifyObject({ pivotPercent: { x: value / 100 } }) }
+                            onChangeNumber={ (value) => set({ ...curObject, pivotPercent: { ...curObject.pivotPercent, x: value / 100 } }) }
                         />
                         { " × " }
                         <UI.Input
                             number
                             value={ curObject.pivotPercent.y * 100 }
-                            onChangeNumber={ (value) => modifyObject({ pivotPercent: { y: value / 100 } }) }
+                            onChangeNumber={ (value) => set({ ...curObject, pivotPercent: { ...curObject.pivotPercent, y: value / 100 } }) }
                         />
                         { " % of size" }
                     </UI.Cell>
@@ -319,26 +299,26 @@ export function DefsObjects(props: {
                         <UI.Input
                             number
                             value={ curObject.interactionRect.x }
-                            onChangeNumber={ (value) => modifyObject({ interactionRect: { x: value } }) }
+                            onChangeNumber={ (value) => set({ ...curObject, interactionRect: { ...curObject.interactionRect, x: value } }) }
                         />
                         { " × " }
                         <UI.Input
                             number
                             value={ curObject.interactionRect.y }
-                            onChangeNumber={ (value) => modifyObject({ interactionRect: { y: value } }) }
+                            onChangeNumber={ (value) => set({ ...curObject, interactionRect: { ...curObject.interactionRect, y: value } }) }
                         />
                         { " px (x, y)" }
                         <br/>
                         <UI.Input
                             number
                             value={ curObject.interactionRect.width }
-                            onChangeNumber={ (value) => modifyObject({ interactionRect: { width: value } }) }
+                            onChangeNumber={ (value) => set({ ...curObject, interactionRect: { ...curObject.interactionRect, width: value } }) }
                         />
                         { " × " }
                         <UI.Input
                             number
                             value={ curObject.interactionRect.height }
-                            onChangeNumber={ (value) => modifyObject({ interactionRect: { height: value } }) }
+                            onChangeNumber={ (value) => set({ ...curObject, interactionRect: { ...curObject.interactionRect, height: value } }) }
                         />
                         { " px (size)" }
                     </UI.Cell>
@@ -350,7 +330,7 @@ export function DefsObjects(props: {
                     <UI.Cell>
                         <UI.Checkbox
                             value={ curObject.resizeable }
-                            onChange={ (value) => modifyObject({ resizeable: value }) }
+                            onChange={ (value) => set({ ...curObject, resizeable: value }) }
                         />
                     </UI.Cell>
 
@@ -363,7 +343,7 @@ export function DefsObjects(props: {
                     <UI.Cell span={ 2 } justifyStretch>
                         <ObjectInheritanceList
                             value={ curObject.inheritPropertiesFromObjectDefs }
-                            onChange={ (value) => setObject({ ...curObject, inheritPropertiesFromObjectDefs: value }) }
+                            onChange={ (value) => set({ ...curObject, inheritPropertiesFromObjectDefs: value }) }
                         />
                     </UI.Cell>
 
@@ -372,7 +352,7 @@ export function DefsObjects(props: {
                     <UI.Cell span={ 2 } justifyStretch>
                         <PropertyDefsPanel
                             defProperties={ curObject.properties }
-                            setDefProperties={ (value) => setObject({ ...curObject, properties: value }) }
+                            setDefProperties={ (value) => set({ ...curObject, properties: value }) }
                         />
                     </UI.Cell>
 

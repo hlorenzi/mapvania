@@ -2,10 +2,11 @@ import * as React from "react"
 import * as ID from "../data/id"
 import * as Defs from "../data/defs"
 import * as Editors from "../data/editors"
+import * as Hierarchy from "../data/hierarchy"
 import * as UI from "../ui"
 import { global } from "../global"
 import styled from "styled-components"
-import { DeepAssignable } from "../util/deepAssign"
+import { useCachedState } from "../util/useCachedState"
 
 
 export function DefsLayers(props: {
@@ -13,152 +14,57 @@ export function DefsLayers(props: {
 })
 {
     const defs = global.editors.editors[props.editorIndex].defs
-    const modify = (newDefs: DeepAssignable<Defs.Defs>) =>
-    {
-        Editors.deepAssignEditor(props.editorIndex, {
-            defs: newDefs,
-        })
-    }
 
-    const [curLayerId, setCurLayerId] = React.useState<ID.ID>("")
+
+    const [listState, setListState] = useCachedState(
+        "DefsLayers_ListState",
+        UI.makeHierarchicalListState())
+
+
+    const curLayerId = listState.lastSelectedId
     const curLayerIndex = defs.layerDefs.findIndex(l => l.id === curLayerId)
     const curLayer = defs.layerDefs.find(l => l.id === curLayerId)
 
 
-    const modifyLayer = (layerDef: DeepAssignable<Defs.DefLayer>) =>
+    const setDefs = (fn: (old: Defs.Defs) => Defs.Defs) =>
     {
-        if (curLayerIndex < 0)
-            return
-
-        modify({ layerDefs: { [curLayerIndex]: layerDef }})
+        Editors.assignEditorDefs(props.editorIndex, fn)
     }
 
 
-    const createLayer = (layerDef: Defs.DefLayer) =>
+    const set = (layerDef: Defs.DefLayer) =>
     {
-        const [newNextIDs, newID] = ID.getNextID(defs.nextIDs)
-        modify({
-            nextIDs: newNextIDs,
-            layerDefs: { [defs.layerDefs.length]:
-                {
-                    ...layerDef,
-                    id: newID,
-                }
-            },
-        })
-        return newID
+        setDefs(defs => ({
+            ...defs,
+            layerDefs: Hierarchy.setItem(
+                defs.layerDefs,
+                curLayerIndex,
+                layerDef),
+        }))
     }
 
 
-    const createTileLayer = () =>
+    const create = () =>
     {
-        const layerDef: Defs.DefLayerTile = {
-            type: "tile",
-            id: null!,
-            name: "layer_" + (defs.layerDefs.length + 1),
-            gridCellWidth: 16,
-            gridCellHeight: 16,
-        }
+        const [nextIds, id] = ID.getNextID(defs.nextIDs)
+        const layerDef = Defs.makeNewLayerDef(id)
 
-        const newId = createLayer(layerDef)
-        setCurLayerId(newId)
+        setDefs(defs => ({ ...defs, nextIDs: nextIds }))
+        return layerDef
     }
 
 
-    const createObjectLayer = () =>
-    {
-        const layerDef: Defs.DefLayerObject = {
-            type: "object",
-            id: null!,
-            name: "layer_" + (defs.layerDefs.length + 1),
-            gridCellWidth: 16,
-            gridCellHeight: 16,
-        }
+    return <UI.Grid template="15em 25em" templateRows="1fr" fullHeight>
 
-        const newId = createLayer(layerDef)
-        setCurLayerId(newId)
-    }
-
-
-    const deleteCurLayer = () =>
-    {
-        modify({
-            layerDefs: defs.layerDefs.filter(l => l.id !== curLayerId),
-        })
-    }
-
-
-    const moveCurLayerUp = () =>
-    {
-        if (curLayerIndex <= 0)
-            return
-            
-        modify({
-            layerDefs: [
-                ...defs.layerDefs.slice(0, curLayerIndex - 1),
-                curLayer!,
-                defs.layerDefs[curLayerIndex - 1],
-                ...defs.layerDefs.slice(curLayerIndex + 1),
-            ],
-        })
-    }
-
-
-    const moveCurLayerDown = () =>
-    {
-        if (curLayerIndex >= defs.layerDefs.length - 1)
-            return
-
-        modify({
-            layerDefs: [
-                ...defs.layerDefs.slice(0, curLayerIndex),
-                defs.layerDefs[curLayerIndex + 1],
-                curLayer!,
-                ...defs.layerDefs.slice(curLayerIndex + 2),
-            ],
-        })
-    }
-
-
-    const getLayerIcon = (layerDef: Defs.DefLayer) =>
-    {
-        return layerDef.type == "tile" ? "🧱" :
-            layerDef.type == "object" ? "🍎" :
-            ""
-    }
-
-
-    const getLayerType = (layerDef: Defs.DefLayer) =>
-    {
-        return layerDef.type == "tile" ? "Tile Layer" :
-            layerDef.type == "object" ? "Object Layer" :
-            ""
-    }
-
-
-    return <UI.Grid template="15em 25em" templateRows="auto 1fr" fullHeight>
-
-        <UI.Cell>
-            <UI.Button
-                label="➕ Tile Layer"
-                onClick={ createTileLayer }
-            />
-
-            <UI.Button
-                label="➕ Object Layer"
-                onClick={ createObjectLayer }
-            />
-        </UI.Cell>
-
-        <UI.Cell/>
-
-        <UI.List
-            value={ curLayerId }
-            onChange={ setCurLayerId }
-            items={ defs.layerDefs.map(layerDef => ({
-                id: layerDef.id,
-                label: getLayerIcon(layerDef) + " " + layerDef.name,
-            }))}
+        <UI.HierarchicalList<Defs.DefLayer>
+            disallowFolders
+            items={ defs.layerDefs }
+            setItems={ fn => setDefs(defs => ({ ...defs, layerDefs: fn(defs.layerDefs) })) }
+            createItem={ create }
+            state={ listState }
+            setState={ setListState }
+            getItemIcon={ item => Defs.getLayerDefIconElement(item) }
+            getItemLabel={ item => item.name }
         />
 
         { curLayer && <UI.Grid template="auto auto" key={ curLayer.id }>
@@ -170,29 +76,26 @@ export function DefsLayers(props: {
             <UI.Cell justifyStretch>
                 <UI.Input
                     value={ curLayer.name }
-                    onChange={ (value) => modifyLayer({ name: value }) }
+                    onChange={ (value) => set({ ...curLayer, name: value }) }
                     fullWidth
-                />
-            </UI.Cell>
-            
-            <UI.Cell span={ 2 } justifyEnd>
-                <UI.Button
-                    label="🔼"
-                    onClick={ moveCurLayerUp }
-                />
-
-                <UI.Button
-                    label="🔽"
-                    onClick={ moveCurLayerDown }
-                />
-
-                <UI.Button
-                    label="❌ Delete"
-                    onClick={ deleteCurLayer }
                 />
             </UI.Cell>
 
             <UI.Cell span={ 2 } divider/>
+
+            <UI.Cell justifyEnd>
+                Type
+            </UI.Cell>
+
+            <UI.Cell>
+                <UI.Select
+                    value={ curLayer.type }
+                    onChange={ (value) => set({ ...curLayer, type: value as Defs.DefLayer["type"] }) }
+                >
+                    <option value="tile">Tile</option>
+                    <option value="object">Object</option>
+                </UI.Select>
+            </UI.Cell>
 
             <UI.Cell justifyEnd>
                 Grid Size
@@ -202,13 +105,13 @@ export function DefsLayers(props: {
                 <UI.Input
                     number
                     value={ curLayer.gridCellWidth }
-                    onChangeNumber={ (value) => modifyLayer({ gridCellWidth: value }) }
+                    onChangeNumber={ (value) => set({ ...curLayer, gridCellWidth: value }) }
                 />
                 { " × " }
                 <UI.Input
                     number
                     value={ curLayer.gridCellHeight }
-                    onChangeNumber={ (value) => modifyLayer({ gridCellHeight: value }) }
+                    onChangeNumber={ (value) => set({ ...curLayer, gridCellHeight: value }) }
                 />
                 { " px" }
             </UI.Cell>

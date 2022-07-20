@@ -3,10 +3,11 @@ import * as ID from "../data/id"
 import * as Defs from "../data/defs"
 import * as Editors from "../data/editors"
 import * as Images from "../data/images"
+import * as Hierarchy from "../data/hierarchy"
 import * as UI from "../ui"
 import { global } from "../global"
 import styled from "styled-components"
-import { DeepAssignable } from "../util/deepAssign"
+import { useCachedState } from "../util/useCachedState"
 
 
 export function DefsTileBrushes(props: {
@@ -14,60 +15,43 @@ export function DefsTileBrushes(props: {
 })
 {
     const defs = global.editors.editors[props.editorIndex].defs
-    const modifyDefs = (newDefs: Defs.Defs) =>
-    {
-        Editors.assignEditorDefs(props.editorIndex, newDefs)
-    }
 
-    const [curBrushId, setCurBrushId] = React.useState<ID.ID>("")
+    const [listState, setListState] = useCachedState(
+        "DefsTileBrushes_ListState",
+        UI.makeHierarchicalListState())
+
+    const curBrushId = listState.lastSelectedId
     const curBrushIndex = defs.tileBrushDefs.findIndex(l => l.id === curBrushId)
     const curBrush = defs.tileBrushDefs.find(l => l.id === curBrushId)
     const curTileset = Defs.getTileset(defs, curBrush?.tilesetDefId ?? "")
     const curTilesetImg = Images.getImageLazy(curTileset?.imageSrc ?? "")
     
 
-    const modify = (brushDef: Defs.DefTileBrush) =>
+    const setDefs = (fn: (old: Defs.Defs) => Defs.Defs) =>
     {
-        if (curBrushIndex < 0)
-            return
+        Editors.assignEditorDefs(props.editorIndex, fn)
+    }
 
-        modifyDefs(Defs.setAssetDef(defs, "tileBrushDefs", curBrushIndex, brushDef))
+
+    const setBrush = (brushDef: Defs.DefTileBrush) =>
+    {
+        setDefs(defs => ({
+            ...defs,
+            tileBrushDefs: Hierarchy.setItem(
+                defs.tileBrushDefs,
+                curBrushIndex,
+                brushDef),
+        }))
     }
 
 
     const create = () =>
     {
-        const [newNextIDs, newID] = ID.getNextID(defs.nextIDs)
-        let newDefs = Defs.setAssetDef(defs, "tileBrushDefs", defs.tileBrushDefs.length, {
-            id: newID,
-            name: "brush_" + defs.tileBrushDefs.length,
-            tilesetDefId: "",
-            tiles: {},
-        })
-        newDefs = {
-            ...newDefs,
-            nextIDs: newNextIDs,
-        }
-        modifyDefs(newDefs)
-        setCurBrushId(newID)
-    }
+        const [nextIds, id] = ID.getNextID(defs.nextIDs)
+        const tileBrush = Defs.makeNewTileBrushDef(id)
 
-
-    const erase = () =>
-    {
-        modifyDefs(Defs.removeAssetDef(defs, "tileBrushDefs", curBrushIndex))
-    }
-
-
-    const moveUp = () =>
-    {
-        modifyDefs(Defs.moveAssetDef(defs, "tileBrushDefs", curBrushIndex, curBrushIndex - 1))
-    }
-
-
-    const moveDown = () =>
-    {
-        modifyDefs(Defs.moveAssetDef(defs, "tileBrushDefs", curBrushIndex, curBrushIndex + 1))
+        setDefs(defs => ({ ...defs, nextIDs: nextIds }))
+        return tileBrush
     }
 
 
@@ -178,7 +162,7 @@ export function DefsTileBrushes(props: {
                 tileIndex,
                 data)
 
-            modify(originalBrush)
+            setBrush(originalBrush)
         }
 
         state.onMouseUp = () =>
@@ -188,27 +172,16 @@ export function DefsTileBrushes(props: {
     }
 
 
-    return <UI.Grid template="15em 25em 1fr" templateRows="auto 1fr" fullHeight alignStart>
+    return <UI.Grid template="15em 25em 1fr" templateRows="1fr" fullHeight alignStart>
 
-        <UI.Cell>
-            <UI.Button
-                label="➕ Tile Brush"
-                onClick={ create }
-            />
-        </UI.Cell>
-
-        <UI.Cell/>
-
-        <UI.Cell/>
-
-        <UI.List
-            value={ curBrushId }
-            onChange={ setCurBrushId }
-            items={ defs.tileBrushDefs.map(tileBrushDef => ({
-                id: tileBrushDef.id,
-                label: tileBrushDef.name,
-                icon: Defs.getTileBrushDefIconElement(defs, tileBrushDef),
-            }))}
+        <UI.HierarchicalList<Defs.DefTileBrush>
+            items={ defs.tileBrushDefs }
+            setItems={ fn => setDefs(defs => ({ ...defs, tileBrushDefs: fn(defs.tileBrushDefs) })) }
+            createItem={ create }
+            state={ listState }
+            setState={ setListState }
+            getItemIcon={ item => Defs.getTileBrushDefIconElement(defs, item) }
+            getItemLabel={ item => item.name }
         />
 
         { curBrush && <UI.Grid template="1fr" templateRows="auto 1fr" fullHeight key={ curBrush.id }>
@@ -222,25 +195,20 @@ export function DefsTileBrushes(props: {
                 <UI.Cell justifyStretch>
                     <UI.Input
                         value={ curBrush.name }
-                        onChange={ (value) => modify({ ...curBrush, name: value }) }
+                        onChange={ (value) => setBrush({ ...curBrush, name: value }) }
                         fullWidth
                     />
                 </UI.Cell>
-                
-                <UI.Cell span={ 2 } justifyEnd>
-                    <UI.Button
-                        label="🔼"
-                        onClick={ moveUp }
-                    />
 
-                    <UI.Button
-                        label="🔽"
-                        onClick={ moveDown }
-                    />
+                <UI.Cell justifyEnd>
+                    Folder
+                </UI.Cell>
 
-                    <UI.Button
-                        label="❌ Delete"
-                        onClick={ erase }
+                <UI.Cell justifyStretch>
+                    <UI.Input
+                        value={ Hierarchy.stringifyFolder(curBrush.folder) }
+                        onChange={ (value) => setBrush({ ...curBrush, folder: Hierarchy.parseFolder(value) }) }
+                        fullWidth
                     />
                 </UI.Cell>
 
@@ -253,7 +221,7 @@ export function DefsTileBrushes(props: {
                 <UI.Cell justifyStretch>
                     <UI.Input
                         value={ curBrush.tilesetDefId }
-                        onChange={ (value) => modify({ ...curBrush, tilesetDefId: value }) }
+                        onChange={ (value) => setBrush({ ...curBrush, tilesetDefId: value }) }
                         fullWidth
                     />
                 </UI.Cell>

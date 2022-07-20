@@ -17,7 +17,7 @@ export function EditorDefs(props: {
     editorIndex: number,
 })
 {
-    const [tab, setTab] = useCachedState("EditorDefsTabIndex", 0)
+    const [tab, setTab] = useCachedState("EditorDefs_TabIndex", 0)
 
 
     return <UI.PanelPadding>

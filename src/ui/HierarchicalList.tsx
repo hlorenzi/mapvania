@@ -67,13 +67,19 @@ const StyledListItem = styled.button<{
     is2D: boolean,
     selected: boolean,
     dragOver: boolean,
+    dragOverAfter: boolean,
 }>`
     display: block;
     width: 100%;
 
-    border: 2px solid transparent;
+    border: 0;
+    border-top: 2px solid transparent;
+    border-bottom: 2px solid transparent;
     ${ props => !props.dragOver ? "" : `
         border-top: 2px solid #0088ff;
+    `}
+    ${ props => !props.dragOverAfter ? "" : `
+        border-bottom: 2px solid #0088ff;
     `}
 
     outline: none;
@@ -87,7 +93,7 @@ const StyledListItem = styled.button<{
     
     box-sizing: border-box;
     margin: 0;
-    padding: 0.4em 1em;
+    padding: 0.2em 1em;
     font-family: inherit;
     font-weight: inherit;
     font-size: 1em;
@@ -169,17 +175,21 @@ export function makeHierarchicalListState(): HierarchicalListState
 }
 
 
+const DRAGOVER_ID_LAST = "last"
+
+
 export function HierarchicalList<T extends Hierarchy.Item>(props: {
     items: Hierarchy.Items<T>,
-    setItems?: (newItems: Hierarchy.Items<T>) => void,
+    setItems?: (fn: (old: Hierarchy.Items<T>) => Hierarchy.Items<T>) => void,
     value?: string,
     onChange?: (id: string) => void,
     state: HierarchicalListState,
     setState: React.Dispatch<React.SetStateAction<HierarchicalListState>>,
     getItemIcon: (item: T) => React.ReactNode,
-    getItemLabel: (item: T) => React.ReactNode,
+    getItemLabel: (item: T) => string,
     createItem?: () => T,
     is2D?: boolean,
+    disallowFolders?: boolean,
     disabled?: boolean,
     style?: React.CSSProperties,
 })
@@ -248,8 +258,8 @@ export function HierarchicalList<T extends Hierarchy.Item>(props: {
         const newItem = props.createItem()
         newItem.folder = props.state.currentFolder
 
-        props.setItems?.([
-            ...props.items,
+        props.setItems?.(items => [
+            ...items,
             newItem,
         ])
 
@@ -266,14 +276,15 @@ export function HierarchicalList<T extends Hierarchy.Item>(props: {
 
     const onRemove = () =>
     {
-        props.setItems?.(props.items.filter(i => !props.state.selectedIds.has(i.id)))
+        props.setItems?.(items =>
+            items.filter(i => !props.state.selectedIds.has(i.id)))
     }
 
 
     const onMoveUp = () =>
     {
-        props.setItems?.(Hierarchy.shiftItems(
-            props.items,
+        props.setItems?.(items => Hierarchy.shiftItems(
+            items,
             props.state.currentFolder,
             props.state.selectedIds,
             -1))
@@ -282,8 +293,8 @@ export function HierarchicalList<T extends Hierarchy.Item>(props: {
 
     const onMoveDown = () =>
     {
-        props.setItems?.(Hierarchy.shiftItems(
-            props.items,
+        props.setItems?.(items => Hierarchy.shiftItems(
+            items,
             props.state.currentFolder,
             props.state.selectedIds,
             1))
@@ -310,28 +321,32 @@ export function HierarchicalList<T extends Hierarchy.Item>(props: {
     }
 
 
-    const onDragStart = (ev: React.DragEvent<HTMLButtonElement>, id: string) =>
+    const onDragStart = (ev: React.DragEvent<HTMLElement>, id: string) =>
     {
         onSelectItem(id, ev.ctrlKey, ev.shiftKey)
     }
 
 
-    const onDragOver = (ev: React.DragEvent<HTMLButtonElement>, id: string) =>
+    const onDragOver = (ev: React.DragEvent<HTMLElement>, id: string) =>
     {
         ev.preventDefault()
+        ev.stopPropagation()
         setCurDragOverId(id)
     }
 
 
-    const onDrop = (ev: React.DragEvent<HTMLButtonElement>, id: string) =>
+    const onDrop = (ev: React.DragEvent<HTMLElement>, id: string) =>
     {
+        ev.stopPropagation()
+
         setCurDragOverId("")
 
-        props.setItems?.(Hierarchy.moveItems(
-            props.items,
+        props.setItems?.(items => Hierarchy.moveItems(
+            items,
             props.state.currentFolder,
             props.state.selectedIds,
-            id))
+            id === DRAGOVER_ID_LAST ? items[items.length - 1].id : id,
+            id === DRAGOVER_ID_LAST))
     }
 
 
@@ -406,48 +421,58 @@ export function HierarchicalList<T extends Hierarchy.Item>(props: {
 
                 <Button
                     label="➕&#xFE0E; Create"
+                    title="Create new item"
                     onClick={ onCreate }
                 />
 
                 <Button
                     label="▲"
+                    title="Move selected items up"
                     onClick={ onMoveUp }
                 />
 
                 <Button
                     label="▼"
+                    title="Move selected items down"
                     onClick={ onMoveDown }
                 />
 
                 <div style={{ flexGrow: 1 }}/>
 
                 <Button
-                    label="❌&#xFE0E;"
+                    label="❌"
+                    title="Delete selected items"
                     onClick={ onRemove }
                 />
 
             </StyledHeader>
         }
         
-        { !props.setItems &&
+        { !!props.disallowFolders ||
+            (!props.setItems &&
             props.state.currentFolder.length === 0 &&
-            !("isFolder" in currentItemsAndSubfolders[0]) ?
+            !("isFolder" in currentItemsAndSubfolders[0])) ?
             <div/>
         :
             <StyledHeader>
 
                 <Button
-                    label="◀"
+                    label={
+                        "◀ 📁 " +
+                        props.state.currentFolder.join("/") + "/"
+                    }
+                    title="Go to parent folder"
                     onClick={ onMoveUpOneFolderLevel }
                 />
-                { " 📁 " + props.state.currentFolder.join("/") + "/" }
 
             </StyledHeader>
         }
 
         <StyledList
             is2D={ !!props.is2D }
-            ref={ scrollParentRef }        
+            ref={ scrollParentRef }
+            onDragOver={ ev => onDragOver(ev, DRAGOVER_ID_LAST) }
+            onDrop={ ev => onDrop(ev, DRAGOVER_ID_LAST) }
         >
 
             { currentItemsAndSubfolders.map(item =>
@@ -462,6 +487,7 @@ export function HierarchicalList<T extends Hierarchy.Item>(props: {
                         onDragOver={ ev => onDragOver(ev, item.id) }
                         selected={ props.state.selectedIds.has(item.id) }
                         dragOver={ curDragOverId === item.id }
+                        dragOverAfter={ curDragOverId === DRAGOVER_ID_LAST && item === currentItemsAndSubfolders[currentItemsAndSubfolders.length - 1] }
                     >
                         <StyledListInner is2D={ !!props.is2D }>
                             <div>📁</div>
@@ -475,6 +501,7 @@ export function HierarchicalList<T extends Hierarchy.Item>(props: {
                 {
                     return <StyledListItem
                         key={ item.id }
+                        title={ props.getItemLabel(item) }
                         is2D={ !!props.is2D }
                         onClick={ ev => onSelectItem(item.id, ev.ctrlKey, ev.shiftKey) }
                         draggable="true"
@@ -483,6 +510,7 @@ export function HierarchicalList<T extends Hierarchy.Item>(props: {
                         onDrop={ ev => onDrop(ev, item.id) }
                         selected={ props.state.selectedIds.has(item.id) }
                         dragOver={ curDragOverId === item.id }
+                        dragOverAfter={ curDragOverId === DRAGOVER_ID_LAST && item === currentItemsAndSubfolders[currentItemsAndSubfolders.length - 1] }
                     >
                         <StyledListInner is2D={ !!props.is2D }>
                             <div>{ props.getItemIcon(item) }</div>
@@ -493,6 +521,12 @@ export function HierarchicalList<T extends Hierarchy.Item>(props: {
                     </StyledListItem>
                 }
             })}
+
+            <div style={{
+                width: "100%",
+                height: "2em",
+                pointerEvents: "none",
+            }}/>
 
         </StyledList>
     </StyledRoot>

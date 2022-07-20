@@ -26,9 +26,20 @@ export interface Folder
 }
 
 
-export interface Actions<T extends Item>
+export function setItem<T extends Item>(
+    items: Items<T>,
+    index: number,
+    item: T)
+    : Items<T>
 {
-    create: () => T
+    if (index < 0)
+        return items
+    
+    return [
+        ...items.slice(0, index),
+        item,
+        ...items.slice(index + 1),
+    ]
 }
 
 
@@ -211,7 +222,8 @@ export function moveItems<T extends Item>(
     allItems: Items<T>,
     folder: FolderId,
     idsToMove: Set<string>,
-    moveBeforeId: string)
+    moveToId: string,
+    after: boolean)
     : Items<T>
 {
     if (allItems.length === 0)
@@ -229,11 +241,14 @@ export function moveItems<T extends Item>(
     const itemsToMove = allItems.filter(item => idsToMove.has(item.id))
     const allItemsWithSelectionDeleted = allItems.filter(item => !idsToMove.has(item.id))
 
-    const moveToIndex = allItemsWithSelectionDeleted.findIndex(
-        item => item.id === moveBeforeId)
+    let moveToIndex = allItemsWithSelectionDeleted
+        .findIndex(item => item.id === moveToId)
 
     if (moveToIndex < 0)
         return allItems
+    
+    if (after)
+        moveToIndex += 1
 
     return [
         ...allItemsWithSelectionDeleted.slice(0, moveToIndex),
