@@ -1,7 +1,7 @@
 import * as React from "react"
 import * as ReactDOM from "react-dom"
 import { global, initGlobal } from "./global"
-import * as Keyboard from "./keyboard"
+import * as Events from "./events"
 import { useRefreshToken } from "./util/refreshToken"
 import { EditorRoot } from "./panels/EditorRoot"
 import { ProjectTree } from "./panels/ProjectTree"
@@ -28,7 +28,7 @@ function App()
     const imagesRefreshToken = useRefreshToken("images")
 
     
-    Keyboard.useKeyboardShortcuts()
+    Events.useKeyboardShortcuts()
 
 
     const initialized = React.useRef(false)

@@ -86,7 +86,7 @@ export function EditorMap(props: {
             window.removeEventListener("mousemove", onMouseMove)
             window.removeEventListener("mouseup", onMouseUp)
             canvas.removeEventListener("wheel", onMouseWheel)
-            canvas.removeEventListener("keydown", onKeyDown)
+            window.removeEventListener("keydown", onKeyDown)
             window.removeEventListener("keyup", onKeyUp)
             canvas.removeEventListener("contextmenu", preventDefault)
             

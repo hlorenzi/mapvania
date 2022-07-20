@@ -7,6 +7,7 @@ import * as Editors from "../data/editors"
 import * as Dev from "../data/dev"
 import * as UI from "../ui"
 import { global } from "../global"
+import * as Events from "../events"
 import * as MathUtils from "../util/mathUtils"
 
 
@@ -437,6 +438,47 @@ export function getObjectVisiblePropertiesRecursive(
 }
 
 
+function updateMouse(state: State, ev: MouseEvent)
+{
+    const map = (global.editors.editors[state.editorIndex] as Editors.EditorMap).map
+    const defs = (global.editors.editors[state.editorIndex] as Editors.EditorMap).defs
+    const room = map.rooms[state.roomId]
+    const layer = defs.layerDefs.find(l => l.id === global.editors.mapEditing.layerDefId)
+
+    const canvasRect = state.canvas.getBoundingClientRect()
+
+    state.mouse.posRaw = {
+        x: ev.clientX - canvasRect.left,
+        y: ev.clientY - canvasRect.top,
+    }
+    
+    state.mouse.pos = {
+        x: (state.mouse.posRaw.x - state.canvasWidth  / 2 + state.camera.pos.x) / state.camera.zoom,
+        y: (state.mouse.posRaw.y - state.canvasHeight / 2 + state.camera.pos.y) / state.camera.zoom,
+    }
+
+    state.mouse.posInRoom = {
+        x: state.mouse.pos.x - (room?.x ?? 0),
+        y: state.mouse.pos.y - (room?.y ?? 0),
+    }
+    
+    if (layer && room)
+    {
+        state.mouse.tile = {
+            x: Math.floor((state.mouse.pos.x - room.x) / layer.gridCellWidth),
+            y: Math.floor((state.mouse.pos.y - room.y) / layer.gridCellHeight),
+        }
+    }
+    else
+    {
+        state.mouse.tile = {
+            x: Math.floor(state.mouse.pos.x / defs.generalDefs.roomWidthMultiple),
+            y: Math.floor(state.mouse.pos.y / defs.generalDefs.roomHeightMultiple),
+        }
+    }
+}
+
+
 export function onMouseDown(state: State, ev: MouseEvent)
 {
     const editor = (global.editors.editors[state.editorIndex] as Editors.EditorMap)
@@ -451,7 +493,10 @@ export function onMouseDown(state: State, ev: MouseEvent)
         return
 
     Editors.historyAdd(state.editorIndex)
+    Events.startMouseCapture()
 
+    updateMouse(state, ev)
+    
     state.mouseDownOrigin =
     {
         posRaw: state.mouse.posRaw,
@@ -580,43 +625,7 @@ export function onMouseDown(state: State, ev: MouseEvent)
 
 export function onMouseMove(state: State, ev: MouseEvent)
 {
-    const defs = (global.editors.editors[state.editorIndex] as Editors.EditorMap).defs
-    const map = (global.editors.editors[state.editorIndex] as Editors.EditorMap).map
-    const room = map.rooms[state.roomId]
-
-    const canvasRect = state.canvas.getBoundingClientRect()
-
-    state.mouse.posRaw = {
-        x: ev.clientX - canvasRect.left,
-        y: ev.clientY - canvasRect.top,
-    }
-
-    state.mouse.pos = {
-        x: (state.mouse.posRaw.x - state.canvasWidth  / 2 + state.camera.pos.x) / state.camera.zoom,
-        y: (state.mouse.posRaw.y - state.canvasHeight / 2 + state.camera.pos.y) / state.camera.zoom,
-    }
-
-    state.mouse.posInRoom = {
-        x: state.mouse.pos.x - (room?.x ?? 0),
-        y: state.mouse.pos.y - (room?.y ?? 0),
-    }
-
-    const layer = defs.layerDefs.find(l => l.id === global.editors.mapEditing.layerDefId)
-    const stage = map.rooms[state.roomId]
-    if (layer && stage)
-    {
-        state.mouse.tile = {
-            x: Math.floor((state.mouse.pos.x - stage.x) / layer.gridCellWidth),
-            y: Math.floor((state.mouse.pos.y - stage.y) / layer.gridCellHeight),
-        }
-    }
-    else
-    {
-        state.mouse.tile = {
-            x: Math.floor(state.mouse.pos.x / defs.generalDefs.roomWidthMultiple),
-            y: Math.floor(state.mouse.pos.y / defs.generalDefs.roomHeightMultiple),
-        }
-    }
+    updateMouse(state, ev)
     
     state.mouseDownDelta.posRaw = {
         x: state.mouse.posRaw.x - state.mouseDownOrigin.posRaw.x,
@@ -659,7 +668,8 @@ export function onMouseUp(state: State, ev: MouseEvent)
     state.onMouseUp = null
     state.onRenderRoomTool = null
     state.onRenderMapTool = null
-    
+
+    Events.endMouseCapture()
     global.editors.refreshToken.commit()
     MapEditor.render(state)
     Dev.refreshDevFile()

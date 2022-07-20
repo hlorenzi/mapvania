@@ -4,6 +4,27 @@ import * as Editors from "./data/editors"
 import { global } from "./global"
 
 
+function preventDefault(ev: Event)
+{
+    ev.preventDefault()
+}
+
+
+export function startMouseCapture()
+{
+    document.addEventListener("contextmenu", preventDefault)
+}
+
+
+export function endMouseCapture()
+{
+    window.requestAnimationFrame(() =>
+    {
+        document.removeEventListener("contextmenu", preventDefault)
+    })
+}
+
+
 export function useKeyboardShortcuts()
 {
     React.useEffect(() =>

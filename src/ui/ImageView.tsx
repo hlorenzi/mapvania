@@ -1,5 +1,6 @@
 import * as React from "react"
 import styled from "styled-components"
+import * as Events from "../events"
 
 
 export interface ImageViewState
@@ -83,6 +84,34 @@ export function ImageView(props: {
             return
 
         const ctx = canvas.getContext("2d")!
+
+
+        const updateMouse = (ev: MouseEvent) =>
+        {
+            const canvasRect = canvas.getBoundingClientRect()
+            const imgW = props.imageData?.width ?? 0
+            const imgH = props.imageData?.height ?? 0
+
+            state.current.mouse.posRaw = {
+                x: ev.clientX - canvasRect.left,
+                y: ev.clientY - canvasRect.top,
+            }
+
+            state.current.mouse.pos = {
+                x: (state.current.mouse.posRaw.x - canvas.width  / 2 + state.current.camera.pos.x) / state.current.camera.zoom + imgW / 2,
+                y: (state.current.mouse.posRaw.y - canvas.height / 2 + state.current.camera.pos.y) / state.current.camera.zoom + imgH / 2,
+            }
+
+            state.current.mouseDownDelta.posRaw = {
+                x: state.current.mouse.posRaw.x - state.current.mouseDownOrigin.posRaw.x,
+                y: state.current.mouse.posRaw.y - state.current.mouseDownOrigin.posRaw.y,
+            }
+
+            state.current.mouseDownDelta.pos = {
+                x: state.current.mouse.pos.x - state.current.mouseDownOrigin.pos.x,
+                y: state.current.mouse.pos.y - state.current.mouseDownOrigin.pos.y,
+            }
+        }
             
         
         const onMouseDown = (ev: MouseEvent) =>
@@ -92,6 +121,9 @@ export function ImageView(props: {
             if (state.current.onMouseMove)
                 return
 
+            Events.startMouseCapture()
+            updateMouse(ev)
+            
             state.current.mouseDown = true
 
             state.current.mouseDownOrigin =
@@ -122,29 +154,7 @@ export function ImageView(props: {
 
         const onMouseMove = (ev: MouseEvent) =>
         {
-            const canvasRect = canvas.getBoundingClientRect()
-            const imgW = props.imageData?.width ?? 0
-            const imgH = props.imageData?.height ?? 0
-
-            state.current.mouse.posRaw = {
-                x: ev.clientX - canvasRect.left,
-                y: ev.clientY - canvasRect.top,
-            }
-
-            state.current.mouse.pos = {
-                x: (state.current.mouse.posRaw.x - canvas.width  / 2 + state.current.camera.pos.x) / state.current.camera.zoom + imgW / 2,
-                y: (state.current.mouse.posRaw.y - canvas.height / 2 + state.current.camera.pos.y) / state.current.camera.zoom + imgH / 2,
-            }
-
-            state.current.mouseDownDelta.posRaw = {
-                x: state.current.mouse.posRaw.x - state.current.mouseDownOrigin.posRaw.x,
-                y: state.current.mouse.posRaw.y - state.current.mouseDownOrigin.posRaw.y,
-            }
-
-            state.current.mouseDownDelta.pos = {
-                x: state.current.mouse.pos.x - state.current.mouseDownOrigin.pos.x,
-                y: state.current.mouse.pos.y - state.current.mouseDownOrigin.pos.y,
-            }
+            updateMouse(ev)
 
             if (state.current.onMouseMove)
                 state.current.onMouseMove(state.current)
@@ -156,6 +166,7 @@ export function ImageView(props: {
         const onMouseUp = (ev: MouseEvent) =>
         {
             ev.preventDefault()
+            Events.endMouseCapture()
 
             onMouseMove(ev)
 
