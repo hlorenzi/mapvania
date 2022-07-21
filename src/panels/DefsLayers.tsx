@@ -81,6 +81,14 @@ export function DefsLayers(props: {
                 />
             </UI.Cell>
 
+            <UI.Cell justifyEnd>
+                ID
+            </UI.Cell>
+
+            <UI.Cell justifyStart>
+                { curLayer.id }
+            </UI.Cell>
+
             <UI.Cell span={ 2 } divider/>
 
             <UI.Cell justifyEnd>

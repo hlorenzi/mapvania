@@ -49,18 +49,6 @@ export function makeNew(refreshToken: RefreshToken): Global
 }
 
 
-export function stringify(obj: any): string
-{
-    return JSON.stringify(obj, undefined, 2)
-}
-
-
-export function parse(text: string): any
-{
-    return JSON.parse(text)
-}
-
-
 export async function setRootDirectory(handle: FileSystemDirectoryHandle)
 {
     global.filesystem.root.handle = handle

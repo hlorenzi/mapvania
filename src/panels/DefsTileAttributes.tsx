@@ -81,6 +81,14 @@ export function DefsTileAttributes(props: {
                     fullWidth
                 />
             </UI.Cell>
+
+            <UI.Cell justifyEnd>
+                ID
+            </UI.Cell>
+
+            <UI.Cell justifyStart>
+                { curTileAttrb.id }
+            </UI.Cell>
             
             <UI.Cell span={ 2 } divider/>
 

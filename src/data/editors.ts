@@ -5,6 +5,7 @@ import * as Filesystem from "./filesystem"
 import * as ID from "./id"
 import * as Dev from "./dev"
 import * as Defs from "./defs"
+import * as DefsSerialization from "./defs_serialization"
 import * as Map from "./map"
 import * as MapSerialization from "./map_serialization"
 import * as MapEditor from "../mapEditor"
@@ -230,8 +231,9 @@ export async function openEditorDefs(rootRelativePath: string)
 {
     try
     {
-        const defsText = await Filesystem.readFileText(rootRelativePath)
-        const defs = Defs.parse(defsText)
+        const serDefsText = await Filesystem.readFileText(rootRelativePath)
+        const serDefs = DefsSerialization.parse(serDefsText)
+        const defs = DefsSerialization.deserialize(serDefs)
         const editor: EditorDefs = {
             type: "defs",
             name: rootRelativePath,
@@ -255,12 +257,13 @@ export async function saveEditorDefs(editorIndex: number)
     {
         const editorData = global.editors.editors[editorIndex] as EditorDefs
 
-        const defsData = Defs.stringify(editorData.defs)
+        const serDefs = DefsSerialization.serialize(editorData.defs)
+        const serDefsText = DefsSerialization.stringify(serDefs)
 
         const file = await Filesystem.findFile(editorData.rootRelativePath)
 
         const writable = await (file.handle as any).createWritable()
-        await writable.write(defsData)
+        await writable.write(serDefsText)
         await writable.close()
 
         editorData.lastSavedDefs = editorData.defs
@@ -288,11 +291,12 @@ export async function openEditorMap(rootRelativePath: string)
             return
         }
         
-        const defsText = await Filesystem.readFileText(defsFile.rootRelativePath)
-        const defs = Defs.parse(defsText)
+        const serDefsText = await Filesystem.readFileText(defsFile.rootRelativePath)
+        const serDefs = DefsSerialization.parse(serDefsText)
+        const defs = DefsSerialization.deserialize(serDefs)
 
         const serMapText = await Filesystem.readFileText(rootRelativePath)
-        const serMap = Filesystem.parse(serMapText) as MapSerialization.SerializedMap
+        const serMap = MapSerialization.parse(serMapText)
         const map = MapSerialization.deserialize(defs, serMap)
 
         const editor: EditorMap = {
@@ -300,7 +304,7 @@ export async function openEditorMap(rootRelativePath: string)
             name: rootRelativePath,
             rootRelativePath,
             defs,
-            defsSerialized: defsText,
+            defsSerialized: serDefsText,
             defsRootRelativePath: defsFile.rootRelativePath,
             map,
             lastSavedMap: map,
@@ -331,7 +335,7 @@ export async function saveEditorMap(editorIndex: number)
         historyAdd(editorIndex)
 
         const serMap = MapSerialization.serialize(editorData.defs, editorData.map)
-        const serMapText = Filesystem.stringify(serMap)
+        const serMapText = MapSerialization.stringify(editorData.defs, serMap)
 
         const file = await Filesystem.findFile(editorData.rootRelativePath)
 
@@ -360,11 +364,12 @@ export async function refreshDefsForOpenEditors()
             if (!defsFile)
                 continue
             
-            const defsText = await Filesystem.readFileText(defsFile.rootRelativePath)
-            if (defsText == editor.defsSerialized)
+            const serDefsText = await Filesystem.readFileText(defsFile.rootRelativePath)
+            if (serDefsText == editor.defsSerialized)
                 continue
             
-            const defs = Defs.parse(defsText)
+            const serDefs = DefsSerialization.parse(serDefsText)
+            const defs = DefsSerialization.deserialize(serDefs)
     
             const serializedMap = MapSerialization.serialize(
                 editor.defs,
@@ -375,7 +380,7 @@ export async function refreshDefsForOpenEditors()
                 serializedMap)
 
             editor.defs = defs
-            editor.defsSerialized = defsText
+            editor.defsSerialized = serDefsText
             editor.map = reloadedMap
         }
     }

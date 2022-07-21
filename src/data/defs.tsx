@@ -6,6 +6,7 @@ import * as Images from "./images"
 import * as Properties from "./properties"
 import { global } from "../global"
 import * as MathUtils from "../util/mathUtils"
+import * as JsonUtils from "../util/json"
 
 
 export interface Defs
@@ -24,6 +25,11 @@ export interface DefGeneral
 {
     roomWidthMultiple: number
     roomHeightMultiple: number
+
+    jsonExportType: "standard" | "merge-friendly"
+    jsonMinimize: boolean
+    jsonUseTrailingCommas: boolean
+    jsonUseBareIdentifiers: boolean
 }
 
 
@@ -143,6 +149,11 @@ export function makeNew(): Defs
         generalDefs: {
             roomWidthMultiple: 16,
             roomHeightMultiple: 16,
+
+            jsonExportType: "merge-friendly",
+            jsonMinimize: false,
+            jsonUseTrailingCommas: true,
+            jsonUseBareIdentifiers: true,
         },
         layerDefs: [],
         tilesetDefs: [],
@@ -222,44 +233,6 @@ export function makeNewObjectDef(id: ID.ID): DefObject
         inheritPropertiesFromObjectDefs: [],
         properties: [],
     }
-}
-
-
-export function stringify(defs: Defs): string
-{
-    return JSON.stringify({
-        ...defs,
-        type: "defs",
-        version: 1,
-    },
-    undefined, 2)
-}
-
-
-export function parse(data: string): Defs
-{
-    const json = JSON.parse(data)
-    const defs = { ...makeNew(), ...(json as Defs) }
-
-    defs.tilesetDefs = defs.tilesetDefs.map(t => ({
-        ...t,
-        folder: t.folder ?? [],
-    }))
-
-    defs.tileBrushDefs = defs.tileBrushDefs ?? []
-
-    defs.tileBrushDefs = defs.tileBrushDefs.map(b => ({
-        ...b,
-        folder: b.folder ?? [],
-    }))
-
-    defs.objectDefs = defs.objectDefs.map(o => ({
-        ...o,
-        folder: o.folder ?? [],
-        inheritPropertiesFromObjectDefs: o.inheritPropertiesFromObjectDefs ?? [],
-    }))
-
-    return defs
 }
 
 

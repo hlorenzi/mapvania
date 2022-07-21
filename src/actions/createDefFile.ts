@@ -1,6 +1,7 @@
 import { global } from "../global"
 import * as Filesystem from "../data/filesystem"
 import * as Defs from "../data/defs"
+import * as DefsSerialization from "../data/defs_serialization"
 import * as Editors from "../data/editors"
 
 
@@ -28,11 +29,12 @@ export const createDefFile =
             if (!rootRelativePath)
                 throw "file not contained in root folder"
 
-            const newDefs = Defs.makeNew()
-            const newDefsData = Defs.stringify(newDefs)
+            const defs = Defs.makeNew()
+            const serDefs = DefsSerialization.serialize(defs)
+            const serDefsText = DefsSerialization.stringify(serDefs)
 
             const writable = await handle.createWritable()
-            await writable.write(newDefsData)
+            await writable.write(serDefsText)
             await writable.close()
 
             await Filesystem.refreshEntries()

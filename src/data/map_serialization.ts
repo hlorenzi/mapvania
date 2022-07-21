@@ -3,6 +3,7 @@ import * as Defs from "./defs"
 import * as Map from "./map"
 import * as MathUtils from "../util/mathUtils"
 import * as Properties from "./properties"
+import * as JsonUtils from "../util/json"
 
 
 export interface SerializedMap extends Omit<Map.Map, "rooms">
@@ -57,6 +58,38 @@ export interface SerLayerObject extends
 export interface SerObject extends Map.Obj
 {
     objectDefName: string
+}
+
+
+export function stringify(
+    defs: Defs.Defs,
+    serMap: SerializedMap)
+    : string
+{
+    const isMergeFriendly = defs.generalDefs.jsonExportType === "merge-friendly"
+
+    const jsonGetOptions: JsonUtils.GetStringifyOptions = (path, parent, value) =>
+    {
+        if (isMergeFriendly)
+        {
+            if (path[0] === "nextIDs")
+                return {
+                    spacedFields: true,
+                }
+        }
+
+        return {}
+    }
+
+    return JsonUtils.stringify(
+        serMap,
+        {
+            sortFields: isMergeFriendly,
+            minimize: defs.generalDefs.jsonMinimize,
+            useTrailingCommas: defs.generalDefs.jsonUseTrailingCommas,
+            useBareIdentifiers: defs.generalDefs.jsonUseBareIdentifiers,
+        },
+        jsonGetOptions)
 }
 
 
@@ -243,6 +276,14 @@ export function serializeObject(
     }
 
     return serObject
+}
+
+
+export function parse(
+    serMapText: string)
+    : SerializedMap
+{
+    return JsonUtils.parse(serMapText)
 }
 
 
