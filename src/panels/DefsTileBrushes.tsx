@@ -212,6 +212,14 @@ export function DefsTileBrushes(props: {
                     />
                 </UI.Cell>
 
+                <UI.Cell justifyEnd>
+                    ID
+                </UI.Cell>
+
+                <UI.Cell justifyStart>
+                    { curBrush.id }
+                </UI.Cell>
+
                 <UI.Cell span={ 2 } divider/>
 
                 <UI.Cell justifyEnd>

@@ -12,12 +12,22 @@ export function DefsGeneral(props: {
 })
 {
     const defs = global.editors.editors[props.editorIndex].defs
-    const modify = (newDefs: DeepAssignable<Defs.Defs>) =>
+
+
+    const setDefs = (fn: (old: Defs.Defs) => Defs.Defs) =>
     {
-        Editors.deepAssignEditor(props.editorIndex, {
-            defs: newDefs,
-        })
+        Editors.assignEditorDefs(props.editorIndex, fn)
     }
+
+
+    const set = (fn: (old: Defs.DefGeneral) => Defs.DefGeneral) =>
+    {
+        setDefs(defs => ({
+            ...defs,
+            generalDefs: fn(defs.generalDefs),
+        }))
+    }
+
 
     return <UI.Grid template="10em auto">
 
@@ -29,14 +39,68 @@ export function DefsGeneral(props: {
             <UI.Input
                 number
                 value={ defs.generalDefs.roomWidthMultiple }
-                onChangeNumber={ (value) => modify({ generalDefs: { roomWidthMultiple: value } }) }
+                onChangeNumber={ (value) => set(d => ({ ...d, roomWidthMultiple: value })) }
             />
             { " × " }
             <UI.Input
                 value={ defs.generalDefs.roomHeightMultiple }
-                onChangeNumber={ (value) => modify({ generalDefs: { roomHeightMultiple: value } }) }
+                onChangeNumber={ (value) => set(d => ({ ...d, roomHeightMultiple: value })) }
             />
             { " px" }
+        </UI.Cell>
+
+        
+        <UI.Cell span={ 2 } divider/>
+
+        
+        <UI.Cell justifyEnd>
+            JSON Export Type
+        </UI.Cell>
+
+        <UI.Cell>
+            <UI.Select
+                value={ defs.generalDefs.jsonExportType }
+                onChange={ (value) => set(d => ({ ...d, jsonExportType: value as Defs.DefGeneral["jsonExportType"] })) }
+            >
+                <option value="standard">Standard</option>
+                <option value="merge-friendly">Git merge-friendly</option>
+            </UI.Select>
+        </UI.Cell>
+
+        
+        <UI.Cell justifyEnd>
+            Minimize
+        </UI.Cell>
+
+        <UI.Cell>
+            <UI.Checkbox
+                value={ defs.generalDefs.jsonMinimize }
+                onChange={ (value) => set(d => ({ ...d, jsonMinimize: value })) }
+            />
+        </UI.Cell>
+
+        
+        <UI.Cell justifyEnd>
+            Use Trailing Commas
+        </UI.Cell>
+
+        <UI.Cell>
+            <UI.Checkbox
+                value={ defs.generalDefs.jsonUseTrailingCommas }
+                onChange={ (value) => set(d => ({ ...d, jsonUseTrailingCommas: value })) }
+            />
+        </UI.Cell>
+
+        
+        <UI.Cell justifyEnd>
+            Use Bare Identifiers
+        </UI.Cell>
+
+        <UI.Cell>
+            <UI.Checkbox
+                value={ defs.generalDefs.jsonUseBareIdentifiers }
+                onChange={ (value) => set(d => ({ ...d, jsonUseBareIdentifiers: value })) }
+            />
         </UI.Cell>
 
     </UI.Grid>

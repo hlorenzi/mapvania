@@ -6,6 +6,7 @@ import * as Images from "./images"
 import * as Properties from "./properties"
 import { global } from "../global"
 import * as MathUtils from "../util/mathUtils"
+import * as JsonUtils from "../util/json"
 
 
 export interface Defs
@@ -24,6 +25,11 @@ export interface DefGeneral
 {
     roomWidthMultiple: number
     roomHeightMultiple: number
+
+    jsonExportType: "standard" | "merge-friendly"
+    jsonMinimize: boolean
+    jsonUseTrailingCommas: boolean
+    jsonUseBareIdentifiers: boolean
 }
 
 
@@ -34,6 +40,8 @@ export type DefLayer =
 
 export interface DefLayerCommon
 {
+    sortAfter?: ID.ID
+    
     id: ID.ID
     name: string
 
@@ -56,6 +64,8 @@ export interface DefLayerObject extends DefLayerCommon
 
 export interface DefTileset
 {
+    sortAfter?: ID.ID
+    
     id: ID.ID
     name: string
     folder: Hierarchy.FolderId,
@@ -80,6 +90,8 @@ export interface DefTileset
 
 export interface DefTileAttribute
 {
+    sortAfter?: ID.ID
+    
     id: ID.ID
     name: string
 
@@ -90,6 +102,8 @@ export interface DefTileAttribute
 
 export interface DefTileBrush
 {
+    sortAfter?: ID.ID
+    
     id: ID.ID
     name: string
     folder: Hierarchy.FolderId
@@ -120,6 +134,8 @@ export type BrushTileType = "rect" | "diagUL" | "diagUR" | "diagDL" | "diagDR"
 
 export interface DefObject
 {
+    sortAfter?: ID.ID
+    
     id: ID.ID
     name: string
     folder: Hierarchy.FolderId
@@ -143,6 +159,11 @@ export function makeNew(): Defs
         generalDefs: {
             roomWidthMultiple: 16,
             roomHeightMultiple: 16,
+
+            jsonExportType: "merge-friendly",
+            jsonMinimize: false,
+            jsonUseTrailingCommas: true,
+            jsonUseBareIdentifiers: true,
         },
         layerDefs: [],
         tilesetDefs: [],
@@ -227,20 +248,131 @@ export function makeNewObjectDef(id: ID.ID): DefObject
 
 export function stringify(defs: Defs): string
 {
-    return JSON.stringify({
+    const data = {
         ...defs,
         type: "defs",
         version: 1,
-    },
-    undefined, 2)
+    }
+
+    const isMergeFriendly = data.generalDefs.jsonExportType === "merge-friendly"
+
+    const jsonGetOptions: JsonUtils.GetStringifyOptions = (path, parent, value) =>
+    {
+        if (isMergeFriendly)
+        {
+            if (path[0] === "nextIDs")
+                return {
+                    spacedFields: true,
+                }
+
+            if (path[0] === "tilesetDefs" &&
+                path[2] === "tileAttributes" &&
+                path.length === 3)
+                return {
+                    useMultilineArray: true,
+                }
+
+            if (path[0] === "objectDefs" &&
+                path[2] === "properties" &&
+                path[path.length - 1] === "choices")
+                return {
+                    useMultilineArray: true,
+                }
+        }
+
+        return {}
+    }
+
+    const setSortOrder = <T extends { id: ID.ID, sortAfter?: ID.ID }>(list: T[]) =>
+    {
+        list = [...list]
+
+        if (!isMergeFriendly)
+        {
+            for (let i = 0; i < list.length; i++)
+                delete list[i].sortAfter
+
+            return list
+        }
+        
+        for (let i = 0; i < list.length; i++)
+            list[i].sortAfter = (i > 0 ? list[i - 1].id : "")
+
+        list.sort((a, b) => ID.compareIDs(a.id, b.id))
+        return list
+    }
+
+    data.layerDefs = setSortOrder(data.layerDefs)
+    data.tilesetDefs = setSortOrder(data.tilesetDefs)
+    data.tileAttributeDefs = setSortOrder(data.tileAttributeDefs)
+    data.tileAttributeDefs = setSortOrder(data.tileAttributeDefs)
+    data.objectDefs = setSortOrder(data.objectDefs)
+
+    return JsonUtils.stringify(
+        data,
+        {
+            sortFields: isMergeFriendly,
+            minimize: data.generalDefs.jsonMinimize,
+            useTrailingCommas: data.generalDefs.jsonUseTrailingCommas,
+            useBareIdentifiers: data.generalDefs.jsonUseBareIdentifiers,
+        },
+        jsonGetOptions)
 }
 
 
 export function parse(data: string): Defs
 {
-    const json = JSON.parse(data)
+    const json = JsonUtils.parse(data)
     const defs = { ...makeNew(), ...(json as Defs) }
 
+    defs.generalDefs.jsonExportType =
+        defs.generalDefs.jsonExportType ?? "merge-friendly"
+
+    defs.generalDefs.jsonMinimize =
+        defs.generalDefs.jsonMinimize ?? false
+
+    defs.generalDefs.jsonUseTrailingCommas =
+        defs.generalDefs.jsonUseTrailingCommas ?? true
+
+    defs.generalDefs.jsonUseBareIdentifiers =
+        defs.generalDefs.jsonUseBareIdentifiers ?? true
+
+    const restoreSortOrder = <T extends { id: ID.ID, sortAfter?: ID.ID }>(list: T[]) =>
+    {
+        const sortIndices = new Map<ID.ID, number>()
+        for (let i = 0; i < list.length; i++)
+        {
+            if (list[i].sortAfter === undefined)
+            {
+                sortIndices.set(list[i].id, i)
+                continue
+            }
+
+            let countBefore = 0
+            let idBefore = list[i].sortAfter
+            while (idBefore)
+            {
+                countBefore++
+                const itemBefore = list.find(i => i.id === idBefore)
+                if (!itemBefore)
+                    break
+                
+                idBefore = itemBefore.sortAfter
+            }
+
+            sortIndices.set(list[i].id, countBefore)
+        }
+            
+        list.sort((a, b) => sortIndices.get(a.id)! - sortIndices.get(b.id)!)
+        return list
+    }
+
+    defs.layerDefs = restoreSortOrder(defs.layerDefs)
+    defs.tilesetDefs = restoreSortOrder(defs.tilesetDefs)
+    defs.tileAttributeDefs = restoreSortOrder(defs.tileAttributeDefs)
+    defs.tileAttributeDefs = restoreSortOrder(defs.tileAttributeDefs)
+    defs.objectDefs = restoreSortOrder(defs.objectDefs)
+    
     defs.tilesetDefs = defs.tilesetDefs.map(t => ({
         ...t,
         folder: t.folder ?? [],
