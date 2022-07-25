@@ -9,8 +9,8 @@ import * as JsonUtils from "../util/json"
 export interface SerializedMap extends Omit<Map.Map, "rooms">
 {
     type: "map"
-    version: 2
-    tilesetRanges: TilesetRange[]
+    version: 3
+    tilesetRanges?: TilesetRange[]
     rooms: SerRoom[]
 }
 
@@ -43,7 +43,7 @@ export interface SerLayerTile extends
     layerDefName: string
     widthInTiles: number
     heightInTiles: number
-    tiles: number[]
+    tiles: (string | number)[]
 }
 
 
@@ -100,9 +100,8 @@ export function serialize(
 {
     const serMap: SerializedMap = {
         type: "map",
-        version: 2,
+        version: 3,
         nextIDs: map.nextIDs,
-        tilesetRanges: [],
         rooms: [],
     }
 
@@ -171,6 +170,8 @@ export function serializeLayerTile(
         heightInTiles: layer.tileField.height,
         tiles: [],
     }
+
+    let currentTilesetId = ""
     
     for (let i = 0; i < layer.tileField.tiles.length; i++)
     {
@@ -181,44 +182,13 @@ export function serializeLayerTile(
             continue
         }
 
-        const tilesetRange = serMap.tilesetRanges
-            .find(tr => tr.tilesetDefId === tile.tilesetDefId)
-
-        if (tilesetRange)
+        if (tile.tilesetDefId !== currentTilesetId)
         {
-            serLayer.tiles.push(tile.tileId + tilesetRange.start)
-            continue
+            currentTilesetId = tile.tilesetDefId
+            serLayer.tiles.push(tile.tilesetDefId)
         }
 
-        const tilesetDef = Defs.getTileset(defs, tile.tilesetDefId)
-        if (!tilesetDef)
-        {
-            serLayer.tiles.push(-1)
-            continue
-        }
-
-        const numTilesInTileset = Defs.getTotalTileNumber(tilesetDef)
-        if (tile.tileId < 0 || tile.tileId >= numTilesInTileset)
-        {
-            serLayer.tiles.push(-1)
-            continue
-        }
-
-        const start =
-            serMap.tilesetRanges.length == 0 ? 0 :
-            serMap.tilesetRanges[serMap.tilesetRanges.length - 1].end
-
-        const newTilesetRange: TilesetRange = {
-            tilesetDefId: tile.tilesetDefId,
-            tilesetDefName: tilesetDef.name,
-            start,
-            end: start + numTilesInTileset,
-            width: tilesetDef.width,
-            height: tilesetDef.height,
-        }
-
-        serMap.tilesetRanges.push(newTilesetRange)
-        serLayer.tiles.push(start + tile.tileId)
+        serLayer.tiles.push(tile.tileId)
     }
 
     return serLayer
@@ -385,28 +355,68 @@ export function deserializeLayerTile(
             room.height),
     }
 
-    for (let y = 0; y < layer.tileField.height; y++)
+    let currentTilesetId = ""
+
+    if (serMap.tilesetRanges)
     {
-        for (let x = 0; x < layer.tileField.width; x++)
+        for (let y = 0; y < layer.tileField.height; y++)
         {
-            const i = y * layer.tileField.width + x
-            if (i < 0 || i >= serLayer.tiles.length)
-                continue
+            for (let x = 0; x < layer.tileField.width; x++)
+            {
+                const i = y * layer.tileField.width + x
+                if (i < 0 || i >= serLayer.tiles.length)
+                    continue
+    
+                const serIndex = serLayer.tiles[i] as number
+                const tilesetRange = serMap.tilesetRanges
+                    .find(tr => serIndex >= tr.start && serIndex < tr.end)
 
-            const serIndex = serLayer.tiles[i]
-            const tilesetRange = serMap.tilesetRanges
-                .find(tr => serIndex >= tr.start && serIndex < tr.end)
+                if (!tilesetRange)
+                    continue
 
-            if (!tilesetRange)
-                continue
+                const tilesetDef = Defs.getTileset(defs, tilesetRange.tilesetDefId)
+                if (!tilesetDef)
+                    continue
 
-            const tilesetDef = Defs.getTileset(defs, tilesetRange.tilesetDefId)
-            if (!tilesetDef)
-                continue
+                layer.tileField.tiles[i] = {
+                    tilesetDefId: tilesetRange.tilesetDefId,
+                    tileId: serIndex - tilesetRange.start,
+                }
+            }
+        }
+    }
 
-            layer.tileField.tiles[i] = {
-                tilesetDefId: tilesetRange.tilesetDefId,
-                tileId: serIndex - tilesetRange.start,
+    else
+    {
+        let tileFieldIndex = 0
+
+        for (let i = 0; i < serLayer.tiles.length; i++)
+        {
+            const serIndexOrId = serLayer.tiles[i]
+            
+            if (typeof serIndexOrId === "string")
+            {
+                currentTilesetId = serIndexOrId
+            }
+            else
+            {
+                tileFieldIndex++
+
+                const tilesetDef = Defs.getTileset(defs, currentTilesetId)
+                if (!tilesetDef)
+                    continue
+
+                if (serIndexOrId < 0 ||
+                    serIndexOrId >= Defs.getTotalTileNumber(tilesetDef))
+                    continue
+
+                if (tileFieldIndex - 1 >= layer.tileField.tiles.length)
+                    continue
+
+                layer.tileField.tiles[tileFieldIndex - 1] = {
+                    tilesetDefId: currentTilesetId,
+                    tileId: serIndexOrId,
+                }
             }
         }
     }
