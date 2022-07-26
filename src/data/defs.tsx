@@ -80,7 +80,9 @@ export interface DefTileset
     gridOffsetX: number
     gridOffsetY: number
 
-    tileAttributes: ID.ID[][]
+    tileAttributes: {
+        [stringifiedTileIndex: string]: ID.ID[]
+    }
 }
 
 
@@ -191,7 +193,7 @@ export function makeNewTilesetDef(id: ID.ID): DefTileset
         gridGapY: 0,
         gridOffsetX: 0,
         gridOffsetY: 0,
-        tileAttributes: [],
+        tileAttributes: {},
     }
 }
 
@@ -359,10 +361,15 @@ export function getTileAttributesForTile(
     tileIndex: number)
     : ID.ID[]
 {
-    if (tileIndex < 0 || tileIndex >= tileAttributes.length)
+    const key = tileIndex.toString()
+
+    const list = tileAttributes as { [s: string]: string[] }
+
+    const attrb = list[key]
+    if (!attrb)
         return []
 
-    return tileAttributes[tileIndex]
+    return attrb
 }
 
 
@@ -372,12 +379,21 @@ export function setTileAttributesForTile(
     attributes: ID.ID[])
     : DefTileset["tileAttributes"]
 {
-    const newTileAttributes = [...tileAttributes]
-    while (tileIndex >= newTileAttributes.length)
-        newTileAttributes.push([])
+    const key = tileIndex.toString()
 
-    newTileAttributes[tileIndex] = attributes
-    return newTileAttributes
+    let newAttrb = tileAttributes as { [s: string]: string[] }
+    newAttrb = { ...newAttrb }
+
+    if (attributes.length === 0)
+    {
+        delete newAttrb[key]
+    }
+    else
+    {
+        newAttrb[key] = attributes
+    }
+
+    return newAttrb
 }
 
 

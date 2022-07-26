@@ -111,7 +111,7 @@ export function serialize(
     serDefs.layerDefs = setSortOrder(serDefs.layerDefs)
     serDefs.tilesetDefs = setSortOrder(serDefs.tilesetDefs)
     serDefs.tileAttributeDefs = setSortOrder(serDefs.tileAttributeDefs)
-    serDefs.tileAttributeDefs = setSortOrder(serDefs.tileAttributeDefs)
+    serDefs.tileBrushDefs = setSortOrder(serDefs.tileBrushDefs)
     serDefs.objectDefs = setSortOrder(serDefs.objectDefs)
 
     return serDefs
@@ -166,7 +166,7 @@ export function deserialize(
     serDefs.layerDefs = restoreSortOrder(serDefs.layerDefs)
     serDefs.tilesetDefs = restoreSortOrder(serDefs.tilesetDefs)
     serDefs.tileAttributeDefs = restoreSortOrder(serDefs.tileAttributeDefs)
-    serDefs.tileAttributeDefs = restoreSortOrder(serDefs.tileAttributeDefs)
+    serDefs.tileBrushDefs = restoreSortOrder(serDefs.tileBrushDefs)
     serDefs.objectDefs = restoreSortOrder(serDefs.objectDefs)
     
     const defs = Defs.makeNew()
@@ -224,7 +224,7 @@ function deserializeTileset(
     serTileset: Defs.DefTileset)
     : Defs.DefTileset
 {
-    return {
+    const tileset = {
         id: serTileset.id,
         name: serTileset.name ?? "",
         folder: serTileset.folder ?? [],
@@ -243,8 +243,20 @@ function deserializeTileset(
         gridOffsetX: serTileset.gridOffsetX ?? 0,
         gridOffsetY: serTileset.gridOffsetY ?? 0,
     
-        tileAttributes: serTileset.tileAttributes ?? [],
+        tileAttributes: serTileset.tileAttributes ?? {},
     }
+
+    // FIXME: Enforce these rules at serialization-time instead
+    for (const key of Object.keys(tileset.tileAttributes))
+    {
+        if (tileset.tileAttributes[key].length === 0)
+            delete tileset.tileAttributes[key]
+
+        if (tileset.tileAttributes[key])
+            tileset.tileAttributes[key].sort((a, b) => ID.compareIDs(a, b))
+    }
+
+    return tileset
 }
 
 

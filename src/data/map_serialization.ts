@@ -10,19 +10,7 @@ export interface SerializedMap extends Omit<Map.Map, "rooms">
 {
     type: "map"
     version: 3
-    tilesetRanges?: TilesetRange[]
     rooms: SerRoom[]
-}
-
-
-export interface TilesetRange
-{
-    tilesetDefId: ID.ID
-    tilesetDefName: string
-    start: number
-    end: number
-    width: number
-    height: number
 }
 
 
@@ -356,67 +344,34 @@ export function deserializeLayerTile(
     }
 
     let currentTilesetId = ""
+    let tileFieldIndex = 0
 
-    if (serMap.tilesetRanges)
+    for (let i = 0; i < serLayer.tiles.length; i++)
     {
-        for (let y = 0; y < layer.tileField.height; y++)
+        const serIndexOrId = serLayer.tiles[i]
+        
+        if (typeof serIndexOrId === "string")
         {
-            for (let x = 0; x < layer.tileField.width; x++)
-            {
-                const i = y * layer.tileField.width + x
-                if (i < 0 || i >= serLayer.tiles.length)
-                    continue
-    
-                const serIndex = serLayer.tiles[i] as number
-                const tilesetRange = serMap.tilesetRanges
-                    .find(tr => serIndex >= tr.start && serIndex < tr.end)
-
-                if (!tilesetRange)
-                    continue
-
-                const tilesetDef = Defs.getTileset(defs, tilesetRange.tilesetDefId)
-                if (!tilesetDef)
-                    continue
-
-                layer.tileField.tiles[i] = {
-                    tilesetDefId: tilesetRange.tilesetDefId,
-                    tileId: serIndex - tilesetRange.start,
-                }
-            }
+            currentTilesetId = serIndexOrId
         }
-    }
-
-    else
-    {
-        let tileFieldIndex = 0
-
-        for (let i = 0; i < serLayer.tiles.length; i++)
+        else
         {
-            const serIndexOrId = serLayer.tiles[i]
-            
-            if (typeof serIndexOrId === "string")
-            {
-                currentTilesetId = serIndexOrId
-            }
-            else
-            {
-                tileFieldIndex++
+            tileFieldIndex++
 
-                const tilesetDef = Defs.getTileset(defs, currentTilesetId)
-                if (!tilesetDef)
-                    continue
+            const tilesetDef = Defs.getTileset(defs, currentTilesetId)
+            if (!tilesetDef)
+                continue
 
-                if (serIndexOrId < 0 ||
-                    serIndexOrId >= Defs.getTotalTileNumber(tilesetDef))
-                    continue
+            if (serIndexOrId < 0 ||
+                serIndexOrId >= Defs.getTotalTileNumber(tilesetDef))
+                continue
 
-                if (tileFieldIndex - 1 >= layer.tileField.tiles.length)
-                    continue
+            if (tileFieldIndex - 1 >= layer.tileField.tiles.length)
+                continue
 
-                layer.tileField.tiles[tileFieldIndex - 1] = {
-                    tilesetDefId: currentTilesetId,
-                    tileId: serIndexOrId,
-                }
+            layer.tileField.tiles[tileFieldIndex - 1] = {
+                tilesetDefId: currentTilesetId,
+                tileId: serIndexOrId,
             }
         }
     }

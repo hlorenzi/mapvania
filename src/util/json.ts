@@ -23,6 +23,7 @@ class StringBuilder
 {
     result = ""
     indentationLevel = 0
+    needsIndentation = false
 
 
     indent()
@@ -37,27 +38,16 @@ class StringBuilder
     }
 
 
-    lastChar()
-    {
-        if (this.result.length > 0)
-            return this.result[this.result.length - 1]
-
-        return "\0"
-    }
-
-
-    writeIndentationIfNeeded()
-    {
-        if (this.lastChar() !== "\n")
-            return
-        
-        this.result += "\t".repeat(this.indentationLevel)
-    }
-
-
     write(str: string)
     {
-        this.writeIndentationIfNeeded()
+        if (this.needsIndentation)
+        {
+            this.needsIndentation = false
+            
+            for (let i = 0; i < this.indentationLevel; i++)
+                this.result += "\t"
+        }
+
         this.result += str
     }
 
@@ -65,6 +55,7 @@ class StringBuilder
     newline()
     {
         this.result += "\n"
+        this.needsIndentation = true
     }
 }
 

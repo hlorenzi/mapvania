@@ -180,11 +180,14 @@ export function DefsTilesets(props: {
                 attrbs.delete(curTileAttrbId)
             else
                 attrbs.add(curTileAttrbId)
+
+            const newAttrbs = [...attrbs]
+            newAttrbs.sort((a, b) => ID.compareIDs(a, b))
                 
             curAttrbs = Defs.setTileAttributesForTile(
                 curAttrbs,
                 tileIndex,
-                [...attrbs])
+                newAttrbs)
 
             set({
                 ...curTileset,
