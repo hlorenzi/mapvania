@@ -316,6 +316,8 @@ export async function openEditorMap(rootRelativePath: string)
         const editorIndex = openEditor(editor)
 
         editor.mapEditor = MapEditor.createState(editorIndex, "")
+        editor.mapEditor.camera.pos = Map.getDefaultCameraPosition(map)
+
         historyAdd(editorIndex, "initial")
     }
     catch (e)

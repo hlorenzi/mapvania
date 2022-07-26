@@ -102,6 +102,20 @@ export function makeNew(): Map
 }
 
 
+export function getDefaultCameraPosition(map: Map): MathUtils.Point
+{
+    for (const room of Object.values(map.rooms))
+    {
+        return {
+            x: room.x + room.width / 2,
+            y: room.y + room.height / 2,
+        }
+    }
+    
+    return { x: 0, y: 0 }
+}
+
+
 export function getRoom(map: Map, roomId: ID.ID): Room | undefined
 {
     return map.rooms[roomId]
