@@ -8,6 +8,7 @@ import { global } from "../global"
 import { useRefreshByEvent } from "../util/refreshToken"
 import { LayerPicker } from "./LayerPicker"
 import { TilePicker } from "./TilePicker"
+import { RoomProperties } from "./RoomProperties"
 import { ObjectPicker } from "./ObjectPicker"
 import { ObjectProperties } from "./ObjectProperties"
 
@@ -296,6 +297,15 @@ export function EditorMap(props: {
                     <ObjectProperties
                         editorIndex={ props.editorIndex }
                     />
+                : editor.mapEditor && editor.mapEditor.roomSelection.size > 0 ?
+                    <>
+                    <LayerPicker
+                        editorIndex={ props.editorIndex }
+                    />
+                    <RoomProperties
+                        editorIndex={ props.editorIndex }
+                    />
+                    </>
                 :
                     <>
                     <LayerPicker
