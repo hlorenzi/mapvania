@@ -264,5 +264,15 @@ export async function showImagePicker(): Promise<string | undefined>
         throw "file not contained in root folder"
     }
 
+    // Refresh entries in case the file is not yet cached
+    try
+    {
+        await findFile(rootRelativePath)
+    }
+    catch
+    {
+        await refreshEntries()
+    }
+
     return rootRelativePath
 }
