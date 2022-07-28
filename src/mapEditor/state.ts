@@ -523,8 +523,7 @@ export function onMouseDown(state: State, ev: MouseEvent)
     {
         if (global.editors.mapEditing.layerDefId === Editors.LAYERDEF_ID_MAP)
         {
-            const hoverRoom = Object.values(map.rooms)
-                .find(r => MathUtils.rectContains(r, state.mouse.pos))
+            const hoverRoom = getRoomAt(state, state.mouse.pos)
             
             if (!ev.ctrlKey &&
                 (!hoverRoom || !state.roomSelection.has(hoverRoom.id)))
@@ -561,9 +560,8 @@ export function onMouseDown(state: State, ev: MouseEvent)
         }
         else
         {
-            const hoverRoom = Object.values(map.rooms)
-                .find(r => MathUtils.rectContains(r, state.mouse.pos))
-            
+            const hoverRoom = getRoomAt(state, state.mouse.pos)
+
             if (hoverRoom && hoverRoom.id !== state.roomId)
             {
                 state.roomId = hoverRoom.id
@@ -896,6 +894,29 @@ export function getObjectRect(state: State, obj: Map.Obj): MathUtils.RectWH
         width: obj.width,
         height: obj.height,
     }
+}
+
+
+export function getRoomAt(state: State, pos: MathUtils.Point): Map.Room | undefined
+{
+    const editor = (global.editors.editors[state.editorIndex] as Editors.EditorMap)
+
+    let lastRoomAt: Map.Room | undefined = undefined
+
+    for (const room of Object.values(editor.map.rooms))
+    {
+        if (MathUtils.rectContains(room, pos))
+            lastRoomAt = room
+    }
+
+    const currentRoom = editor.map.rooms[state.roomId]
+    if (currentRoom)
+    {
+        if (MathUtils.rectContains(currentRoom, pos))
+            lastRoomAt = currentRoom
+    }
+
+    return lastRoomAt
 }
 
 
