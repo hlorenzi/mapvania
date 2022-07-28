@@ -9,6 +9,7 @@ import * as UI from "../ui"
 import { global } from "../global"
 import * as Events from "../events"
 import * as MathUtils from "../util/mathUtils"
+import { CacheCanvas } from "../util/cacheCanvas"
 
 
 export interface State
@@ -21,6 +22,7 @@ export interface State
     ctx: CanvasRenderingContext2D
     canvasWidth: number
     canvasHeight: number
+    cachedCanvases: CacheCanvas
 
     onMouseMove: null | ((state: State) => void)
     onMouseUp: null | ((state: State) => void)
@@ -83,6 +85,7 @@ export function createState(editorIndex: number, roomId: ID.ID): State
         ctx: null!,
         canvasWidth: 0,
         canvasHeight: 0,
+        cachedCanvases: new CacheCanvas(),
 
         onMouseMove: null,
         onMouseUp: null,

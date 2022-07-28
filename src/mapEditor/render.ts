@@ -6,10 +6,31 @@ import * as Map from "../data/map"
 import * as Images from "../data/images"
 import { global } from "../global"
 import * as MathUtils from "../util/mathUtils"
+import { CacheCanvas } from "../util/cacheCanvas"
+
+
+let prevImagesRefreshToken = -1
+let prevShowGrid = ""
+let prevShowOtherLayers = ""
+let prevLayerDefId = ""
 
 
 export function render(state: MapEditor.State)
 {
+    state.cachedCanvases.advanceTimer(10)
+
+    if (global.images.refreshToken.refreshValue !== prevImagesRefreshToken ||
+        global.editors.mapEditing.showGrid !== prevShowGrid ||
+        global.editors.mapEditing.showOtherLayers !== prevShowOtherLayers ||
+        global.editors.mapEditing.layerDefId !== prevLayerDefId)
+    {
+        prevImagesRefreshToken = global.images.refreshToken.refreshValue
+        prevShowGrid = global.editors.mapEditing.showGrid
+        prevShowOtherLayers = global.editors.mapEditing.showOtherLayers
+        prevLayerDefId = global.editors.mapEditing.layerDefId
+        state.cachedCanvases.clear()
+    }
+
     if (state.editorIndex < 0 || state.editorIndex >= global.editors.editors.length)
         return
 
@@ -24,11 +45,10 @@ export function render(state: MapEditor.State)
 
     state.ctx.imageSmoothingQuality = "low"
     state.ctx.imageSmoothingEnabled = false
+    state.ctx.lineWidth = 1 / state.camera.zoom
 
     state.ctx.fillStyle = "#080808"
     state.ctx.fillRect(0, 0, state.canvasWidth, state.canvasHeight)
-
-    state.ctx.lineWidth = 1 / state.camera.zoom
 
     state.ctx.translate(
         Math.floor(state.canvasWidth  / 2 - state.camera.pos.x) + 0.5,
@@ -41,7 +61,8 @@ export function render(state: MapEditor.State)
     renderWorldLayerBkg(state, defs, editingLayerDef)
 
     let editingRoom: Map.Room | null = null
-    for (const room of Object.values(map.rooms))
+    const rooms = Object.values(map.rooms)
+    for (const room of rooms)
     {
         if (room.id === state.roomId)
         {
@@ -59,7 +80,7 @@ export function render(state: MapEditor.State)
         state.ctx.translate(room.x, room.y)
     
         renderRoomBkg(state, room)
-        renderRoom(state, defs, room, editingLayerDef)
+        renderRoomCached(state, defs, room, false, editingLayerDef)
 
         state.ctx.restore()
     }
@@ -72,7 +93,7 @@ export function render(state: MapEditor.State)
         renderRoomBkg(state, editingRoom)
         renderTileLayerBkg(state, defs, editingRoom, editingLayerDef)
         renderObjectLayerBkg(state, defs, editingRoom, editingLayerDef)
-        renderRoom(state, defs, editingRoom, editingLayerDef)
+        renderRoom(state.ctx, state, defs, editingRoom, true, editingLayerDef)
         renderTileLayerForeground(state, defs, editingRoom, editingLayerDef)
         renderObjectLayerForeground(state, defs, editingRoom, editingLayerDef)
         
@@ -83,6 +104,31 @@ export function render(state: MapEditor.State)
             state.ctx.restore()
         }
         
+        state.ctx.restore()
+    }
+    
+    for (const room of rooms)
+    {
+        if (room.id === state.roomId)
+            continue
+
+        if (!isRectVisible(
+                state,
+                room.x, room.y,
+                room.width, room.height))
+            continue
+
+        state.ctx.save()
+        state.ctx.translate(room.x, room.y)
+        renderRoomBorder(state, room)
+        state.ctx.restore()
+    }
+
+    if (editingRoom)
+    {
+        state.ctx.save()
+        state.ctx.translate(editingRoom.x, editingRoom.y)
+        renderRoomBorder(state, editingRoom)
         state.ctx.restore()
     }
     
@@ -112,13 +158,61 @@ export function renderRoomBkg(
 }
 
 
-export function renderRoom(
+export function renderRoomCached(
     state: MapEditor.State,
     defs: Defs.Defs,
     room: Map.Room,
+    currentlyEditing: boolean,
     editingLayerDef: Defs.DefLayer | undefined)
 {
-    state.ctx.save()
+    if (!currentlyEditing)
+    {
+        const cachedCanvas = state.cachedCanvases.get(
+            room.id,
+            room.width, room.height,
+            (canvas, ctx) =>
+            {
+                ctx.imageSmoothingQuality = "low"
+                ctx.imageSmoothingEnabled = false
+                ctx.lineWidth = 1
+
+                ctx.clearRect(0, 0, room.width, room.height)
+
+                renderRoom(
+                    ctx,
+                    state,
+                    defs,
+                    room,
+                    false,
+                    editingLayerDef)
+            })
+                    
+        state.ctx.drawImage(
+            cachedCanvas,
+            0, 0)
+    }
+    else
+    {
+        renderRoom(
+            state.ctx,
+            state,
+            defs,
+            room,
+            true,
+            editingLayerDef)
+    }
+}
+
+
+export function renderRoom(
+    ctx: CanvasRenderingContext2D,
+    state: MapEditor.State,
+    defs: Defs.Defs,
+    room: Map.Room,
+    currentlyEditing: boolean,
+    editingLayerDef: Defs.DefLayer | undefined)
+{
+    ctx.save()
     
     for (var i = defs.layerDefs.length - 1; i >= 0; i--)
     {
@@ -127,19 +221,19 @@ export function renderRoom(
         if (!layer)
             continue
 
-        state.ctx.save()
+        ctx.save()
 
         if (global.editors.mapEditing.layerDefId !== Editors.LAYERDEF_ID_MAP &&
             global.editors.mapEditing.layerDefId !== layer.layerDefId)
         {
             if (global.editors.mapEditing.showOtherLayers === "none")
             {
-                state.ctx.restore()
+                ctx.restore()
                 continue
             }
             else if (global.editors.mapEditing.showOtherLayers === "faded")
             {
-                state.ctx.globalAlpha = 0.15
+                ctx.globalAlpha = 0.15
             }
         }
 
@@ -157,12 +251,13 @@ export function renderRoom(
 
             for (let x = 0; x < layer.tileField.width; x++)
             {
-                if (isRectVisible(
-                    state,
-                    room.x + x * layerDef.gridCellWidth,
-                    room.y,
-                    layerDef.gridCellWidth,
-                    room.height))
+                if (!currentlyEditing ||
+                    isRectVisible(
+                        state,
+                        room.x + x * layerDef.gridCellWidth,
+                        room.y,
+                        layerDef.gridCellWidth,
+                        room.height))
                 {
                     drawX1 = Math.min(drawX1, x)
                     drawX2 = Math.max(drawX2, x)
@@ -171,12 +266,13 @@ export function renderRoom(
 
             for (let y = 0; y < layer.tileField.height; y++)
             {
-                if (isRectVisible(
-                    state,
-                    room.x,
-                    room.y + y * layerDef.gridCellHeight,
-                    room.width,
-                    layerDef.gridCellHeight))
+                if (!currentlyEditing ||
+                    isRectVisible(
+                        state,
+                        room.x,
+                        room.y + y * layerDef.gridCellHeight,
+                        room.width,
+                        layerDef.gridCellHeight))
                 {
                     drawY1 = Math.min(drawY1, y)
                     drawY2 = Math.max(drawY2, y)
@@ -212,6 +308,7 @@ export function renderRoom(
                     const imagePx = Defs.getPixelForTileIndex(cachedTileset, tile.tileId)
 
                     drawImage(
+                        ctx,
                         state,
                         cachedImage.element,
                         imagePx.x,
@@ -236,11 +333,15 @@ export function renderRoom(
             
             for (const object of Object.values(layer.objects))
             {
-                if (state.objectSelection.has(object.id) ||
-                    hoverObject === object)
-                    continue
+                if (currentlyEditing)
+                {
+                    if (state.objectSelection.has(object.id) ||
+                        hoverObject === object)
+                        continue
+                }
 
                 renderObject(
+                    ctx,
                     state,
                     defs,
                     object,
@@ -248,50 +349,66 @@ export function renderRoom(
                     false)
             }
 
-            for (const objectId of state.objectSelection)
+            if (currentlyEditing)
             {
-                if (hoverObject?.id === objectId)
-                    continue
+                for (const objectId of state.objectSelection)
+                {
+                    if (hoverObject?.id === objectId)
+                        continue
 
-                const object = layer.objects[objectId]
-                if (!object)
-                    continue
+                    const object = layer.objects[objectId]
+                    if (!object)
+                        continue
 
-                renderObject(
-                    state,
-                    defs,
-                    object,
-                    false,
-                    true)
-            }
+                    renderObject(
+                        ctx,
+                        state,
+                        defs,
+                        object,
+                        false,
+                        true)
+                }
 
-            if (hoverObject)
-            {
-                renderObject(
-                    state,
-                    defs,
-                    hoverObject,
-                    true,
-                    state.objectSelection.has(hoverObject.id))
+                if (hoverObject)
+                {
+                    renderObject(
+                        ctx,
+                        state,
+                        defs,
+                        hoverObject,
+                        true,
+                        state.objectSelection.has(hoverObject.id))
+                }
             }
         }
 
-        state.ctx.restore()
+        ctx.restore()
     }
+
+    ctx.restore()
+}
+
+
+function renderRoomBorder(
+    state: MapEditor.State,
+    room: Map.Room)
+{
+    state.ctx.save()
 
     const strongBorder = global.editors.mapEditing.layerDefId === Editors.LAYERDEF_ID_MAP ?
         state.roomSelection.has(room.id) :
         room.id === state.roomId
 
     state.ctx.strokeStyle = strongBorder ? "#fff" : "#888"
+    state.ctx.lineWidth = state.ctx.lineWidth * (strongBorder ? 2 : 1)
 
     state.ctx.strokeRect(0, 0, room.width, room.height)
-
     state.ctx.restore()
 }
 
 
 function renderObject(
+    ctx: CanvasRenderingContext2D,
     state: MapEditor.State,
     defs: Defs.Defs,
     object: Map.Obj,
@@ -316,6 +433,7 @@ function renderObject(
     
     if (image)
         drawImage(
+            ctx,
             state,
             image.element,
             objectDef.imageRect.x,
@@ -329,24 +447,24 @@ function renderObject(
 
     if (hovering)
     {
-        state.ctx.save()
-        state.ctx.setLineDash([2, 2])
-        state.ctx.strokeStyle = "#ccc"
-        state.ctx.strokeRect(
+        ctx.save()
+        ctx.setLineDash([2, 2])
+        ctx.strokeStyle = "#ccc"
+        ctx.strokeRect(
             object.x + topleftX, object.y + topleftY,
             object.width, object.height)
-        state.ctx.restore()
+        ctx.restore()
     }
 
     if (selected)
     {
-        state.ctx.fillStyle = "#fff4"
-        state.ctx.fillRect(
+        ctx.fillStyle = "#fff4"
+        ctx.fillRect(
             object.x + topleftX, object.y + topleftY,
             object.width, object.height)
 
-        state.ctx.strokeStyle = "#fff"
-        state.ctx.strokeRect(
+        ctx.strokeStyle = "#fff"
+        ctx.strokeRect(
             object.x + topleftX, object.y + topleftY,
             object.width, object.height)
     }
@@ -362,11 +480,12 @@ function renderObject(
         {
             if (visProp.showGhost)
             {
-                state.ctx.save()
-                state.ctx.globalAlpha = 0.5
+                ctx.save()
+                ctx.globalAlpha = 0.5
                 
                 if (image)
                     drawImage(
+                        ctx,
                         state,
                         image.element,
                         objectDef.imageRect.x,
@@ -378,79 +497,79 @@ function renderObject(
                         imageW,
                         imageH)
 
-                state.ctx.restore()
+                ctx.restore()
             }
 
             if (visProp.linksToIndexAsPath !== null)
             {
-                state.ctx.save()
-                state.ctx.strokeStyle = visProp.color
-                state.ctx.lineWidth = handleSize / 4
-                state.ctx.beginPath()
-                state.ctx.moveTo(
+                ctx.save()
+                ctx.strokeStyle = visProp.color
+                ctx.lineWidth = handleSize / 4
+                ctx.beginPath()
+                ctx.moveTo(
                     visibleProperties[visProp.linksToIndexAsPath].value.x,
                     visibleProperties[visProp.linksToIndexAsPath].value.y)
-                state.ctx.lineTo(
+                ctx.lineTo(
                     visProp.value.x,
                     visProp.value.y)
-                state.ctx.stroke()
-                state.ctx.restore()
+                ctx.stroke()
+                ctx.restore()
             }
             else
             {
-                state.ctx.save()
-                state.ctx.strokeStyle = visProp.color
-                state.ctx.lineWidth = handleSize / 6
-                state.ctx.setLineDash([handleSize / 2, handleSize / 2])
-                state.ctx.beginPath()
-                state.ctx.moveTo(
+                ctx.save()
+                ctx.strokeStyle = visProp.color
+                ctx.lineWidth = handleSize / 6
+                ctx.setLineDash([handleSize / 2, handleSize / 2])
+                ctx.beginPath()
+                ctx.moveTo(
                     object.x,
                     object.y)
-                state.ctx.lineTo(
+                ctx.lineTo(
                     visProp.value.x,
                     visProp.value.y)
-                state.ctx.stroke()
-                state.ctx.restore()
+                ctx.stroke()
+                ctx.restore()
             }
 
             if (visProp.value.type === "point")
             {
-                state.ctx.fillStyle = visProp.color
-                state.ctx.fillRect(
+                ctx.fillStyle = visProp.color
+                ctx.fillRect(
                     visProp.value.x - handleSize / 2,
                     visProp.value.y - handleSize / 2,
                     handleSize, handleSize)
             }
             else if (visProp.value.type === "rect")
             {
-                state.ctx.save()
-                state.ctx.strokeStyle = visProp.color
-                state.ctx.lineWidth = handleSize / 4
-                state.ctx.strokeRect(
+                ctx.save()
+                ctx.strokeStyle = visProp.color
+                ctx.lineWidth = handleSize / 4
+                ctx.strokeRect(
                     visProp.value.x,
                     visProp.value.y,
                     visProp.value.width,
                     visProp.value.height)
-                state.ctx.restore()
+                ctx.restore()
 
-                state.ctx.fillStyle = visProp.color
+                ctx.fillStyle = visProp.color
                 
-                state.ctx.fillRect(
+                ctx.fillRect(
                     visProp.value.x - handleSize / 2,
                     visProp.value.y - handleSize / 2,
                     handleSize, handleSize)
                     
-                state.ctx.fillRect(
+                ctx.fillRect(
                     visProp.value.x + visProp.value.width - handleSize / 2,
                     visProp.value.y - handleSize / 2,
                     handleSize, handleSize)
                     
-                state.ctx.fillRect(
+                ctx.fillRect(
                     visProp.value.x + visProp.value.width - handleSize / 2,
                     visProp.value.y + visProp.value.height - handleSize / 2,
                     handleSize, handleSize)
                     
-                state.ctx.fillRect(
+                ctx.fillRect(
                     visProp.value.x - handleSize / 2,
                     visProp.value.y + visProp.value.height - handleSize / 2,
                     handleSize, handleSize)
@@ -632,6 +751,7 @@ export function renderTileLayerForeground(
                 const imagePx = Defs.getPixelForTileIndex(tileset, tileIndex)
 
                 drawImage(
+                    state.ctx,
                     state,
                     image.element,
                     imagePx.x, imagePx.y,
@@ -659,6 +779,7 @@ export function renderTileLayerForeground(
                 const imagePx = Defs.getPixelForTileIndex(tileset, cell.tile.tileId)
 
                 drawImage(
+                    state.ctx,
                     state,
                     image.element,
                     imagePx.x, imagePx.y,
@@ -772,6 +893,7 @@ export function renderObjectLayerForeground(
         state.ctx.globalAlpha = 0.5
 
         drawImage(
+            state.ctx,
             state,
             image.element,
             objectDef.imageRect.x, objectDef.imageRect.y,
@@ -870,6 +992,7 @@ export function isRectVisible(
 
 
 function drawImage(
+    ctx: CanvasRenderingContext2D,
     state: MapEditor.State,
     image: CanvasImageSource,
     srcX: number,
@@ -885,7 +1008,7 @@ function drawImage(
     const srcMargin = 0.01
     const destMargin = 0
 
-    state.ctx.drawImage(
+    ctx.drawImage(
         image,
         srcX + srcMargin,
         srcY + srcMargin,
