@@ -88,7 +88,6 @@ export function ObjectProperties(props: {
     return <div style={{
         height: "100%",
         minHeight: "0",
-        borderRadius: "0.5em",
         contain: "paint",
         pointerEvents: "auto",
         backgroundColor: "#242424",

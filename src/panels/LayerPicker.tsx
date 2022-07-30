@@ -55,8 +55,7 @@ export function LayerPicker(props: {
 
 
     return <div style={{
-        height: "min-content",
-        borderRadius: "0.5em",
+        maxHeight: "40vh",
         contain: "paint",
         pointerEvents: "auto",
         backgroundColor: "#242424",

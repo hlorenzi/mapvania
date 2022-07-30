@@ -144,191 +144,191 @@ export function EditorMap(props: {
     }
 
 
-    return <UI.PanelPadding noOverflow>
+    return <div style={{
+        display: "grid",
+        gridTemplate: "1fr / auto 1fr auto 30em",
+        width: "100%",
+        height: "100%",
+        minHeight: "0",
+        overflow: "hidden",
+    }}>
 
-        <div style={{
-            display: "grid",
-            gridTemplate: "1fr / auto 1fr auto 30em",
-            width: "100%",
-            height: "100%",
-            minHeight: "0",
-        }}>
-
-            <StyledCanvas
-                ref={ canvasRef }
-                style={{
-                    gridRow: 1,
-                    gridColumn: "1 / 5",
-                    width: "100%",
-                    height: "100%",
-            }}/>
-
-            <div style={{
+        <StyledCanvas
+            ref={ canvasRef }
+            style={{
                 gridRow: 1,
-                gridColumn: 1,
-                justifySelf: "start",
-                alignSelf: "start",
-                margin: "1em",
-                backgroundColor: "#111",
-            }}>
-
-                { global.editors.mapEditing.layerDefId === Editors.LAYERDEF_ID_MAP &&
-                    <>
-                    <UI.Button
-                        label="📐 Move (M)"
-                        selected={ global.editors.mapEditing.tool === "move" }
-                        onClick={ () => chooseTool("move") }
-                    />
-
-                    <UI.Button
-                        label="✒️ Draw (B)"
-                        selected={ global.editors.mapEditing.tool === "draw" }
-                        onClick={ () => chooseTool("draw") }
-                    />
-
-                    <UI.Button
-                        label="✂️ Select (Shift)"
-                        selected={ global.editors.mapEditing.tool === "select" }
-                        onClick={ () => chooseTool("select") }
-                    />
-                    </>
-                }
-                
-                { editingLayerDef && editingLayerDef.type === "tile" &&
-                    <>
-                    <UI.Button
-                        label="✒️ Draw (B)"
-                        selected={ global.editors.mapEditing.tool === "draw" }
-                        onClick={ () => chooseTool("draw") }
-                    />
-
-                    <UI.Button
-                        label="💧 Fill (G)"
-                        selected={ global.editors.mapEditing.tool === "fill" }
-                        onClick={ () => chooseTool("fill") }
-                    />
-
-                    <UI.Button
-                        label="❌ Erase (E)"
-                        selected={ global.editors.mapEditing.tool === "erase" }
-                        onClick={ () => chooseTool("erase") }
-                    />
-
-                    <UI.Button
-                        label="✂️ Select (Shift)"
-                        selected={ global.editors.mapEditing.tool === "select" }
-                        onClick={ () => chooseTool("select") }
-                    />
-                    </>
-                }
-
-                { editingLayerDef && editingLayerDef.type === "object" &&
-                    <>
-                    <UI.Button
-                        label="📐 Move (M)"
-                        selected={ global.editors.mapEditing.tool === "move" }
-                        onClick={ () => chooseTool("move") }
-                    />
-
-                    <UI.Button
-                        label="✒️ Draw (B)"
-                        selected={ global.editors.mapEditing.tool === "draw" }
-                        onClick={ () => chooseTool("draw") }
-                    />
-
-                    <UI.Button
-                        label="✂️ Select (Shift)"
-                        selected={ global.editors.mapEditing.tool === "select" }
-                        onClick={ () => chooseTool("select") }
-                    />
-                    </>
-                }
-
-            </div>
-
-            <div style={{
-                gridRow: 1,
-                gridColumn: 3,
-                justifySelf: "end",
-                alignSelf: "start",
-                margin: "1em",
-                backgroundColor: "#111",
-            }}>
-                <UI.Button
-                    label={
-                        "🌐 Grid: " +
-                        (global.editors.mapEditing.showGrid === "background" ? "Back" :
-                        global.editors.mapEditing.showGrid === "foreground" ? "Front" :
-                        "Off") }
-                    onClick={ toggleShowGrid }
-                />
-                <UI.Button
-                    label={
-                        "🧅 Other Layers: " +
-                        (global.editors.mapEditing.showOtherLayers === "normal" ? "Normal" :
-                        global.editors.mapEditing.showOtherLayers === "faded" ? "Faded" :
-                        "Off") }
-                    onClick={ toggleShowOtherLayers }
-                />
-                <br/>
-                <UI.Button
-                    label={
-                        "🖌️ Brush at Edges: " +
-                        (global.editors.mapEditing.tileBrushEdgeBehavior === "connectAlways" ? "Connect to OoB" :
-                        "Ignore") }
-                    onClick={ toggleTileBrushEdgeBehavior }
-                />
-            </div>
-
-            <div style={{
-                gridRow: 1,
-                gridColumn: 4,
+                gridColumn: "1 / 4",
                 width: "100%",
                 height: "100%",
-                minHeight: "0",
-                display: "grid",
-                gridTemplate: "auto 1fr / 1fr",
-                gridGap: "0.5em",
-                pointerEvents: "none",
-                padding: "0.5em",
-            }}>
+        }}/>
 
-                { editor.mapEditor && editor.mapEditor.objectSelection.size > 0 ?
-                    <ObjectProperties
-                        editorIndex={ props.editorIndex }
-                    />
-                : editor.mapEditor && editor.mapEditor.roomSelection.size > 0 ?
-                    <>
-                    <LayerPicker
-                        editorIndex={ props.editorIndex }
-                    />
-                    <RoomProperties
-                        editorIndex={ props.editorIndex }
-                    />
-                    </>
-                :
-                    <>
-                    <LayerPicker
-                        editorIndex={ props.editorIndex }
-                    />
+        <div style={{
+            gridRow: 1,
+            gridColumn: 1,
+            justifySelf: "start",
+            alignSelf: "start",
+            margin: "1em",
+            backgroundColor: "#111",
+            borderRadius: "0.25em",
+            contain: "paint",
+        }}>
 
-                    { editingLayerDef && editingLayerDef.type === "tile" &&
-                        <TilePicker
-                            editorIndex={ props.editorIndex }
-                        />
-                    }
+            { global.editors.mapEditing.layerDefId === Editors.LAYERDEF_ID_MAP &&
+                <>
+                <UI.Button
+                    label="📐 Move (M)"
+                    selected={ global.editors.mapEditing.tool === "move" }
+                    onClick={ () => chooseTool("move") }
+                />
 
-                    { editingLayerDef && editingLayerDef.type === "object" &&
-                        <ObjectPicker
-                            editorIndex={ props.editorIndex }
-                        />
-                    }
-                    </>
-                }
+                <UI.Button
+                    label="✒️ Draw (B)"
+                    selected={ global.editors.mapEditing.tool === "draw" }
+                    onClick={ () => chooseTool("draw") }
+                />
 
-            </div>
+                <UI.Button
+                    label="✂️ Select (Shift)"
+                    selected={ global.editors.mapEditing.tool === "select" }
+                    onClick={ () => chooseTool("select") }
+                />
+                </>
+            }
+            
+            { editingLayerDef && editingLayerDef.type === "tile" &&
+                <>
+                <UI.Button
+                    label="✒️ Draw (B)"
+                    selected={ global.editors.mapEditing.tool === "draw" }
+                    onClick={ () => chooseTool("draw") }
+                />
+
+                <UI.Button
+                    label="💧 Fill (G)"
+                    selected={ global.editors.mapEditing.tool === "fill" }
+                    onClick={ () => chooseTool("fill") }
+                />
+
+                <UI.Button
+                    label="❌ Erase (E)"
+                    selected={ global.editors.mapEditing.tool === "erase" }
+                    onClick={ () => chooseTool("erase") }
+                />
+
+                <UI.Button
+                    label="✂️ Select (Shift)"
+                    selected={ global.editors.mapEditing.tool === "select" }
+                    onClick={ () => chooseTool("select") }
+                />
+                </>
+            }
+
+            { editingLayerDef && editingLayerDef.type === "object" &&
+                <>
+                <UI.Button
+                    label="📐 Move (M)"
+                    selected={ global.editors.mapEditing.tool === "move" }
+                    onClick={ () => chooseTool("move") }
+                />
+
+                <UI.Button
+                    label="✒️ Draw (B)"
+                    selected={ global.editors.mapEditing.tool === "draw" }
+                    onClick={ () => chooseTool("draw") }
+                />
+
+                <UI.Button
+                    label="✂️ Select (Shift)"
+                    selected={ global.editors.mapEditing.tool === "select" }
+                    onClick={ () => chooseTool("select") }
+                />
+                </>
+            }
 
         </div>
 
-    </UI.PanelPadding>
+        <div style={{
+            gridRow: 1,
+            gridColumn: 3,
+            justifySelf: "end",
+            alignSelf: "start",
+            margin: "1em",
+            backgroundColor: "#111",
+            borderRadius: "0.25em",
+            contain: "paint",
+        }}>
+            <UI.Button
+                label={
+                    "🌐 Grid: " +
+                    (global.editors.mapEditing.showGrid === "background" ? "Back" :
+                    global.editors.mapEditing.showGrid === "foreground" ? "Front" :
+                    "Off") }
+                onClick={ toggleShowGrid }
+            />
+            <UI.Button
+                label={
+                    "🧅 Other Layers: " +
+                    (global.editors.mapEditing.showOtherLayers === "normal" ? "Normal" :
+                    global.editors.mapEditing.showOtherLayers === "faded" ? "Faded" :
+                    "Off") }
+                onClick={ toggleShowOtherLayers }
+            />
+            <br/>
+            <UI.Button
+                label={
+                    "🖌️ Brush at Edges: " +
+                    (global.editors.mapEditing.tileBrushEdgeBehavior === "connectAlways" ? "Connect to OoB" :
+                    "Ignore") }
+                onClick={ toggleTileBrushEdgeBehavior }
+            />
+        </div>
+
+        <div style={{
+            gridRow: 1,
+            gridColumn: 4,
+            width: "100%",
+            height: "100%",
+            minHeight: "0",
+            display: "grid",
+            gridTemplate: "auto 1fr / 1fr",
+            gridGap: "0.5em",
+            pointerEvents: "none",
+        }}>
+
+            { editor.mapEditor && editor.mapEditor.objectSelection.size > 0 ?
+                <ObjectProperties
+                    editorIndex={ props.editorIndex }
+                />
+            : editor.mapEditor && editor.mapEditor.roomSelection.size > 0 ?
+                <>
+                <LayerPicker
+                    editorIndex={ props.editorIndex }
+                />
+                <RoomProperties
+                    editorIndex={ props.editorIndex }
+                />
+                </>
+            :
+                <>
+                <LayerPicker
+                    editorIndex={ props.editorIndex }
+                />
+
+                { editingLayerDef && editingLayerDef.type === "tile" &&
+                    <TilePicker
+                        editorIndex={ props.editorIndex }
+                    />
+                }
+
+                { editingLayerDef && editingLayerDef.type === "object" &&
+                    <ObjectPicker
+                        editorIndex={ props.editorIndex }
+                    />
+                }
+                </>
+            }
+
+        </div>
+
+    </div>
 }
