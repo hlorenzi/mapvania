@@ -56,6 +56,7 @@ export function ProjectTree()
             { currentDirectory.childDirectories.map((directory, i) =>
                 <StyledEntry
                     key={ i }
+                    isRecognized
                 >
                     📁 { directory.name }/
                 </StyledEntry>
@@ -65,8 +66,9 @@ export function ProjectTree()
                 <StyledEntry
                     key={ i }
                     onDoubleClick={ () => Editors.openEditorByFile(file.rootRelativePath) }
+                    isRecognized={ Filesystem.isRecognizedFile(file.rootRelativePath) }
                 >
-                    { file.name }
+                    { Filesystem.getFileDisplayName(file.name) }
                 </StyledEntry>
             )}
 
@@ -104,10 +106,14 @@ const StyledTree = styled.div`
 `
 
 
-const StyledEntry = styled.div`
+const StyledEntry = styled.div<{
+    isRecognized: boolean,
+}>`
     padding: 0.25em 1em;
     
     cursor: pointer;
+
+    opacity: ${ props => props.isRecognized ? "1" : "0.6" };
 
     &:hover
     {

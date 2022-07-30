@@ -236,7 +236,7 @@ export async function openEditorDefs(rootRelativePath: string)
         const defs = DefsSerialization.deserialize(serDefs)
         const editor: EditorDefs = {
             type: "defs",
-            name: rootRelativePath,
+            name: Filesystem.getFileDisplayName(rootRelativePath),
             rootRelativePath,
             defs,
             lastSavedDefs: defs,
@@ -301,7 +301,7 @@ export async function openEditorMap(rootRelativePath: string)
 
         const editor: EditorMap = {
             type: "map",
-            name: rootRelativePath,
+            name: Filesystem.getFileDisplayName(rootRelativePath),
             rootRelativePath,
             defs,
             defsSerialized: serDefsText,

@@ -276,3 +276,27 @@ export async function showImagePicker(): Promise<string | undefined>
 
     return rootRelativePath
 }
+
+
+export function isRecognizedFile(rootRelativePath: string)
+{
+    if (rootRelativePath.endsWith(DEFS_EXTENSION))
+        return true
+
+    if (rootRelativePath.endsWith(MAP_EXTENSION))
+        return true
+
+    return false
+}
+
+
+export function getFileDisplayName(rootRelativePath: string)
+{
+    if (rootRelativePath.endsWith(DEFS_EXTENSION))
+        return "⚙️ " + rootRelativePath.replace("./", "").replace(DEFS_EXTENSION, "")
+
+    if (rootRelativePath.endsWith(MAP_EXTENSION))
+        return "🗺️ " + rootRelativePath.replace("./", "").replace(MAP_EXTENSION, "")
+
+    return rootRelativePath
+}
