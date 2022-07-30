@@ -69,10 +69,19 @@ export function ImageView(props: {
             return
 
         state.current.camera.pos = { x: 0, y: 0 }
-        state.current.camera.zoom = Math.min(
-            4,
-            (canvas.clientWidth - 32) / props.imageData.width,
-            (canvas.clientHeight - 32)/ props.imageData.height)
+        state.current.camera.zoom = 1
+
+        for (let z = -10; z <= 4; z++)
+        {
+            const zoom = Math.pow(1.5, z)
+
+            if (props.imageData.width * zoom < canvas.clientWidth - 16 &&
+                props.imageData.height * zoom < canvas.clientHeight - 16)
+            {
+                state.current.camera.zoom = zoom
+            }
+        }
+
 
     }, [props.imageData, props.imageData?.width, props.imageData?.height])
 
@@ -91,10 +100,13 @@ export function ImageView(props: {
             const canvasRect = canvas.getBoundingClientRect()
             const imgW = props.imageData?.width ?? 0
             const imgH = props.imageData?.height ?? 0
+            
+            const pixelRatio =
+                window.devicePixelRatio || 1
 
             state.current.mouse.posRaw = {
-                x: ev.clientX - canvasRect.left,
-                y: ev.clientY - canvasRect.top,
+                x: (ev.clientX - canvasRect.left) * pixelRatio,
+                y: (ev.clientY - canvasRect.top) * pixelRatio,
             }
 
             state.current.mouse.pos = {
@@ -209,8 +221,11 @@ export function ImageView(props: {
 
         const render = () =>
         {
-            canvas.width = canvas.clientWidth
-            canvas.height = canvas.clientHeight
+            const pixelRatio =
+                window.devicePixelRatio || 1
+
+            canvas.width = Math.round(canvas.clientWidth * pixelRatio)
+            canvas.height = Math.round(canvas.clientHeight * pixelRatio)
     
             const imgW = props.imageData?.width ?? 0
             const imgH = props.imageData?.height ?? 0

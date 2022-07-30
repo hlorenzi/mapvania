@@ -22,6 +22,7 @@ export interface State
     ctx: CanvasRenderingContext2D
     canvasWidth: number
     canvasHeight: number
+    pixelRatio: number
     cachedCanvases: CacheCanvas
 
     onMouseMove: null | ((state: State) => void)
@@ -85,6 +86,7 @@ export function createState(editorIndex: number, roomId: ID.ID): State
         ctx: null!,
         canvasWidth: 0,
         canvasHeight: 0,
+        pixelRatio: 1,
         cachedCanvases: new CacheCanvas(),
 
         onMouseMove: null,
@@ -136,9 +138,12 @@ export function createState(editorIndex: number, roomId: ID.ID): State
 
 export function onResize(state: State)
 {
+    state.pixelRatio =
+        window.devicePixelRatio || 1
+
     const canvasRect = state.canvas.getBoundingClientRect()
-    state.canvasWidth = Math.floor(canvasRect.width)
-    state.canvasHeight = Math.floor(canvasRect.height)
+    state.canvasWidth = Math.round(canvasRect.width * state.pixelRatio)
+    state.canvasHeight = Math.round(canvasRect.height * state.pixelRatio)
 
     state.canvas.width = state.canvasWidth
     state.canvas.height = state.canvasHeight
@@ -451,8 +456,8 @@ function updateMouse(state: State, ev: MouseEvent)
     const canvasRect = state.canvas.getBoundingClientRect()
 
     state.mouse.posRaw = {
-        x: ev.clientX - canvasRect.left,
-        y: ev.clientY - canvasRect.top,
+        x: (ev.clientX - canvasRect.left) * state.pixelRatio,
+        y: (ev.clientY - canvasRect.top) * state.pixelRatio,
     }
     
     state.mouse.pos = {
