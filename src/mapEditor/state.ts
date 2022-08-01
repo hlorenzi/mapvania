@@ -358,7 +358,7 @@ export function getObjectVisiblePropertiesRecursive(
         result.push({
             objectId: object.id,
             propertyId: fieldId,
-            color: "#ffff00",
+            color: field.color,
             showGhost: field.showGhost,
             value: {
                 type: "point",
@@ -378,7 +378,7 @@ export function getObjectVisiblePropertiesRecursive(
         result.push({
             objectId: object.id,
             propertyId: fieldId,
-            color: "#ff8800",
+            color: field.color,
             showGhost: false,
             value: {
                 type: "rect",

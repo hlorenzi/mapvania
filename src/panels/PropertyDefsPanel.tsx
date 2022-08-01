@@ -338,6 +338,19 @@ export function FieldPoint(props: {
 {
     return <Tabulation>
         <UI.Grid template="auto 1fr">
+            
+            <UI.Cell justifyEnd>
+                Color
+            </UI.Cell>
+
+            <UI.Cell justifyStretch>
+                <UI.InputColor
+                    value={ props.field.color }
+                    onChange={ (value) => props.setField({ ...props.field, color: value }) }
+                    fullWidth
+                />
+            </UI.Cell>
+
             <UI.Cell justifyEnd>
                 Relative
             </UI.Cell>
@@ -371,6 +384,18 @@ export function FieldRect(props: {
 {
     return <Tabulation>
         <UI.Grid template="auto 1fr">
+            <UI.Cell justifyEnd>
+                Color
+            </UI.Cell>
+
+            <UI.Cell justifyStretch>
+                <UI.InputColor
+                    value={ props.field.color }
+                    onChange={ (value) => props.setField({ ...props.field, color: value }) }
+                    fullWidth
+                />
+            </UI.Cell>
+
             <UI.Cell justifyEnd>
                 Relative
             </UI.Cell>

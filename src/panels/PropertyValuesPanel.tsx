@@ -124,6 +124,17 @@ export function Field<T extends Properties.DefField>(props: {
 
         <UI.Cell justifyEnd>
             { props.field.id }
+
+            { !("color" in props.field) ? null :
+                <div style={{
+                    marginLeft: "0.5em",
+                    display: "inline-block",
+                    width: "1em",
+                    height: "1em",
+                    backgroundColor: props.field.color,
+                    border: "1px solid #ffffff",
+                }}/>
+            }
         </UI.Cell>
         
         <UI.Cell justifyStart>

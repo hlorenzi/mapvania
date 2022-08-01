@@ -54,6 +54,7 @@ export interface DefFieldPoint extends DefFieldCommon
 {
     type: "point"
     relative: boolean
+    color: string
     showGhost: boolean
 }
 
@@ -62,6 +63,7 @@ export interface DefFieldRect extends DefFieldCommon
 {
     type: "rect"
     relative: boolean
+    color: string
 }
 
 
@@ -165,6 +167,7 @@ export function makeDefFieldOfType(id: string, type: DefField["type"]): DefField
             ...common,
             type: "point",
             relative: true,
+            color: "#ffff00",
             showGhost: false,
         }
 
@@ -172,6 +175,7 @@ export function makeDefFieldOfType(id: string, type: DefField["type"]): DefField
             ...common,
             type: "rect",
             relative: true,
+            color: "#ff8800",
         }
 
         case "choice": return {
@@ -441,6 +445,90 @@ export function getDefsIntersection(defs: DefProperties[]): DefProperties
 }
 
 
+export function serializeDefs(
+    fields: DefProperties)
+    : DefProperties
+{
+    return fields
+}
+
+
+export function deserializeDefs(
+    serFields: DefProperties)
+    : DefProperties
+{
+    const fields: DefProperties = []
+
+    for (const serField of serFields)
+    {
+        fields.push(deserializeDefField(serField))
+    }
+
+    return fields
+}
+
+
+function deserializeDefField(
+    field: DefField)
+    : DefField
+{
+    switch (field.type)
+    {
+        case "bool":
+        {
+            return field
+        }
+        
+        case "string":
+        {
+            return field
+        }
+
+        case "number":
+        {
+            return field
+        }
+
+        case "point":
+        {
+            field.color = field.color ?? "#ffff00"
+            return field
+        }
+
+        case "rect":
+        {
+            field.color = field.color ?? "#ff8800"
+            return field
+        }
+
+        case "choice":
+        {
+            return field
+        }
+
+        case "struct":
+        {
+            for (let i = 0; i < field.fields.length; i++)
+                field.fields[i] = deserializeDefField(field.fields[i])
+            return field
+        }
+
+        case "enum":
+        {
+            for (let i = 0; i < field.variants.length; i++)
+                field.variants[i] = deserializeDefField(field.variants[i])
+            return field
+        }
+
+        case "list":
+        {
+            field.element = deserializeDefField(field.element)
+            return field
+        }
+    }
+}
+
+
 export function serializeValues(
     fields: DefProperties,
     values: PropertyValues)
@@ -468,7 +556,7 @@ export function deserializeValues(
 }
 
 
-export function deserializeValue(
+function deserializeValue(
     field: DefField,
     serValue: FieldValue)
     : FieldValue

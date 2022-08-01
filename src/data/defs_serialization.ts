@@ -313,6 +313,6 @@ function deserializeObject(
         resizeable: serObject.resizeable ?? false,
         
         inheritPropertiesFromObjectDefs: serObject.inheritPropertiesFromObjectDefs ?? [],
-        properties: serObject.properties ?? [],
+        properties: Properties.deserializeDefs(serObject.properties ?? []),
     }
 }
