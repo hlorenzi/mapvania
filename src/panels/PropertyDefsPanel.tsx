@@ -8,7 +8,6 @@ import * as Images from "../data/images"
 import * as MapEditor from "../mapEditor"
 import * as UI from "../ui"
 import { global } from "../global"
-import { deepAssign, DeepAssignable } from "../util/deepAssign"
 
 
 export function PropertyDefsPanel(props: {

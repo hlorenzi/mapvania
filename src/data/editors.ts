@@ -1,6 +1,5 @@
 import { RefreshToken } from "../util/refreshToken"
 import { global } from "../global"
-import { DeepAssignable, deepAssign } from "../util/deepAssign"
 import * as Filesystem from "./filesystem"
 import * as ID from "./id"
 import * as Dev from "./dev"
@@ -63,6 +62,16 @@ export interface EditorDefs extends EditorCommon
     type: "defs"
     defs: Defs.Defs
     lastSavedDefs: Defs.Defs
+
+    history: EditorDefsHistoryStep[]
+    historyPointer: number
+}
+
+
+export interface EditorDefsHistoryStep
+{
+    tag: string
+    defs: Defs.Defs
 }
 
 
@@ -134,19 +143,7 @@ export function assignEditorDefs(
         },
         ...global.editors.editors.slice(editorIndex + 1),
     ]
-    global.editors.refreshToken.commit()
-}
-
-
-export function deepAssignEditor<T extends Editor>(
-    editorIndex: number,
-    value: DeepAssignable<T>)
-{
-    global.editors.editors = [
-        ...global.editors.editors.slice(0, editorIndex),
-        deepAssign(global.editors.editors[editorIndex] as T, value),
-        ...global.editors.editors.slice(editorIndex + 1),
-    ]
+    historyAdd(editorIndex)
     global.editors.refreshToken.commit()
 }
 
@@ -240,8 +237,12 @@ export async function openEditorDefs(rootRelativePath: string)
             rootRelativePath,
             defs,
             lastSavedDefs: defs,
+            history: [],
+            historyPointer: -1,
         }
-        openEditor(editor)
+
+        const editorIndex = openEditor(editor)
+        historyAdd(editorIndex, "initial")
     }
     catch (e)
     {
@@ -256,6 +257,8 @@ export async function saveEditorDefs(editorIndex: number)
     try
     {
         const editorData = global.editors.editors[editorIndex] as EditorDefs
+
+        historyAdd(editorIndex)
 
         const serDefs = DefsSerialization.serialize(editorData.defs)
         const serDefsText = DefsSerialization.stringify(serDefs)
@@ -407,40 +410,70 @@ export function historyAdd(editorIndex: number, tag?: string)
 
         editor.historyPointer = editor.history.length - 1
     }
+
+    else if (editor.type === "defs")
+    {
+        if (editor.history.length > 0 &&
+            editor.history[editor.historyPointer].defs === editor.defs)
+            return
+        
+        editor.history = editor.history.slice(0, editor.historyPointer + 1)
+
+        editor.history.push({
+            tag: tag ?? "",
+            defs: editor.defs,
+        })
+
+        editor.historyPointer = editor.history.length - 1
+    }
 }
 
 
 export function undo(editorIndex: number)
 {
     const editor = global.editors.editors[editorIndex]
+
+    if (editor.historyPointer - 1 < 0)
+        return
+    
+    editor.historyPointer -= 1
+
     if (editor.type === "map")
     {
-        if (editor.historyPointer - 1 < 0)
-            return
-        
-        editor.historyPointer -= 1
         editor.map = editor.history[editor.historyPointer].map
         editor.mapEditor.cachedCanvases.clear()
-        render(editorIndex)
-        global.editors.refreshToken.commit()
     }
+    else if (editor.type === "defs")
+    {
+        editor.defs = editor.history[editor.historyPointer].defs
+    }
+
+    render(editorIndex)
+    global.editors.refreshToken.commit()
 }
 
 
 export function redo(editorIndex: number)
 {
     const editor = global.editors.editors[editorIndex]
+
+    if (editor.historyPointer + 1 >= editor.history.length)
+        return
+    
+    editor.historyPointer += 1
+
     if (editor.type === "map")
     {
-        if (editor.historyPointer + 1 >= editor.history.length)
-            return
-        
-        editor.historyPointer += 1
         editor.map = editor.history[editor.historyPointer].map
         editor.mapEditor.cachedCanvases.clear()
-        render(editorIndex)
-        global.editors.refreshToken.commit()
     }
+    else if (editor.type === "defs")
+    {
+        editor.defs = editor.history[editor.historyPointer].defs
+    }
+    
+    render(editorIndex)
+    global.editors.refreshToken.commit()
 }
 
 

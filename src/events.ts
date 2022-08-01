@@ -84,6 +84,8 @@ export function useKeyboardShortcuts()
                 case "z":
                     if (ev.ctrlKey)
                     {
+                        ev.preventDefault()
+
                         if (ev.shiftKey)
                             Editors.redo(global.editors.currentEditor)
                         else
@@ -93,7 +95,10 @@ export function useKeyboardShortcuts()
                     
                 case "y":
                     if (ev.ctrlKey)
+                    {
+                        ev.preventDefault()
                         Editors.redo(global.editors.currentEditor)
+                    }
                     break
             }
         }
