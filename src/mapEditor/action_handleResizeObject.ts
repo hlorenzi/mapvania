@@ -40,6 +40,9 @@ export function setupHandleResizeObject(
 
     state.onMouseMove = () =>
     {
+        if (state.mouseDownLocked)
+            return
+        
         let newX1 = object.x - (object.width * objectDef.pivotPercent.x)
         let newX2 = newX1 + object.width
 

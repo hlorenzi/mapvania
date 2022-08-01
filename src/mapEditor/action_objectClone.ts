@@ -31,11 +31,7 @@ export function setupObjectClone(state: MapEditor.State)
 
     state.onMouseMove = () =>
     {
-        const mouseDist = MathUtils.pointDistance(
-            { x: 0, y: 0 },
-            state.mouseDownDelta.posInRoom)
-
-        if (mouseDist < Math.max(layerDef.gridCellWidth, layerDef.gridCellHeight))
+        if (state.mouseDownLockedGrid)
             return
 
         const clonedObjects: Map.LayerObject["objects"] = {}

@@ -32,6 +32,9 @@ export function setupObjectMove(state: MapEditor.State)
 
     state.onMouseMove = () =>
     {
+        if (state.mouseDownLocked)
+            return
+
         let hadChanges = false
 
         const newObjects = { ...originalObjects }

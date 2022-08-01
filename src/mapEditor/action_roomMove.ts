@@ -18,6 +18,9 @@ export function setupRoomMove(state: MapEditor.State)
 
     state.onMouseMove = () =>
     {
+        if (state.mouseDownLocked)
+            return
+
         let hadChanges = false
 
         const newRooms = { ...editor.map.rooms }

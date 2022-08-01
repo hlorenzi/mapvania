@@ -64,6 +64,9 @@ export interface State
         tile: { x: number, y: number }
     }
 
+    mouseDownLocked: boolean
+    mouseDownLockedGrid: boolean
+
     rectSelection: null |
     {
         tile1: { x: number, y: number }
@@ -127,6 +130,9 @@ export function createState(editorIndex: number, roomId: ID.ID): State
             posInRoom: { x: 0, y: 0 },
             tile: { x: 0, y: 0 },
         },
+
+        mouseDownLocked: false,
+        mouseDownLockedGrid: false,
 
         rectSelection: null,
 
@@ -513,6 +519,9 @@ export function onMouseDown(state: State, ev: MouseEvent)
         tile: state.mouse.tile,
     }
 
+    state.mouseDownLocked = true
+    state.mouseDownLockedGrid = true
+
     const handles = getInteractionHandles(state)
     const hoveringHandle = handles.find(h => MathUtils.rectCenteredContains(h, state.mouse.pos))
 
@@ -631,6 +640,9 @@ export function onMouseDown(state: State, ev: MouseEvent)
 
 export function onMouseMove(state: State, ev: MouseEvent)
 {
+    const editor = (global.editors.editors[state.editorIndex] as Editors.EditorMap)
+    const defs = editor.defs
+
     updateMouse(state, ev)
     
     state.mouseDownDelta.posRaw = {
@@ -654,8 +666,33 @@ export function onMouseMove(state: State, ev: MouseEvent)
     }
 
     if (state.onMouseMove)
+    {
+        const mouseDistRaw = MathUtils.pointDistance(
+            { x: 0, y: 0 },
+            state.mouseDownDelta.posRaw)
+
+        if (mouseDistRaw > 4)
+            state.mouseDownLocked = false
+
+        const mouseDistGrid = MathUtils.pointDistance(
+            { x: 0, y: 0 },
+            state.mouseDownDelta.pos)
+            
+        const layerDef = Defs.getLayerDef(defs, global.editors.mapEditing.layerDefId)
+        if (layerDef)
+        {
+            if (mouseDistGrid > Math.max(layerDef.gridCellWidth, layerDef.gridCellHeight))
+                state.mouseDownLockedGrid = false
+        }
+        else
+        {
+            if (mouseDistGrid > Math.max(defs.generalDefs.roomWidthMultiple, defs.generalDefs.roomHeightMultiple))
+                state.mouseDownLockedGrid = false
+        }
+
         state.onMouseMove(state)
-    
+    }
+
     MapEditor.render(state)
 }
 

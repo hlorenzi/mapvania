@@ -41,6 +41,9 @@ export function setupHandleVisibleProperty(
 
     state.onMouseMove = () =>
     {
+        if (state.mouseDownLocked)
+            return
+
         if (state.toolDeleteFromList)
         {
             editor.map = Map.setRoomObject(

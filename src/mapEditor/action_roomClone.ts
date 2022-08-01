@@ -16,11 +16,7 @@ export function setupRoomClone(state: MapEditor.State)
 
     state.onMouseMove = () =>
     {
-        const mouseDist = MathUtils.pointDistance(
-            { x: 0, y: 0 },
-            state.mouseDownDelta.pos)
-
-        if (mouseDist < Math.max(editor.defs.generalDefs.roomWidthMultiple, editor.defs.generalDefs.roomHeightMultiple))
+        if (state.mouseDownLockedGrid)
             return
 
         const originalSelection = [...state.roomSelection]
