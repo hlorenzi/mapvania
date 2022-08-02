@@ -19,24 +19,20 @@ export function setupRoomClone(state: MapEditor.State)
         if (state.mouseDownLockedGrid)
             return
 
-        const originalSelection = [...state.roomSelection]
-        state.roomSelection.clear()
+        const selectedRooms = [...state.roomSelection]
+            .map(id => editor.map.rooms[id])
+            .filter(o => o !== undefined)
 
-        for (const roomId of originalSelection)
-        {
-            const originalRoom = roomsOrig[roomId]
-            if (!originalRoom)
-                continue
+        const result = Map.cloneRooms(
+            editor.map,
+            selectedRooms)
+            
+        state.roomSelection = new Set(result.newIds)
 
-            const [newMap, clonedRoom] = Map.cloneRoom(
-                editor.map,
-                originalRoom)
+        if (result.newIds.length > 0)
+            state.roomId = result.newIds[0]
 
-            editor.map = newMap
-
-            state.roomSelection.add(clonedRoom.id)
-            state.roomId = clonedRoom.id
-        }
+        editor.map = result.map
 
         MapEditor.setupRoomMove(state)
     }

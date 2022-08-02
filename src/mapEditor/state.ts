@@ -46,6 +46,7 @@ export interface State
         pos: { x: number, y: number }
         posInRoom: { x: number, y: number }
         tile: { x: number, y: number }
+        posSnapped: { x: number, y: number }
     }
 
     mouseDownOrigin:
@@ -54,6 +55,7 @@ export interface State
         pos: { x: number, y: number }
         posInRoom: { x: number, y: number }
         tile: { x: number, y: number }
+        posSnapped: { x: number, y: number }
     }
 
     mouseDownDelta:
@@ -62,6 +64,7 @@ export interface State
         pos: { x: number, y: number }
         posInRoom: { x: number, y: number }
         tile: { x: number, y: number }
+        posSnapped: { x: number, y: number }
     }
 
     mouseDownLocked: boolean
@@ -113,6 +116,7 @@ export function createState(editorIndex: number, roomId: ID.ID): State
             pos: { x: 0, y: 0 },
             posInRoom: { x: 0, y: 0 },
             tile: { x: 0, y: 0 },
+            posSnapped: { x: 0, y: 0 },
         },
         
         mouseDownOrigin:
@@ -121,6 +125,7 @@ export function createState(editorIndex: number, roomId: ID.ID): State
             pos: { x: 0, y: 0 },
             posInRoom: { x: 0, y: 0 },
             tile: { x: 0, y: 0 },
+            posSnapped: { x: 0, y: 0 },
         },
 
         mouseDownDelta:
@@ -129,6 +134,7 @@ export function createState(editorIndex: number, roomId: ID.ID): State
             pos: { x: 0, y: 0 },
             posInRoom: { x: 0, y: 0 },
             tile: { x: 0, y: 0 },
+            posSnapped: { x: 0, y: 0 },
         },
 
         mouseDownLocked: false,
@@ -482,12 +488,22 @@ function updateMouse(state: State, ev: MouseEvent)
             x: Math.floor((state.mouse.pos.x - room.x) / layer.gridCellWidth),
             y: Math.floor((state.mouse.pos.y - room.y) / layer.gridCellHeight),
         }
+
+        state.mouse.posSnapped = {
+            x: state.mouse.tile.x * layer.gridCellWidth,
+            y: state.mouse.tile.y * layer.gridCellHeight,
+        }
     }
     else
     {
         state.mouse.tile = {
             x: Math.floor(state.mouse.pos.x / defs.generalDefs.roomWidthMultiple),
             y: Math.floor(state.mouse.pos.y / defs.generalDefs.roomHeightMultiple),
+        }
+
+        state.mouse.posSnapped = {
+            x: state.mouse.tile.x * defs.generalDefs.roomWidthMultiple,
+            y: state.mouse.tile.y * defs.generalDefs.roomHeightMultiple,
         }
     }
 }
@@ -517,6 +533,7 @@ export function onMouseDown(state: State, ev: MouseEvent)
         pos: state.mouse.pos,
         posInRoom: state.mouse.posInRoom,
         tile: state.mouse.tile,
+        posSnapped: state.mouse.posSnapped,
     }
 
     state.mouseDownLocked = true
@@ -747,16 +764,34 @@ export function onKey(state: State, ev: KeyboardEvent, down: boolean)
         document.activeElement.tagName === "TEXTAREA"))
         return
     
+    const editor = (global.editors.editors[state.editorIndex] as Editors.EditorMap)
+    
     const key = ev.key.toLowerCase()
+
+    const layerDef = Defs.getLayerDef(editor.defs, global.editors.mapEditing.layerDefId)
 
     switch (key)
     {
         case "c":
             if (down && ev.ctrlKey)
             {
-                copyTileSelection(state)
-                global.editors.mapEditing.tool = "draw"
-                state.rectSelection = null
+                if (layerDef?.type === "tile")
+                {
+                    copyTileSelection(state)
+                    global.editors.mapEditing.tool = "draw"
+                    state.rectSelection = null
+                }
+                else if (layerDef?.type === "object")
+                {
+                    copyObjectSelection(state)
+                    global.editors.mapEditing.tool = "move"
+                }
+                else if (global.editors.mapEditing.layerDefId === Editors.LAYERDEF_ID_MAP)
+                {
+                    copyRoomSelection(state)
+                    global.editors.mapEditing.tool = "move"
+                }
+
                 MapEditor.render(state)
                 ev.preventDefault()
             }
@@ -765,16 +800,52 @@ export function onKey(state: State, ev: KeyboardEvent, down: boolean)
         case "x":
             if (down && ev.ctrlKey)
             {
-                copyTileSelection(state)
-                eraseTileSelection(state)
+                if (layerDef?.type === "tile")
+                {
+                    copyTileSelection(state)
+                    eraseTileSelection(state)
+                    global.editors.mapEditing.tool = "draw"
+                    state.rectSelection = null
+                }
+                else if (layerDef?.type === "object")
+                {
+                    copyObjectSelection(state)
+                    eraseObjectSelection(state)
+                    global.editors.mapEditing.tool = "move"
+                }
+                else if (global.editors.mapEditing.layerDefId === Editors.LAYERDEF_ID_MAP)
+                {
+                    copyRoomSelection(state)
+                    eraseRoomSelection(state)
+                    global.editors.mapEditing.tool = "move"
+                }
+                
                 Editors.historyAdd(state.editorIndex)
-                global.editors.mapEditing.tool = "draw"
-                state.rectSelection = null
                 MapEditor.render(state)
                 ev.preventDefault()
             }
             break
 
+        case "v":
+            if (down && ev.ctrlKey)
+            {
+                if (layerDef?.type === "object")
+                {
+                    pasteObjects(state)
+                    global.editors.mapEditing.tool = "move"
+                }
+                else if (global.editors.mapEditing.layerDefId === Editors.LAYERDEF_ID_MAP)
+                {
+                    pasteRooms(state)
+                    global.editors.mapEditing.tool = "move"
+                }
+
+                Editors.historyAdd(state.editorIndex)
+                MapEditor.render(state)
+                ev.preventDefault()
+            }
+            break
+    
         case "d":
         case "delete":
         case "backspace":
@@ -790,9 +861,9 @@ export function onKey(state: State, ev: KeyboardEvent, down: boolean)
                 eraseTileSelection(state)
                 eraseObjectSelection(state)
                 eraseRoomSelection(state)
-                Editors.historyAdd(state.editorIndex)
                 state.rectSelection = null
                 state.toolDeleteFromList = false
+                Editors.historyAdd(state.editorIndex)
                 MapEditor.render(state)
                 ev.preventDefault()
             }
@@ -810,6 +881,72 @@ export function onKey(state: State, ev: KeyboardEvent, down: boolean)
             ev.preventDefault()
             break
     }
+}
+
+
+export function copyRoomSelection(state: State)
+{
+    const editor = (global.editors.editors[state.editorIndex] as Editors.EditorMap)
+
+    global.editors.mapEditing.roomsCopied = []
+
+    for (const id of state.roomSelection)
+    {
+        const room = editor.map.rooms[id]
+        if (!room)
+            continue
+
+        global.editors.mapEditing.roomsCopied.push(room)        
+    }
+}
+
+
+export function pasteRooms(state: State)
+{
+    if (global.editors.mapEditing.roomsCopied.length === 0)
+        return
+    
+    const editor = (global.editors.editors[state.editorIndex] as Editors.EditorMap)
+    let map = editor.map
+    
+    let xMin: number = null!
+    let yMin: number = null!
+    let xMax: number = null!
+    let yMax: number = null!
+
+    for (const room of global.editors.mapEditing.roomsCopied)
+    {
+        xMin = (xMin === null || room.x < xMin) ? room.x : xMin
+        yMin = (yMin === null || room.y < yMin) ? room.y : yMin
+        xMax = (xMax === null || room.x + room.width > xMax) ? room.x + room.width : xMax
+        yMax = (yMax === null || room.y + room.height > yMax) ? room.y + room.height : yMax
+    }
+
+    const xSize = xMax - xMin
+    const ySize = yMax - yMin
+
+    const xOffset = MathUtils.snapRound(-xMin - xSize / 2, editor.defs.generalDefs.roomWidthMultiple) +
+        state.mouse.posSnapped.x
+
+    const yOffset = MathUtils.snapRound(-yMin - ySize / 2, editor.defs.generalDefs.roomHeightMultiple) +
+        state.mouse.posSnapped.y
+
+    const result = Map.cloneRooms(
+        map,
+        global.editors.mapEditing.roomsCopied,
+        (room) => ({
+            ...room,
+            x: room.x + xOffset,
+            y: room.y + yOffset,
+        }))
+
+    state.roomSelection = new Set(result.newIds)
+
+    if (result.newIds.length > 0)
+        state.roomId = result.newIds[0]
+
+    editor.map = result.map
+    global.editors.refreshToken.commit()
 }
 
 
@@ -918,6 +1055,92 @@ export function eraseTileSelection(state: State)
         global.editors.mapEditing.layerDefId,
         layer)
 
+    global.editors.refreshToken.commit()
+}
+
+
+export function copyObjectSelection(state: State)
+{
+    const editor = (global.editors.editors[state.editorIndex] as Editors.EditorMap)
+
+    global.editors.mapEditing.objectsCopied = []
+
+    const room = editor.map.rooms[state.roomId]
+    if (!room)
+        return
+
+    const layer = room.layers[global.editors.mapEditing.layerDefId]
+    if (!layer || layer.type !== "object")
+        return
+
+    for (const id of state.objectSelection)
+    {
+        const obj = layer.objects[id]
+        if (!obj)
+            continue
+
+        global.editors.mapEditing.objectsCopied.push(obj)        
+    }
+}
+
+
+export function pasteObjects(state: State)
+{
+    if (global.editors.mapEditing.objectsCopied.length === 0)
+        return
+    
+    const editor = (global.editors.editors[state.editorIndex] as Editors.EditorMap)
+    let map = editor.map
+
+    const room = map.rooms[state.roomId]
+    if (!room)
+        return
+
+    const layer = room.layers[global.editors.mapEditing.layerDefId]
+    if (!layer || layer.type !== "object")
+        return
+
+    const layerDef = Defs.getLayerDef(editor.defs, layer.layerDefId)
+    if (!layerDef)
+        return
+    
+    let xMin: number = null!
+    let yMin: number = null!
+    let xMax: number = null!
+    let yMax: number = null!
+
+    for (const obj of global.editors.mapEditing.objectsCopied)
+    {
+        const rect = getObjectRect(state, obj)
+        xMin = (xMin === null || rect.x < xMin) ? rect.x : xMin
+        yMin = (yMin === null || rect.y < yMin) ? rect.y : yMin
+        xMax = (xMax === null || rect.x + rect.width > xMax) ? rect.x + rect.width : xMax
+        yMax = (yMax === null || rect.y + rect.height > yMax) ? rect.y + rect.height : yMax
+    }
+
+    const xSize = xMax - xMin
+    const ySize = yMax - yMin
+
+    const xOffset = MathUtils.snapRound(-xMin - xSize / 2, layerDef.gridCellWidth) +
+        state.mouse.posSnapped.x
+
+    const yOffset = MathUtils.snapRound(-yMin - ySize / 2, layerDef.gridCellHeight) +
+        state.mouse.posSnapped.y
+
+    const result = Map.cloneObjects(
+        map,
+        room.id,
+        layer.layerDefId,
+        global.editors.mapEditing.objectsCopied,
+        (obj) => ({
+            ...obj,
+            x: obj.x + xOffset,
+            y: obj.y + yOffset,
+        }))
+
+    state.objectSelection = new Set(result.newIds)
+
+    editor.map = result.map
     global.editors.refreshToken.commit()
 }
 

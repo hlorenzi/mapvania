@@ -32,6 +32,9 @@ export interface Global
         tileBrushEdgeBehavior: "none" | "connectAlways"
 
         objectDefId: ID.ID
+        objectsCopied: Map.Obj[]
+
+        roomsCopied: Map.Room[]
 
         showGrid: "none" | "background" | "foreground"
         showOtherLayers: "none" | "normal" | "faded"
@@ -123,6 +126,9 @@ export function makeNew(refreshToken: RefreshToken): Global
             tileBrushEdgeBehavior: "none",
 
             objectDefId: "",
+            objectsCopied: [],
+
+            roomsCopied: [],
 
             showGrid: "background",
             showOtherLayers: "normal",

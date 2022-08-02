@@ -26,57 +26,25 @@ export function setupObjectClone(state: MapEditor.State)
     if (!layer || layer.type !== "object")
         return
     
-    const originalObjects = layer.objects
-
 
     state.onMouseMove = () =>
     {
         if (state.mouseDownLockedGrid)
             return
 
-        const clonedObjects: Map.LayerObject["objects"] = {}
+        const selectedObjs = [...state.objectSelection]
+            .map(id => layer.objects[id])
+            .filter(o => o !== undefined)
 
-        const originalSelection = [...state.objectSelection]
-        state.objectSelection.clear()
-
-        let nextIDs = editor.map.nextIDs
-
-        for (const objectId of originalSelection)
-        {
-            const originalObject = originalObjects[objectId]
-            if (!originalObject)
-                continue
-
-            const [newNextIDs, clonedObjId] = ID.getNextID(nextIDs)
-            nextIDs = newNextIDs
-
-            const clonedObject = {
-                ...originalObject,
-                id: clonedObjId,
-            }
-
-            clonedObjects[clonedObjId] = clonedObject
-            state.objectSelection.add(clonedObjId)
-        }
-
-        const newLayer: Map.LayerObject = {
-            ...layer as Map.LayerObject,
-            objects: {
-                ...layer.objects,
-                ...clonedObjects,
-            },
-        }
-
-        editor.map = Map.setRoomLayer(
+        const result = Map.cloneObjects(
             editor.map,
             state.roomId,
             global.editors.mapEditing.layerDefId,
-            newLayer)
+            selectedObjs)
 
-        editor.map = {
-            ...editor.map,
-            nextIDs,
-        }
+        state.objectSelection = new Set(result.newIds)
+
+        editor.map = result.map
 
         MapEditor.setupObjectMove(state)
     }

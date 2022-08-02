@@ -134,55 +134,122 @@ export function setRoom(map: Map, roomId: ID.ID, room: Room): Map
 }
 
 
-export function cloneRoom(map: Map, room: Room): [Map, Room]
+export function cloneRooms(
+    map: Map,
+    roomsToBeCloned: Room[],
+    modifyRoom?: (clonedRoom: Room) => Room)
+    : { map: Map, newIds: ID.ID[] }
 {
+    if (roomsToBeCloned.length === 0)
+        return { map, newIds: [] }
+    
     let nextIDs = map.nextIDs
 
-    const [newNextIDs, clonedRoomId] = ID.getNextID(nextIDs)
-    nextIDs = newNextIDs
+    const rooms = { ...map.rooms }
+    const clonedRoomIds: ID.ID[] = []
 
-    const clonedRoom: Room = {
-        ...room,
-        id: clonedRoomId,
-        layers: { ...room.layers },
-    }
-
-    for (const layer of Object.values(clonedRoom.layers))
+    for (const room of roomsToBeCloned)
     {
-        if (layer.type == "object")
+        const [newNextIDs, clonedRoomId] = ID.getNextID(nextIDs)
+        nextIDs = newNextIDs
+
+        let clonedRoom: Room = {
+            ...room,
+            id: clonedRoomId,
+            layers: { ...room.layers },
+        }
+
+        clonedRoomIds.push(clonedRoomId)
+
+        for (const layer of Object.values(clonedRoom.layers))
         {
-            const newLayer: LayerObject = {
-                ...layer,
-                objects: {},
-            }
-
-            for (const obj of Object.values(layer.objects))
+            if (layer.type == "object")
             {
-                const [newNextIDs, clonedObjId] = ID.getNextID(nextIDs)
-                nextIDs = newNextIDs
-
-                const newObject: Obj = {
-                    ...obj,
-                    id: clonedObjId,
+                const newLayer: LayerObject = {
+                    ...layer,
+                    objects: {},
                 }
 
-                newLayer.objects[newObject.id] = newObject
-            }
+                for (const obj of Object.values(layer.objects))
+                {
+                    const [newNextIDs, clonedObjId] = ID.getNextID(nextIDs)
+                    nextIDs = newNextIDs
 
-            clonedRoom.layers[newLayer.layerDefId] = newLayer
+                    const newObject: Obj = {
+                        ...obj,
+                        id: clonedObjId,
+                    }
+
+                    newLayer.objects[newObject.id] = newObject
+                }
+
+                clonedRoom.layers[newLayer.layerDefId] = newLayer
+            }
         }
+        
+        if (modifyRoom)
+            clonedRoom = modifyRoom(clonedRoom)
+
+        rooms[clonedRoomId] = clonedRoom
     }
     
-    const newMap = {
+    map = {
         ...map,
         nextIDs,
-        rooms: {
-            ...map.rooms,
-            [clonedRoom.id]: clonedRoom,
+        rooms,
+    }
+
+    return { map, newIds: clonedRoomIds }
+}
+
+
+export function cloneObjects(
+    map: Map,
+    roomId: ID.ID,
+    layerId: ID.ID,
+    objsToBeCloned: Obj[],
+    modifyObj?: (newObj: Obj) => Obj)
+    : { map: Map, newIds: ID.ID[] }
+{
+    let layer = getRoomLayer(map, roomId, layerId)
+    if (layer?.type !== "object")
+        return { map, newIds: [] }
+
+    let nextIDs = map.nextIDs
+    const clonedObjIds: ID.ID[] = []
+
+    for (const obj of objsToBeCloned)
+    {
+        const [newNextIDs, clonedObjId] = ID.getNextID(nextIDs)
+        nextIDs = newNextIDs
+
+        clonedObjIds.push(clonedObjId)
+    
+        let clonedObj: Obj = {
+            ...obj,
+            id: clonedObjId,
+        }
+
+        if (modifyObj)
+            clonedObj = modifyObj(clonedObj)
+    
+        layer = {
+            ...layer,
+            objects: {
+                ...layer.objects,
+                [clonedObjId]: clonedObj,
+            }
         }
     }
 
-    return [newMap, clonedRoom]
+    map = {
+        ...map,
+        nextIDs,
+    }
+
+    map = setRoomLayer(map, roomId, layer.layerDefId, layer)
+
+    return { map, newIds: clonedObjIds }
 }
 
 
