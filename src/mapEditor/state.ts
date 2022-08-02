@@ -592,8 +592,10 @@ export function onMouseDown(state: State, ev: MouseEvent)
         else
         {
             const hoverRoom = getRoomAt(state, state.mouse.pos)
+            const hoverObject = getObjectAt(state, state.mouse.posInRoom)
 
-            if (hoverRoom && hoverRoom.id !== state.roomId)
+            if (hoverRoom && hoverRoom.id !== state.roomId &&
+                !hoverObject)
             {
                 state.roomId = hoverRoom.id
             }
@@ -615,8 +617,6 @@ export function onMouseDown(state: State, ev: MouseEvent)
                 }
                 else if (editingLayerDef && editingLayerDef.type === "object")
                 {
-                    const hoverObject = getObjectAt(state, state.mouse.posInRoom)
-                    
                     if (!ev.ctrlKey &&
                         (!hoverObject || !state.objectSelection.has(hoverObject.id)))
                     {
