@@ -35,13 +35,21 @@ export function DefsTileBrushes(props: {
 
     const setBrush = (brushDef: Defs.DefTileBrush) =>
     {
-        setDefs(defs => ({
-            ...defs,
-            tileBrushDefs: Hierarchy.setItem(
+        setDefs(defs =>
+        {
+            const tileBrushDefs = Hierarchy.setItem(
                 defs.tileBrushDefs,
                 curBrushIndex,
-                brushDef),
-        }))
+                brushDef)
+    
+            if (tileBrushDefs === defs.tileBrushDefs)
+                return defs
+            
+            return {
+                ...defs,
+                tileBrushDefs,
+            }
+        })
     }
 
 
@@ -60,8 +68,6 @@ export function DefsTileBrushes(props: {
         if (!curBrush || !curTileset || !curTilesetImg)
             return
 
-        ctx.strokeStyle = "#ccc"
-        
         ctx.textAlign = "center"
         ctx.textBaseline = "middle"
         ctx.font = "900 " + (curTileset.gridCellHeight * 0.75) + "px system-ui"
@@ -74,6 +80,7 @@ export function DefsTileBrushes(props: {
                 y + curTileset.gridCellHeight <= curTilesetImg.height;
                 y += curTileset.gridCellHeight + curTileset.gridGapY)
             {
+                ctx.strokeStyle = "#ccc"
                 ctx.strokeRect(
                     x, y,
                     curTileset.gridCellWidth, curTileset.gridCellHeight)
@@ -89,17 +96,65 @@ export function DefsTileBrushes(props: {
                     curBrush,
                     tileIndex)
 
+                ctx.fillStyle = "#f008"
+                ctx.strokeStyle = "#fd8"
+                
                 for (let cx = 0; cx < 3; cx++)
                 for (let cy = 0; cy < 3; cy++)
                 {
-                    if (data.connections[cx + cy * 3])
+                    const c = data.connections[cx + cy * 3]
+
+                    const x1 = x + (cx + 0) * curTileset.gridCellWidth / 3
+                    const x2 = x + (cx + 1) * curTileset.gridCellWidth / 3
+                    const y1 = y + (cy + 0) * curTileset.gridCellHeight / 3
+                    const y2 = y + (cy + 1) * curTileset.gridCellHeight / 3
+                    const w = curTileset.gridCellWidth / 3
+                    const h = curTileset.gridCellHeight / 3
+
+                    if (c === Defs.BrushTileType.Full)
                     {
-                        ctx.fillStyle = "#f008"
-                        ctx.fillRect(
-                            x + cx * curTileset.gridCellWidth / 3,
-                            y + cy * curTileset.gridCellHeight / 3,
-                            curTileset.gridCellWidth / 3,
-                            curTileset.gridCellHeight / 3)
+                        ctx.fillRect(x1, y1, w, h)
+                        ctx.strokeRect(x1, y1, w, h)
+                    }
+                    else if (c === Defs.BrushTileType.DiagonalUL)
+                    {
+                        ctx.beginPath()
+                        ctx.moveTo(x1, y1)
+                        ctx.lineTo(x2, y1)
+                        ctx.lineTo(x1, y2)
+                        ctx.lineTo(x1, y1)
+                        ctx.fill()
+                        ctx.stroke()
+                    }
+                    else if (c === Defs.BrushTileType.DiagonalUR)
+                    {
+                        ctx.beginPath()
+                        ctx.moveTo(x2, y1)
+                        ctx.lineTo(x2, y2)
+                        ctx.lineTo(x1, y1)
+                        ctx.lineTo(x2, y1)
+                        ctx.fill()
+                        ctx.stroke()
+                    }
+                    else if (c === Defs.BrushTileType.DiagonalDL)
+                    {
+                        ctx.beginPath()
+                        ctx.moveTo(x1, y2)
+                        ctx.lineTo(x1, y1)
+                        ctx.lineTo(x2, y2)
+                        ctx.lineTo(x1, y2)
+                        ctx.fill()
+                        ctx.stroke()
+                    }
+                    else if (c === Defs.BrushTileType.DiagonalDR)
+                    {
+                        ctx.beginPath()
+                        ctx.moveTo(x2, y2)
+                        ctx.lineTo(x1, y2)
+                        ctx.lineTo(x2, y1)
+                        ctx.lineTo(x2, y2)
+                        ctx.fill()
+                        ctx.stroke()
                     }
                 }
             }
@@ -112,10 +167,13 @@ export function DefsTileBrushes(props: {
     {
         if (!curBrush || !curTileset)
             return
-        
-        let erasing: boolean | null = null
 
         let originalBrush = curBrush
+        
+        let drawnMultiple = false
+        let lastDrawnTileIndex: number | null = null
+        let lastDrawnConnection: number | null = null
+        let erasing: boolean | null = null
 
         state.onMouseMove = (state: UI.ImageViewState) =>
         {
@@ -133,36 +191,68 @@ export function DefsTileBrushes(props: {
                 curTileset,
                 tileIndex)
                 
-            const quadrantX = Math.min(2, Math.floor(
+            const connectionX = Math.min(2, Math.floor(
                 (state.mouse.pos.x - tilePx.x) / (curTileset.gridCellWidth / 3)))
                 
-            const quadrantY = Math.min(2, Math.floor(
+            const connectionY = Math.min(2, Math.floor(
                 (state.mouse.pos.y - tilePx.y) / (curTileset.gridCellHeight / 3)))
 
-            const quadrant = quadrantX + quadrantY * 3
+            const connection = connectionX + connectionY * 3
+
+            const subquadrantX = Math.min(2, Math.floor(
+                (state.mouse.pos.x - tilePx.x) % (curTileset.gridCellWidth / 3) / (curTileset.gridCellWidth / 9)))
+            
+            const subquadrantY = Math.min(2, Math.floor(
+                (state.mouse.pos.y - tilePx.y) % (curTileset.gridCellHeight / 3) / (curTileset.gridCellHeight / 9)))
             
             let data = Defs.getTileBrushData(
                 originalBrush,
                 tileIndex)
 
             if (erasing === null)
-                erasing = data.connections[quadrant]
+                erasing = data.connections[connection] !== Defs.BrushTileType.None
 
-            data = {
-                ...data,
-                connections: [
-                    ...data.connections.slice(0, quadrant),
-                    !erasing,
-                    ...data.connections.slice(quadrant + 1),
-                ] as Defs.DefTileBrush["tiles"][number]["connections"]
-            }
+            const brushType =
+                erasing ?
+                    Defs.BrushTileType.None :
+                !drawnMultiple && subquadrantX === 0 && subquadrantY === 0 ?
+                    Defs.BrushTileType.DiagonalUL :
+                !drawnMultiple && subquadrantX === 2 && subquadrantY === 0 ?
+                    Defs.BrushTileType.DiagonalUR :
+                !drawnMultiple && subquadrantX === 0 && subquadrantY === 2 ?
+                    Defs.BrushTileType.DiagonalDL :
+                !drawnMultiple && subquadrantX === 2 && subquadrantY === 2 ?
+                    Defs.BrushTileType.DiagonalDR :
+                Defs.BrushTileType.Full
 
-            originalBrush = Defs.setTileBrushData(
+            originalBrush = Defs.setTileBrushConnection(
                 originalBrush,
                 tileIndex,
-                data)
+                connection,
+                brushType)
+
+            if (!erasing &&
+                !drawnMultiple &&
+                lastDrawnTileIndex !== null &&
+                lastDrawnConnection !== null)
+            {
+                if (tileIndex !== lastDrawnTileIndex ||
+                    connection !== lastDrawnConnection)
+                {
+                    drawnMultiple = true
+                    
+                    originalBrush = Defs.setTileBrushConnection(
+                        originalBrush,
+                        lastDrawnTileIndex,
+                        lastDrawnConnection,
+                        Defs.BrushTileType.Full)
+                }
+            }
 
             setBrush(originalBrush)
+
+            lastDrawnTileIndex = tileIndex
+            lastDrawnConnection = connection
         }
 
         state.onMouseUp = () =>

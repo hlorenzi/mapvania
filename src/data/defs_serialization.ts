@@ -282,7 +282,7 @@ function deserializeTileBrush(
     serTileBrush: Defs.DefTileBrush)
     : Defs.DefTileBrush
 {
-    return {
+    const brush: Defs.DefTileBrush = {
         id: serTileBrush.id,
         name: serTileBrush.name ?? "",
         folder: serTileBrush.folder ?? [],
@@ -290,6 +290,20 @@ function deserializeTileBrush(
         tilesetDefId: serTileBrush.tilesetDefId ?? "",
         tiles: serTileBrush.tiles ?? {},
     }
+
+    for (const tile of Object.values(brush.tiles))
+    {
+        delete (tile as any).neighbors
+        delete (tile as any).type
+
+        if (typeof tile.connections[0] === "boolean")
+        {
+            tile.connections = tile.connections.map(
+                c => !!c ? Defs.BrushTileType.Full : Defs.BrushTileType.None) as Defs.BrushTileConnections
+        }
+    }
+
+    return brush
 }
 
 

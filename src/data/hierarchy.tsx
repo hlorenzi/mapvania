@@ -34,6 +34,9 @@ export function setItem<T extends Item>(
 {
     if (index < 0)
         return items
+
+    if (items[index] === item)
+        return items
     
     return [
         ...items.slice(0, index),

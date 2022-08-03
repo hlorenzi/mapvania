@@ -105,25 +105,37 @@ export interface DefTileBrush
     tilesetDefId: ID.ID
 
     tiles: {
-        [stringifiedTileIndex: string]: {
-            type: BrushTileType
-            connections: [
-                boolean, boolean, boolean,
-                boolean, boolean, boolean,
-                boolean, boolean, boolean,
-            ]
-            neighbors: [
-                BrushTileType,
-                BrushTileType,
-                BrushTileType,
-                BrushTileType,
-            ]
-        }
+        [stringifiedTileIndex: string]: BrushTileData
     }
 }
 
 
-export type BrushTileType = "rect" | "diagUL" | "diagUR" | "diagDL" | "diagDR"
+export enum BrushTileType
+{
+    None = 0,
+    Full = 1,
+
+    DiagonalStart = 2,
+    DiagonalUL = 2,
+    DiagonalUR = 3,
+    DiagonalDL = 4,
+    DiagonalDR = 5,
+    DiagonalEnd = 5,
+}
+
+
+export type BrushTileData =
+{
+    connections: BrushTileConnections
+}
+
+
+export type BrushTileConnections =
+[
+    BrushTileType, BrushTileType, BrushTileType,
+    BrushTileType, BrushTileType, BrushTileType,
+    BrushTileType, BrushTileType, BrushTileType,
+]
 
 
 export interface DefObject
@@ -400,49 +412,68 @@ export function setTileAttributesForTile(
 export function getTileBrushData(
     brush: DefTileBrush,
     tileIndex: number)
-    : DefTileBrush["tiles"][number]
+    : BrushTileData
 {
     const data = brush.tiles[tileIndex.toString()]
     if (data === undefined)
         return {
-            type: "rect",
             connections: [
-                false, false, false,
-                false, false, false,
-                false, false, false,
+                BrushTileType.None, BrushTileType.None, BrushTileType.None,
+                BrushTileType.None, BrushTileType.None, BrushTileType.None,
+                BrushTileType.None, BrushTileType.None, BrushTileType.None,
             ],
-            neighbors: [
-                "rect",
-                "rect",
-                "rect",
-                "rect",
-            ]
         }
         
     return data
 }
 
 
-export function setTileBrushData(
+export function setTileBrushConnection(
     brush: DefTileBrush,
     tileIndex: number,
-    data: DefTileBrush["tiles"][number])
+    connection: number,
+    type: BrushTileType)
     : DefTileBrush
 {
     const key = tileIndex.toString()
 
-    const tiles = {
-        ...brush.tiles,
-        [key]: data,
+    let data = brush.tiles[key]
+
+    if (data && data.connections[connection] === type)
+        return brush
+    
+    if (!data)
+    {
+        data = {
+            connections: [
+                BrushTileType.None, BrushTileType.None, BrushTileType.None,
+                BrushTileType.None, BrushTileType.None, BrushTileType.None,
+                BrushTileType.None, BrushTileType.None, BrushTileType.None,
+            ]
+        }
     }
 
-    if (data.connections.every(c => !c))
-        delete tiles[key]
+    data = {
+        ...data,
+        connections: [
+            ...data.connections.slice(0, connection),
+            type,
+            ...data.connections.slice(connection + 1),
+        ] as BrushTileConnections
+    }
 
-    return {
+    brush = {
         ...brush,
-        tiles,
+        tiles: {
+            ...brush.tiles,
+            [key]: data,
+        }
     }
+
+    if (data.connections.every(c => c === BrushTileType.None))
+        delete brush.tiles[key]
+
+    return brush
 }
 
 
@@ -465,14 +496,25 @@ export function getTileBrushTopmostLeftmostTile(
 
 export function getTileBrushDefaultTile(
     defs: Defs,
-    brush: DefTileBrush)
+    brush: DefTileBrush,
+    type: BrushTileType)
     : number | undefined
 {
-    const tile = getMatchingTileInTileBrush(
-        defs, brush,
-        [false, false, false,
-        false, true, false,
-        false, false, false])
+    let tile = getTileWithCenterTypeInTileBrush(
+        defs,
+        brush,
+        type)
+
+    if (tile !== undefined)
+        return tile
+
+    if (type !== BrushTileType.Full)
+    {
+        tile = getTileWithCenterTypeInTileBrush(
+            defs,
+            brush,
+            BrushTileType.Full)
+    }
 
     if (tile !== undefined)
         return tile
@@ -484,49 +526,128 @@ export function getTileBrushDefaultTile(
 }
 
 
-export function isTileInTileBrush(
+export function getTileTypeInTileBrush(
     defs: Defs,
     brush: DefTileBrush,
     tileIndex: number)
-    : boolean
+    : BrushTileType
 {
     const data = getTileBrushData(brush, tileIndex)
     if (data === undefined)
-        return false
+        return BrushTileType.None
 
-    return data.connections.some(c => c)
+    return data.connections[4]
 }
 
 
-export function getMatchingTileInTileBrush(
+export function getTileWithCenterTypeInTileBrush(
     defs: Defs,
     brush: DefTileBrush,
-    connections: DefTileBrush["tiles"][string]["connections"])
+    centerType: BrushTileType)
     : number | undefined
 {
     const matches: { score: number, tileIndex: number }[] = []
 
-    for (const [key, value] of Object.entries(brush.tiles))
+    for (const [tileIndexKey, data] of Object.entries(brush.tiles))
     {
-        // Prioritize 4-way connection
-        if ([1, 3, 5, 7].some(c => connections[c] !== value.connections[c]))
-            continue
+        const tileIndex = parseInt(tileIndexKey)
 
         let score = 0
 
-        for (const c of [0, 2, 6, 8])
+        // Add score for center piece
+        if (data.connections[4] === centerType)
+            score += 10000
+
+        // Add score for other connections
+        for (const c of [0, 1, 2, 3, 5, 6, 7, 8])
         {
-            if (connections[c] === value.connections[c])
-                score++
+            if (data.connections[c] === BrushTileType.None)
+                score += 100
         }
 
-        const tileIndex = parseInt(key)
         matches.push({
             score,
             tileIndex,
         })
     }
 
+    if (matches.length == 0)
+        return undefined
+
+    matches.sort((a, b) => b.score - a.score)
+    return matches[0].tileIndex
+}
+
+
+export function getMatchingTileInTileBrush(
+    defs: Defs,
+    brush: DefTileBrush,
+    desiredConnections: BrushTileConnections)
+    : number | undefined
+{
+    const matches: { score: number, tileIndex: number }[] = []
+
+    for (const [tileIndexKey, data] of Object.entries(brush.tiles))
+    {
+        if (data.connections[4] !== desiredConnections[4])
+            continue
+
+        let score = 0
+
+        let matched4Way = true
+
+        // Prioritize 4-way connection
+        for (const c of [1, 3, 5, 7])
+        {
+            if (data.connections[c] === desiredConnections[c])
+            {
+                score += 100000
+                continue
+            }
+
+            if (desiredConnections[c] === BrushTileType.Full &&
+                data.connections[c] !== BrushTileType.None)
+            {
+                score += 10000
+                continue
+            }
+
+            if (data.connections[c] === BrushTileType.Full &&
+                desiredConnections[c] !== BrushTileType.None)
+            {
+                score += 1000
+                continue
+            }
+
+            matched4Way = false
+        }
+
+        if (!matched4Way)
+            continue
+
+        // Add score for diagonal connections
+        for (const c of [0, 2, 6, 8])
+        {
+            if (data.connections[c] === desiredConnections[c])
+                score += 1000
+
+            else if (data.connections[c] === BrushTileType.Full &&
+                desiredConnections[c] !== BrushTileType.None)
+                score += 100
+
+            else if (desiredConnections[c] === BrushTileType.Full &&
+                data.connections[c] !== BrushTileType.None)
+                score += 10
+        }
+
+        const tileIndex = parseInt(tileIndexKey)
+
+        matches.push({
+            score,
+            tileIndex,
+        })
+    }
+    
     if (matches.length == 0)
         return undefined
 
