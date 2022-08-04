@@ -8,9 +8,11 @@ import * as Images from "../data/images"
 import * as MapEditor from "../mapEditor"
 import * as UI from "../ui"
 import { global } from "../global"
+import { InputObjectPicker } from "./InputObjectPicker"
 
 
 export function ObjectInheritanceList(props: {
+    defs: Defs.Defs,
     value: Defs.DefObject["inheritPropertiesFromObjectDefs"],
     onChange: (newList: Defs.DefObject["inheritPropertiesFromObjectDefs"]) => void,
 })
@@ -40,7 +42,7 @@ export function ObjectInheritanceList(props: {
         ])
     }
 
-    return <UI.Grid template="auto 1fr">
+    return <UI.Grid template="auto 1fr" alignCenter>
 
         { props.value.map((id, i) =>
             <React.Fragment key={ i }>
@@ -51,14 +53,12 @@ export function ObjectInheritanceList(props: {
                     />
                 </UI.Cell>
 
-                <UI.Cell justifyStretch>
-                    <UI.Input
-                        value={ id }
-                        onChange={ value => set(i, value) }
-                        placeholder="Parent Object ID"
-                        fullWidth
-                    />
-                </UI.Cell>
+                <InputObjectPicker
+                    defs={ props.defs }
+                    value={ id }
+                    onChange={ value => set(i, value) }
+                    header="Select a parent object"
+                />
 
             </React.Fragment>
         )}

@@ -8,6 +8,7 @@ import * as UI from "../ui"
 import { global } from "../global"
 import styled from "styled-components"
 import { useCachedState } from "../util/useCachedState"
+import { InputTilesetPicker } from "./InputTilesetPicker"
 
 
 export function DefsTileBrushes(props: {
@@ -312,15 +313,15 @@ export function DefsTileBrushes(props: {
 
                 <UI.Cell span={ 2 } divider/>
 
-                <UI.Cell justifyEnd>
-                    Tileset ID
+                <UI.Cell justifyEnd alignCenter>
+                    Tileset
                 </UI.Cell>
 
                 <UI.Cell justifyStretch>
-                    <UI.Input
+                    <InputTilesetPicker
+                        defs={ defs }
                         value={ curBrush.tilesetDefId }
                         onChange={ (value) => setBrush({ ...curBrush, tilesetDefId: value }) }
-                        fullWidth
                     />
                 </UI.Cell>
             

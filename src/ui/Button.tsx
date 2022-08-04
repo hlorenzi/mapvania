@@ -5,18 +5,18 @@ import styled from "styled-components"
 const StyledButton = styled.button<{
     fullWidth: boolean,
     selected: boolean,
+    backgroundColor: string,
 }>`
     font-size: 1em;
     font-family: inherit;
     color: inherit;
-    background-color: transparent;
+    background-color: ${ props => props.backgroundColor };
 
     justify-self: stretch;
 
     ${ props => props.fullWidth ? "width: 100%;" : "" }
     min-width: 1em;
     
-    background-color: transparent;
     box-sizing: border-box;
     border: ${ props => props.selected ? "1px solid #ffffff" : "1px solid transparent" };
     outline: none;
@@ -42,6 +42,7 @@ export function Button(props: {
     disabled?: boolean,
     selected?: boolean,
     fullWidth?: boolean,
+    backgroundColor?: string,
     style?: React.CSSProperties,
 })
 {
@@ -52,6 +53,7 @@ export function Button(props: {
         disabled={ props.disabled }
         selected={ !!props.selected }
         fullWidth={ !!props.fullWidth }
+        backgroundColor={ props.backgroundColor ?? "transparent" }
         style={ props.style }
     >
         { props.children ?? props.label }

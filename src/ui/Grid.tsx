@@ -52,6 +52,7 @@ export function Grid(props: {
     template?: string,
     templateRows?: string,
     alignStart?: boolean,
+    alignCenter?: boolean,
     maxWidth?: string,
     fullHeight?: boolean,
     style?: React.CSSProperties,
@@ -61,7 +62,11 @@ export function Grid(props: {
         cols={ props.cols }
         template={ props.template }
         templateRows={ props.templateRows ?? "auto" }
-        alignItems={ props.alignStart ? "start" : "baseline" }
+        alignItems={
+            props.alignStart ? "start" :
+            props.alignCenter ? "center" :
+            "baseline"
+        }
         fullHeight={ !!props.fullHeight }
         maxWidth={ props.maxWidth }
         style={ props.style }
@@ -74,12 +79,14 @@ export function Grid(props: {
 const StyledCell = styled.div<{
     span: number | string,
     justifySelf: string,
+    alignSelf: string,
     textAlign: string,
     fullHeight: boolean,
 }>`
     grid-column-start: auto;
     grid-column-end: span ${ props => props.span };
     justify-self: ${ props => props.justifySelf };
+    align-self: ${ props => props.alignSelf };
     text-align: ${ props => props.textAlign };
 
     ${ props => props.fullHeight ?
@@ -106,6 +113,7 @@ export function Cell(props: {
     justifyCenter?: boolean,
     justifyEnd?: boolean,
     justifyStretch?: boolean,
+    alignCenter?: boolean,
     fullHeight?: boolean,
     divider?: boolean,
     style?: React.CSSProperties,
@@ -118,6 +126,10 @@ export function Cell(props: {
         props.justifyStretch ? "stretch" :
         "inherit"
 
+    const alignSelf =
+        props.alignCenter ? "center" :
+        "inherit"
+
     const textAlign =
         props.justifyCenter ? "center" :
         props.justifyEnd ? "right" :
@@ -127,6 +139,7 @@ export function Cell(props: {
     return <StyledCell
         span={ props.span ?? (!!props.fill ? "main-end" : 1) }
         justifySelf={ justifySelf }
+        alignSelf={ alignSelf }
         textAlign={ textAlign }
         fullHeight={ !!props.fullHeight }
         style={ props.style }

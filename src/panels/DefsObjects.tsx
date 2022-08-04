@@ -342,6 +342,7 @@ export function DefsObjects(props: {
 
                     <UI.Cell span={ 2 } justifyStretch>
                         <ObjectInheritanceList
+                            defs={ defs }
                             value={ curObject.inheritPropertiesFromObjectDefs }
                             onChange={ (value) => set({ ...curObject, inheritPropertiesFromObjectDefs: value }) }
                         />
