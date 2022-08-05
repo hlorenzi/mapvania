@@ -18,10 +18,6 @@ export function ModalObjectPicker(props: {
     onChange?: (newValue: ID.ID) => void,
 })
 {
-    const [state, setState] = React.useState(
-        UI.makeHierarchicalListState())
-
-
     const onChangeInner = (id: ID.ID) =>
     {
         if (id.startsWith(Hierarchy.FOLDER_ID_PREFIX))
@@ -46,8 +42,6 @@ export function ModalObjectPicker(props: {
                     items={ props.defs.objectDefs }
                     value={ props.value }
                     onChange={ onChangeInner }
-                    state={ state }
-                    setState={ setState }
                     getItemIcon={ item => Defs.getObjectDefIconElement(item) }
                     getItemLabel={ item => item.name }
                 />

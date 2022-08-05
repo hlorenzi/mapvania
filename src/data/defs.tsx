@@ -765,3 +765,28 @@ export function getObjectDefIconElement(objectDef: DefObject): React.ReactNode |
         </div>
     </div>
 }
+
+
+export function getImageIconElement(rootRelativePath: string): React.ReactNode | null
+{
+    const image = Images.getImageLazy(rootRelativePath)
+    if (!image)
+        return <span/>
+
+    return <div style={{
+        objectFit: "contain",
+        display: "inline-block",
+    }}>
+        <div style={{
+            width: Math.min(64, image.width) + "px",
+            height: Math.min(64, image.height) + "px",
+            overflow: "hidden",
+        }}>
+            <img
+                draggable="false"
+                src={ image.element.src }
+                style={{
+            }}/>
+        </div>
+    </div>
+}

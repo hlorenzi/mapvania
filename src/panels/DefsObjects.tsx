@@ -10,6 +10,7 @@ import { global } from "../global"
 import { PropertyDefsPanel } from "./PropertyDefsPanel"
 import styled from "styled-components"
 import { useCachedState } from "../util/useCachedState"
+import { InputImagePicker } from "./InputImagePicker"
 import { ObjectInheritanceList } from "./ObjectInheritanceList"
 
 
@@ -61,22 +62,18 @@ export function DefsObjects(props: {
     }
 
 
-    const loadImage = async () =>
+    const chooseImage = async (rootRelativePath: string) =>
     {
         if (!curObject)
             return
 
-        const imageRootRelativePath = await Filesystem.showImagePicker()
-        if (!imageRootRelativePath)
-            return
-
-        const image = await Images.loadImage(imageRootRelativePath)
+        const image = await Images.loadImage(rootRelativePath)
         if (!image)
             return
 
         set({
             ...curObject,
-            imageSrc: imageRootRelativePath,
+            imageSrc: rootRelativePath,
             imageRect: {
                 x: 0,
                 y: 0,
@@ -231,10 +228,14 @@ export function DefsObjects(props: {
 
                     <UI.Cell span={ 2 } divider/>
 
-                    <UI.Cell span={ 2 } justifyCenter>
-                        <UI.Button
-                            label="⛰️ Load Image..."
-                            onClick={ loadImage }
+                    <UI.Cell justifyEnd alignCenter>
+                        Image
+                    </UI.Cell>
+
+                    <UI.Cell justifyStretch>
+                        <InputImagePicker
+                            value={ curObject.imageSrc }
+                            onChange={ chooseImage }
                         />
                     </UI.Cell>
                     

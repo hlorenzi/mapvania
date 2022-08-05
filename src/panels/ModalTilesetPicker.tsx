@@ -18,10 +18,6 @@ export function ModalTilesetPicker(props: {
     onChange?: (newValue: ID.ID) => void,
 })
 {
-    const [state, setState] = React.useState(
-        UI.makeHierarchicalListState())
-
-
     const onChangeInner = (id: ID.ID) =>
     {
         if (id.startsWith(Hierarchy.FOLDER_ID_PREFIX))
@@ -46,8 +42,6 @@ export function ModalTilesetPicker(props: {
                     items={ props.defs.tilesetDefs }
                     value={ props.value }
                     onChange={ onChangeInner }
-                    state={ state }
-                    setState={ setState }
                     getItemIcon={ item => Defs.getTilesetDefIconElement(item) }
                     getItemLabel={ item => item.name }
                 />

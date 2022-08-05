@@ -7,6 +7,8 @@ export const DIRECTORY_SEPARATOR = "/"
 export const DEFS_EXTENSION = ".defs.json"
 export const MAP_EXTENSION = ".map.json"
 export const DEV_FILENAME = "dev.json"
+export const BUILTIN_IMAGE_PREFIX = ":"
+export const BUILTIN_IMAGE_SEPARATOR = ":"
 
 
 export interface Global

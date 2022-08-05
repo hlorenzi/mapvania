@@ -183,8 +183,8 @@ export function HierarchicalList<T extends Hierarchy.Item>(props: {
     setItems?: (fn: (old: Hierarchy.Items<T>) => Hierarchy.Items<T>) => void,
     value?: string,
     onChange?: (id: string) => void,
-    state: HierarchicalListState,
-    setState: React.Dispatch<React.SetStateAction<HierarchicalListState>>,
+    state?: HierarchicalListState,
+    setState?: React.Dispatch<React.SetStateAction<HierarchicalListState>>,
     getItemIcon: (item: T) => React.ReactNode,
     getItemLabel: (item: T) => string,
     createItem?: () => T,
@@ -194,14 +194,20 @@ export function HierarchicalList<T extends Hierarchy.Item>(props: {
     style?: React.CSSProperties,
 })
 {
+    const [stateInner, setStateInner] = React.useState(makeHierarchicalListState())
+
+    const state = props.state ?? stateInner
+    const setState = props.setState ?? setStateInner
+
+
     const scrollParentRef = React.useRef<HTMLDivElement>(null)
 
 
     const currentItemsAndSubfolders = React.useMemo(() =>
         Hierarchy.getItemsAndSubfoldersAt(
             props.items,
-            props.state.currentFolder)
-    , [props.items, props.state.currentFolder.join(Hierarchy.FOLDER_SEPARATOR)])
+            state.currentFolder)
+    , [props.items, state.currentFolder.join(Hierarchy.FOLDER_SEPARATOR)])
 
 
     const [curDragOverId, setCurDragOverId] = React.useState("")
@@ -212,7 +218,7 @@ export function HierarchicalList<T extends Hierarchy.Item>(props: {
         if (props.onChange)
             props.onChange(id)
         
-        props.setState(s =>
+        setState(s =>
         {
             let selectedIds = s.selectedIds
 
@@ -256,14 +262,14 @@ export function HierarchicalList<T extends Hierarchy.Item>(props: {
             return
         
         const newItem = props.createItem()
-        newItem.folder = props.state.currentFolder
+        newItem.folder = state.currentFolder
 
         props.setItems?.(items => [
             ...items,
             newItem,
         ])
 
-        props.setState(s => ({
+        setState(s => ({
             ...s,
             lastSelectedId: newItem.id,
             selectedIds: new Set([newItem.id]),
@@ -277,7 +283,7 @@ export function HierarchicalList<T extends Hierarchy.Item>(props: {
     const onRemove = () =>
     {
         props.setItems?.(items =>
-            items.filter(i => !props.state.selectedIds.has(i.id)))
+            items.filter(i => !state.selectedIds.has(i.id)))
     }
 
 
@@ -285,8 +291,8 @@ export function HierarchicalList<T extends Hierarchy.Item>(props: {
     {
         props.setItems?.(items => Hierarchy.shiftItems(
             items,
-            props.state.currentFolder,
-            props.state.selectedIds,
+            state.currentFolder,
+            state.selectedIds,
             -1))
     }
 
@@ -295,15 +301,15 @@ export function HierarchicalList<T extends Hierarchy.Item>(props: {
     {
         props.setItems?.(items => Hierarchy.shiftItems(
             items,
-            props.state.currentFolder,
-            props.state.selectedIds,
+            state.currentFolder,
+            state.selectedIds,
             1))
     }
 
 
     const onMoveUpOneFolderLevel = () =>
     {
-        props.setState(s => ({
+        setState(s => ({
             ...s,
             currentFolder: s.currentFolder.slice(0, s.currentFolder.length - 1),
             selectedIds: new Set(),
@@ -313,7 +319,7 @@ export function HierarchicalList<T extends Hierarchy.Item>(props: {
 
     const onEnterFolder = (folder: string[]) =>
     {
-        props.setState(s => ({
+        setState(s => ({
             ...s,
             currentFolder: folder,
             selectedIds: new Set(),
@@ -343,8 +349,8 @@ export function HierarchicalList<T extends Hierarchy.Item>(props: {
 
         props.setItems?.(items => Hierarchy.moveItems(
             items,
-            props.state.currentFolder,
-            props.state.selectedIds,
+            state.currentFolder,
+            state.selectedIds,
             id === DRAGOVER_ID_LAST ? items[items.length - 1].id : id,
             id === DRAGOVER_ID_LAST))
     }
@@ -370,7 +376,7 @@ export function HierarchicalList<T extends Hierarchy.Item>(props: {
         if (props.value === undefined)
             return
 
-        props.setState(s => ({
+        setState(s => ({
             ...s,
             lastSelectedId: props.value!,
             selectedIds: new Set([props.value!]),
@@ -388,7 +394,7 @@ export function HierarchicalList<T extends Hierarchy.Item>(props: {
 
         const onScroll = (ev: Event) =>
         {
-            props.setState(s => ({
+            setState(s => ({
                 ...s,
                 scrollTop: elem.scrollTop,
             }))
@@ -407,7 +413,7 @@ export function HierarchicalList<T extends Hierarchy.Item>(props: {
         if (!elem)
             return
 
-        elem.scrollTop = props.state.scrollTop
+        elem.scrollTop = state.scrollTop
 
     }, [])
 
@@ -450,7 +456,7 @@ export function HierarchicalList<T extends Hierarchy.Item>(props: {
         
         { !!props.disallowFolders ||
             (!props.setItems &&
-            props.state.currentFolder.length === 0 &&
+            state.currentFolder.length === 0 &&
             !("isFolder" in currentItemsAndSubfolders[0])) ?
             <div/>
         :
@@ -459,7 +465,7 @@ export function HierarchicalList<T extends Hierarchy.Item>(props: {
                 <Button
                     label={
                         "◀ 📁 " +
-                        props.state.currentFolder.join("/") + "/"
+                        state.currentFolder.join("/") + "/"
                     }
                     title="Go to parent folder"
                     onClick={ onMoveUpOneFolderLevel }
@@ -485,7 +491,7 @@ export function HierarchicalList<T extends Hierarchy.Item>(props: {
                         onClick={ ev => onSelectItem(item.id, ev.ctrlKey, ev.shiftKey) }
                         onDoubleClick={ () => onEnterFolder(item.folder) }
                         onDragOver={ ev => onDragOver(ev, item.id) }
-                        selected={ props.state.selectedIds.has(item.id) }
+                        selected={ state.selectedIds.has(item.id) }
                         dragOver={ curDragOverId === item.id }
                         dragOverAfter={ curDragOverId === DRAGOVER_ID_LAST && item === currentItemsAndSubfolders[currentItemsAndSubfolders.length - 1] }
                     >
@@ -508,7 +514,7 @@ export function HierarchicalList<T extends Hierarchy.Item>(props: {
                         onDragStart={ ev => onDragStart(ev, item.id) }
                         onDragOver={ ev => onDragOver(ev, item.id) }
                         onDrop={ ev => onDrop(ev, item.id) }
-                        selected={ props.state.selectedIds.has(item.id) }
+                        selected={ state.selectedIds.has(item.id) }
                         dragOver={ curDragOverId === item.id }
                         dragOverAfter={ curDragOverId === DRAGOVER_ID_LAST && item === currentItemsAndSubfolders[currentItemsAndSubfolders.length - 1] }
                     >

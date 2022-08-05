@@ -1,3 +1,4 @@
+import * as Hierarchy from "../data/hierarchy"
 import { RefreshToken } from "../util/refreshToken"
 import { global } from "../global"
 import * as Filesystem from "./filesystem"
@@ -20,6 +21,104 @@ export interface Image
     width: number
     height: number
     element: HTMLImageElement
+}
+
+
+export interface BuiltinImageItem extends Hierarchy.Item
+{
+    name: string
+}
+
+
+export const builtinImages: BuiltinImageItem[] =
+[
+    { name: "circle", id: "obj/circle.png" },
+    { name: "square", id: "obj/square.png" },
+    { name: "diamond", id: "obj/diamond.png" },
+    { name: "dot", id: "obj/dot.png" },
+    { name: "block", id: "obj/block.png" },
+
+    { name: "plus", id: "obj/plus.png" },
+    { name: "triangleU", id: "obj/triangleU.png" },
+    { name: "triangleR", id: "obj/triangleR.png" },
+    { name: "triangleD", id: "obj/triangleD.png" },
+    { name: "triangleL", id: "obj/triangleL.png" },
+
+    { name: "minus", id: "obj/minus.png" },
+    { name: "arrowU", id: "obj/arrowU.png" },
+    { name: "arrowR", id: "obj/arrowR.png" },
+    { name: "arrowD", id: "obj/arrowD.png" },
+    { name: "arrowL", id: "obj/arrowL.png" },
+    
+    { name: "xmark", id: "obj/xmark.png" },
+    { name: "corners", id: "obj/corners.png" },
+    { name: "crosshairs", id: "obj/crosshairs.png" },
+    { name: "swirl", id: "obj/swirl.png" },
+    { name: "sparkle", id: "obj/sparkle.png" },
+
+    { name: "coin", id: "obj/coin.png" },
+    { name: "gem", id: "obj/gem.png" },
+    { name: "crown", id: "obj/crown.png" },
+    { name: "heart", id: "obj/heart.png" },
+    { name: "star", id: "obj/star.png" },
+
+    { name: "smiley", id: "obj/smiley.png" },
+    { name: "baddie", id: "obj/baddie.png" },
+    { name: "skull", id: "obj/skull.png" },
+    { name: "shock", id: "obj/shock.png" },
+    { name: "fire", id: "obj/fire.png" },
+
+    { name: "key", id: "obj/key.png" },
+    { name: "keyhole", id: "obj/keyhole.png" },
+    { name: "flag", id: "obj/flag.png" },
+    { name: "exclamation", id: "obj/exclamation.png" },
+    { name: "question", id: "obj/question.png" },
+    
+    { name: "1", id: "obj/1.png" },
+    { name: "2", id: "obj/2.png" },
+    { name: "3", id: "obj/3.png" },
+    { name: "4", id: "obj/4.png" },
+    { name: "e", id: "obj/e.png" },
+]
+
+
+export const standardTintColors: string[] = [
+    "#ffffff", // white
+    "#3f6cf5", // blue
+    "#e93f3f", // red
+    "#e9cf3f", // yellow
+    "#4fa328", // green
+    "#d750e9", // pink
+    "#8236f4", // purple
+    "#f4790c", // orange
+    "#44f5fe", // cyan
+    "#828282", // gray
+    "#000000", // black
+]
+
+
+export const standardBkgColors: string[] = [
+    "#00000000", // transparent
+    "#bbbbbb", // white
+    "#303030", // gray
+    "#000000", // black
+]
+
+
+export interface Color
+{
+    r: number
+    g: number
+    b: number
+    a: number
+}
+
+
+export interface BuiltinImageOptions
+{
+    id: string
+    color: Color
+    bkgColor: Color
 }
 
 
@@ -60,6 +159,91 @@ export function getImageLazy(rootRelativePath: string): Image | undefined
 }
 
 
+export function encodeBuiltinImagePath(
+    opts: BuiltinImageOptions)
+    : string
+{
+    console.log("encode", opts, colorRgbToHex(opts.color), colorRgbToHex(opts.bkgColor))
+
+    return Filesystem.BUILTIN_IMAGE_PREFIX +
+        opts.id + Filesystem.BUILTIN_IMAGE_SEPARATOR +
+        colorRgbToHex(opts.color) + Filesystem.BUILTIN_IMAGE_SEPARATOR +
+        colorRgbToHex(opts.bkgColor)
+}
+
+
+export function decodeBuiltinImagePath(
+    path: string)
+    : BuiltinImageOptions | null
+{
+    if (!path.startsWith(Filesystem.BUILTIN_IMAGE_PREFIX))
+        return null
+    
+    const split = path
+        .substring(Filesystem.BUILTIN_IMAGE_PREFIX.length)
+        .split(Filesystem.BUILTIN_IMAGE_SEPARATOR)
+
+    if (split.length === 1)
+    {
+        return {
+            id: split[0],
+            color: { r: 255, g: 255, b: 255, a: 255 },
+            bkgColor: { r: 0, g: 0, b: 0, a: 0 },
+        }
+    }
+
+    if (split.length < 3)
+        return null
+
+    const id = split[0]
+    const color = colorHexToRgb(split[1])
+    const bkgColor = colorHexToRgb(split[2])
+
+    return {
+        id,
+        color,
+        bkgColor,
+    }
+}
+
+
+export function colorHexToRgb(hex: string)
+{
+    if (hex.length < 6)
+        return { r: 0, g: 0, b: 0, a: 0 }
+    
+    let start = 0
+
+    if (hex[0] === "#")
+        start = 1
+
+    if (hex.length - start < 6)
+        return { r: 0, g: 0, b: 0, a: 0 }
+    
+    return {
+        r: parseInt(hex.substring(start + 0, start + 2), 16),
+        g: parseInt(hex.substring(start + 2, start + 4), 16),
+        b: parseInt(hex.substring(start + 4, start + 6), 16),
+        a: hex.length - start >= 8 ?
+            parseInt(hex.substring(start + 6, start + 8), 16) :
+            255,
+    }
+}
+
+
+export function colorRgbToHex(color: Color)
+{
+    const rgb =
+        (color.r << 16) |
+        (color.g << 8) |
+        (color.b << 0)
+
+    return "#" +
+        rgb.toString(16).padStart(6, "0") +
+        color.a.toString(16).padStart(2, "0")
+}
+
+
 const imagesLoading = new Set<string>()
 
 
@@ -84,10 +268,31 @@ export async function loadImage(rootRelativePath: string): Promise<Image | null>
 
     try
     {
-        const entry = await Filesystem.findFile(rootRelativePath)
-        const file = await entry.handle.getFile()
-        const bytes = await file.arrayBuffer()
-        const element = await getImageElementFromBytes(rootRelativePath, bytes)
+        let element: HTMLImageElement
+
+        if (rootRelativePath.startsWith(Filesystem.BUILTIN_IMAGE_PREFIX))
+        {
+            const opts = decodeBuiltinImagePath(rootRelativePath)!
+            const entry = await fetch("assets/" + opts.id)
+            const bytes = await entry.arrayBuffer()
+            const elementOriginal = await getImageElementFromBytes(
+                rootRelativePath,
+                bytes)
+
+            element = await tintImageElement(
+                elementOriginal,
+                opts.color,
+                opts.bkgColor)
+        }
+        else
+        {
+            const entry = await Filesystem.findFile(rootRelativePath)
+            const file = await entry.handle.getFile()
+            const bytes = await file.arrayBuffer()
+            element = await getImageElementFromBytes(
+                rootRelativePath,
+                bytes)
+        }
 
         global.images.images[rootRelativePath] = {
             width: element.width,
@@ -123,6 +328,50 @@ export async function getImageElementFromBytes(
     })
 
     return imgElem
+}
+
+
+export async function tintImageElement(
+    element: HTMLImageElement,
+    color: Color,
+    bkgColor: Color)
+    : Promise<HTMLImageElement>
+{
+    const canvas = document.createElement("canvas")
+    canvas.width = element.width
+    canvas.height = element.height
+
+    const ctx = canvas.getContext("2d")!
+    ctx.clearRect(0, 0, canvas.width, canvas.height)
+    ctx.drawImage(element, 0, 0)
+
+    const pixels = ctx.getImageData(0, 0, canvas.width, canvas.height)
+    for (let p = 0; p < pixels.data.length; p += 4)
+    {
+        if (pixels.data[p + 3] > 0)
+        {
+            pixels.data[p + 0] = Math.floor(
+                (pixels.data[p + 0] / 255) * (color.r / 255) * 255)
+
+            pixels.data[p + 1] = Math.floor(
+                (pixels.data[p + 1] / 255) * (color.g / 255) * 255)
+
+            pixels.data[p + 2] = Math.floor(
+                (pixels.data[p + 2] / 255) * (color.b / 255) * 255)
+        }
+        else
+        {
+            pixels.data[p + 0] = bkgColor.r
+            pixels.data[p + 1] = bkgColor.g
+            pixels.data[p + 2] = bkgColor.b
+            pixels.data[p + 3] = bkgColor.a
+        }
+    }
+        
+    ctx.putImageData(pixels, 0, 0)
+    
+    element.src = canvas.toDataURL("image/png")
+    return element
 }
 
 

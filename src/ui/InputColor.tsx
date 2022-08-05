@@ -53,11 +53,16 @@ export function InputColor(props: {
     }
 
 
+    let value = props.value
+    if (value && value.length > 7)
+        value = value.slice(0, 7)
+
+
     return <StyledInputColor
         id={ props.id }
         ref={ inputRef }
         type="color"
-        value={ props.value }
+        value={ value }
         onChange={ onChange }
         disabled={ props.disabled }
         fullWidth={ !!props.fullWidth }
