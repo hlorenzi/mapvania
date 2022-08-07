@@ -79,7 +79,7 @@ export function render(state: MapEditor.State)
         state.ctx.save()
         state.ctx.translate(room.x, room.y)
     
-        renderRoomBkg(state, room)
+        renderRoomBkg(state.ctx, state, room)
         renderRoomCached(state, defs, room, false, editingLayerDef)
 
         state.ctx.restore()
@@ -90,7 +90,7 @@ export function render(state: MapEditor.State)
         state.ctx.save()
         state.ctx.translate(editingRoom.x, editingRoom.y)
     
-        renderRoomBkg(state, editingRoom)
+        renderRoomBkg(state.ctx, state, editingRoom)
         renderTileLayerBkg(state, defs, editingRoom, editingLayerDef)
         renderObjectLayerBkg(state, defs, editingRoom, editingLayerDef)
         renderRoom(state.ctx, state, defs, editingRoom, true, editingLayerDef)
@@ -118,9 +118,13 @@ export function render(state: MapEditor.State)
                 room.width, room.height))
             continue
 
+        const strongBorder = global.editors.mapEditing.layerDefId === Editors.LAYERDEF_ID_MAP ?
+            state.roomSelection.has(room.id) :
+            false
+    
         state.ctx.save()
         state.ctx.translate(room.x, room.y)
-        renderRoomBorder(state, room)
+        renderRoomBorder(state.ctx, state, room, strongBorder)
         state.ctx.restore()
     }
 
@@ -128,7 +132,7 @@ export function render(state: MapEditor.State)
     {
         state.ctx.save()
         state.ctx.translate(editingRoom.x, editingRoom.y)
-        renderRoomBorder(state, editingRoom)
+        renderRoomBorder(state.ctx, state, editingRoom, true)
         state.ctx.restore()
     }
     
@@ -147,14 +151,12 @@ export function render(state: MapEditor.State)
 
 
 export function renderRoomBkg(
+    ctx: CanvasRenderingContext2D,
     state: MapEditor.State,
     room: Map.Room)
 {
-    //state.ctx.fillStyle = "#000"
-    //state.ctx.fillRect(8, 8, stage.width, stage.height)
-    
-    state.ctx.fillStyle = "#181818"
-    state.ctx.fillRect(0, 0, room.width, room.height)
+    ctx.fillStyle = "#181818"
+    ctx.fillRect(0, 0, room.width, room.height)
 }
 
 
@@ -389,21 +391,19 @@ export function renderRoom(
 }
 
 
-function renderRoomBorder(
+export function renderRoomBorder(
+    ctx: CanvasRenderingContext2D,
     state: MapEditor.State,
-    room: Map.Room)
+    room: Map.Room,
+    strongBorder: boolean)
 {
-    state.ctx.save()
+    ctx.save()
 
-    const strongBorder = global.editors.mapEditing.layerDefId === Editors.LAYERDEF_ID_MAP ?
-        state.roomSelection.has(room.id) :
-        room.id === state.roomId
+    ctx.strokeStyle = strongBorder ? "#fff" : "#888"
+    ctx.lineWidth = state.ctx.lineWidth * (strongBorder ? 2 : 1)
 
-    state.ctx.strokeStyle = strongBorder ? "#fff" : "#888"
-    state.ctx.lineWidth = state.ctx.lineWidth * (strongBorder ? 2 : 1)
-
-    state.ctx.strokeRect(0, 0, room.width, room.height)
-    state.ctx.restore()
+    ctx.strokeRect(0, 0, room.width, room.height)
+    ctx.restore()
 }
 
 

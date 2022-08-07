@@ -143,6 +143,16 @@ export function EditorMap(props: {
         Editors.render(props.editorIndex)
     }
 
+    const capture = () =>
+    {
+        MapEditor.screenshotRoomSelection(editor.mapEditor, true)
+    }
+
+    const captureClean = () =>
+    {
+        MapEditor.screenshotRoomSelection(editor.mapEditor, false)
+    }
+
 
     return <div style={{
         display: "grid",
@@ -280,6 +290,27 @@ export function EditorMap(props: {
                     (global.editors.mapEditing.tileBrushEdgeBehavior === "connectAlways" ? "Connect to OoB" :
                     "Ignore") }
                 onClick={ toggleTileBrushEdgeBehavior }
+            />
+        </div>
+
+        <div style={{
+            gridRow: 1,
+            gridColumn: 1,
+            justifySelf: "start",
+            alignSelf: "end",
+            margin: "1em",
+            backgroundColor: "#111",
+            borderRadius: "0.25em",
+            contain: "paint",
+        }}>
+            <UI.Button
+                label="📷 Capture (F2)"
+                onClick={ capture }
+            />
+            
+            <UI.Button
+                label="📷 Capture Clean (F3)"
+                onClick={ captureClean }
             />
         </div>
 

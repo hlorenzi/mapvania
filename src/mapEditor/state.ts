@@ -1,5 +1,6 @@
 import * as MapEditor from "./index"
 import * as ID from "../data/id"
+import * as Filesystem from "../data/filesystem"
 import * as Defs from "../data/defs"
 import * as Map from "../data/map"
 import * as Properties from "../data/properties"
@@ -880,6 +881,16 @@ export function onKey(state: State, ev: KeyboardEvent, down: boolean)
             state.toolAddToList = down
             ev.preventDefault()
             break
+
+        case "f2":
+            screenshotRoomSelection(state, true)
+            ev.preventDefault()
+            break
+
+        case "f3":
+            screenshotRoomSelection(state, false)
+            ev.preventDefault()
+            break
     }
 }
 
@@ -1274,4 +1285,148 @@ export function eraseRoomSelection(state: State)
     state.roomSelection.clear()
     MapEditor.render(state)
     global.editors.refreshToken.commit()
+}
+
+
+export function screenshotRoomSelection(
+    state: State,
+    renderBorders: boolean)
+{
+    const editor = (global.editors.editors[state.editorIndex] as Editors.EditorMap)
+    
+    let rooms: Map.Room[]
+
+    if (global.editors.mapEditing.layerDefId === Editors.LAYERDEF_ID_MAP)
+    {
+        rooms = [...state.roomSelection]
+            .map(id => editor.map.rooms[id])
+            .filter(r => !!r)
+    }
+    else
+    {
+        rooms = [editor.map.rooms[state.roomId]]
+            .filter(r => !!r)
+    }
+    
+    if (rooms.length === 0)
+        return
+    
+    let xMin: number = null!
+    let yMin: number = null!
+    let xMax: number = null!
+    let yMax: number = null!
+
+    for (const room of rooms)
+    {
+        xMin = (xMin === null || room.x < xMin) ? room.x : xMin
+        yMin = (yMin === null || room.y < yMin) ? room.y : yMin
+        xMax = (xMax === null || room.x + room.width > xMax) ? room.x + room.width : xMax
+        yMax = (yMax === null || room.y + room.height > yMax) ? room.y + room.height : yMax
+    }
+
+    const xSize = xMax - xMin + (renderBorders ? 1 : 0)
+    const ySize = yMax - yMin + (renderBorders ? 1 : 0)
+
+    const canvas = document.createElement("canvas")
+    canvas.width = xSize
+    canvas.height = ySize
+
+    const ctx = canvas.getContext("2d")!
+    ctx.imageSmoothingQuality = "low"
+    ctx.imageSmoothingEnabled = false
+    ctx.clearRect(0, 0, xSize, ySize)
+
+    for (const room of rooms)
+    {
+        ctx.save()
+        ctx.translate(room.x - xMin, room.y - yMin)
+
+        if (renderBorders)
+        {
+            MapEditor.renderRoomBkg(
+                ctx,
+                state,
+                room)
+        }
+
+        MapEditor.renderRoom(
+            ctx,
+            state,
+            editor.defs,
+            room,
+            false,
+            undefined)
+
+        if (renderBorders)
+        {
+            ctx.save()
+            ctx.translate(0.5, 0.5)
+            
+            MapEditor.renderRoomBorder(
+                ctx,
+                state,
+                room,
+                false)
+
+            ctx.restore()
+        }
+
+        ctx.restore()
+    }
+
+    const roomIdsDisplay = 
+        Filesystem.getFileDisplayName(editor.rootRelativePath) +
+        "/" +
+        (rooms.length === 1 ?
+            rooms[0].id :
+            rooms.length + " rooms")
+
+    const title = roomIdsDisplay + " • Mapvania Render"
+
+    canvas.toBlob((blob) =>
+    {
+        if (!blob)
+            return
+        
+        const url = URL.createObjectURL(blob)
+        const newWindow = window.open(url)
+        if (!newWindow)
+            return
+        
+        newWindow.addEventListener("load", () =>
+        {
+            newWindow.document.title = title
+
+            newWindow.document.body.style.backgroundColor = "#242424"
+
+            // Override Chrome's default image background color
+            const style = newWindow.document.createElement("style")
+            style.innerHTML = `
+                img
+                {
+                    background-color: #080808 !important;
+                }
+            `
+            newWindow.document.head.appendChild(style)
+            
+            // Retrieve the automatically-generated img element
+            const img = newWindow.document.querySelector("img")
+            if (img)
+            {
+                // Set pixel-perfect scaling if the entire image fits on the screen
+                if (img.width > xSize / state.pixelRatio &&
+                    img.height > ySize / state.pixelRatio )
+                {
+                    img.style.width = `${ xSize / state.pixelRatio }px`
+                    img.style.height = `${ ySize / state.pixelRatio }px`
+                }
+
+                img.style.backgroundColor = "#080808"
+
+                // The download attribute doesn't have an effect on img elements
+                img.setAttribute("download", roomIdsDisplay + ".png")
+            }
+        })
+    },
+    "image/png")
 }
