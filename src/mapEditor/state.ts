@@ -599,6 +599,8 @@ export function onMouseDown(state: State, ev: MouseEvent)
                 !hoverObject)
             {
                 state.roomId = hoverRoom.id
+                state.rectSelection = null
+                state.objectSelection.clear()
             }
             else
             {
@@ -773,6 +775,31 @@ export function onKey(state: State, ev: KeyboardEvent, down: boolean)
 
     switch (key)
     {
+        case "a":
+            if (down && ev.ctrlKey)
+            {
+                if (layerDef?.type === "tile")
+                {
+                    selectAllTiles(state)
+                    copyTileSelection(state)
+                    global.editors.mapEditing.tool = "draw"
+                }
+                else if (layerDef?.type === "object")
+                {
+                    selectAllObjects(state)
+                    global.editors.mapEditing.tool = "move"
+                }
+                else if (global.editors.mapEditing.layerDefId === Editors.LAYERDEF_ID_MAP)
+                {
+                    selectAllRooms(state)
+                    global.editors.mapEditing.tool = "move"
+                }
+
+                MapEditor.render(state)
+                ev.preventDefault()
+            }
+            break
+
         case "c":
             if (down && ev.ctrlKey)
             {
@@ -876,7 +903,6 @@ export function onKey(state: State, ev: KeyboardEvent, down: boolean)
             ev.preventDefault()
             break
 
-        case "a":
         case "alt":
             state.toolAddToList = down
             ev.preventDefault()
@@ -1220,15 +1246,82 @@ export function getObjectAt(state: State, pos: MathUtils.Point): Map.Obj | undef
 }
 
 
-export function eraseObjectSelection(state: State)
+export function selectAllTiles(state: State)
 {
     const editor = (global.editors.editors[state.editorIndex] as Editors.EditorMap)
+
+    state.rectSelection = null
 
     editor.map = Map.ensureRoomLayer(
         editor.defs,
         editor.map,
         state.roomId,
         global.editors.mapEditing.layerDefId)
+
+    let layer = Map.getRoomLayer(
+        editor.map,
+        state.roomId,
+        global.editors.mapEditing.layerDefId)
+    
+    if (!layer || layer.type !== "tile")
+        return
+
+    state.rectSelection = {
+        tile1: {
+            x: 0,
+            y: 0,
+        },
+        tile2: {
+            x: layer.tileField.width - 1,
+            y: layer.tileField.height - 1,
+        },
+    }
+        
+    MapEditor.render(state)
+    global.editors.refreshToken.commit()
+}
+
+
+export function selectAllObjects(state: State)
+{
+    const editor = (global.editors.editors[state.editorIndex] as Editors.EditorMap)
+
+    state.objectSelection.clear()
+
+    let layer = Map.getRoomLayer(
+        editor.map,
+        state.roomId,
+        global.editors.mapEditing.layerDefId)
+    
+    if (!layer || layer.type !== "object")
+        return
+
+    for (const objectId of Object.keys(layer.objects))
+        state.objectSelection.add(objectId)
+        
+    MapEditor.render(state)
+    global.editors.refreshToken.commit()
+}
+
+
+export function selectAllRooms(state: State)
+{
+    const editor = (global.editors.editors[state.editorIndex] as Editors.EditorMap)
+
+    state.roomId = ""
+    state.roomSelection.clear()
+
+    for (const roomId of Object.keys(editor.map.rooms))
+        state.roomSelection.add(roomId)
+        
+    MapEditor.render(state)
+    global.editors.refreshToken.commit()
+}
+
+
+export function eraseObjectSelection(state: State)
+{
+    const editor = (global.editors.editors[state.editorIndex] as Editors.EditorMap)
 
     let layer = Map.getRoomLayer(
         editor.map,
