@@ -8,7 +8,7 @@ import * as Hierarchy from "../data/hierarchy"
 import * as UI from "../ui"
 import { global } from "../global"
 import styled from "styled-components"
-import { DeepAssignable } from "../util/deepAssign"
+import { InputImagePicker } from "./InputImagePicker"
 import { useCachedState } from "../util/useCachedState"
 
 
@@ -58,22 +58,18 @@ export function DefsTilesets(props: {
     }
 
 
-    const loadTilesetImage = async () =>
+    const chooseImage = async (rootRelativePath: string) =>
     {
         if (!curTileset)
             return
 
-        const imageRootRelativePath = await Filesystem.showImagePicker()
-        if (!imageRootRelativePath)
-            return
-
-        const image = await Images.loadImage(imageRootRelativePath)
+        const image = await Images.loadImage(rootRelativePath)
         if (!image)
             return
 
         set({
             ...curTileset,
-            imageSrc: imageRootRelativePath,
+            imageSrc: rootRelativePath,
             width: image.width,
             height: image.height,
         })
@@ -202,7 +198,7 @@ export function DefsTilesets(props: {
     }
 
 
-    return <UI.Grid template="15em 25em 1fr" templateRows="1fr" fullHeight alignStart>
+    return <UI.Grid template="15em 27em 1fr" templateRows="1fr" fullHeight alignStart>
 
         <UI.HierarchicalList<Defs.DefTileset>
             items={ defs.tilesetDefs }
@@ -252,14 +248,17 @@ export function DefsTilesets(props: {
 
                 <UI.Cell span={ 2 } divider/>
 
-                <UI.Cell span={ 2 } justifyCenter>
-                    <UI.Button
-                        label="⛰️ Load Image..."
-                        onClick={ loadTilesetImage }
-                    />
+                <UI.Cell justifyEnd alignCenter>
+                    Image
                 </UI.Cell>
 
-                <UI.Cell span={ 2 } divider/>
+                <UI.Cell justifyStretch>
+                    <InputImagePicker
+                        value={ curTileset.imageSrc }
+                        onChange={ chooseImage }
+                        imageset={ Images.builtinTilesetImages }
+                    />
+                </UI.Cell>
                 
                 <UI.Cell justifyEnd>
                     Tile Size
@@ -319,6 +318,8 @@ export function DefsTilesets(props: {
                     { " px" }
                 </UI.Cell>
 
+                <UI.Cell span={ 2 } divider/>
+                
             </UI.Grid>
 
             <UI.List

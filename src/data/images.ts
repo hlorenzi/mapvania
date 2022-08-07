@@ -30,13 +30,21 @@ export interface BuiltinImageItem extends Hierarchy.Item
 }
 
 
-export const builtinImages: BuiltinImageItem[] =
+export const builtinTilesetImages: BuiltinImageItem[] =
 [
+    { name: "basic", id: "tileset/basic.png" },
+    { name: "basic_color", id: "tileset/basic_color.png" },
+    { name: "example_forest", id: "tileset/example_forest.png" },
+]
+
+
+export const builtinObjectImages: BuiltinImageItem[] =
+[
+    { name: "blank", id: "obj/blank.png" },
     { name: "circle", id: "obj/circle.png" },
     { name: "square", id: "obj/square.png" },
     { name: "diamond", id: "obj/diamond.png" },
     { name: "dot", id: "obj/dot.png" },
-    { name: "block", id: "obj/block.png" },
 
     { name: "plus", id: "obj/plus.png" },
     { name: "triangleU", id: "obj/triangleU.png" },
@@ -73,12 +81,17 @@ export const builtinImages: BuiltinImageItem[] =
     { name: "flag", id: "obj/flag.png" },
     { name: "exclamation", id: "obj/exclamation.png" },
     { name: "question", id: "obj/question.png" },
-    
+
     { name: "1", id: "obj/1.png" },
     { name: "2", id: "obj/2.png" },
     { name: "3", id: "obj/3.png" },
     { name: "4", id: "obj/4.png" },
     { name: "e", id: "obj/e.png" },
+    
+    { name: "block", id: "obj/block.png" },
+    { name: "chest", id: "obj/chest.png" },
+    { name: "leverR", id: "obj/leverR.png" },
+    { name: "leverL", id: "obj/leverL.png" },
 ]
 
 

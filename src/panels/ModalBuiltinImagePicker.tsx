@@ -13,6 +13,7 @@ import * as UI from "../ui"
 export function ModalBuiltinImagePicker(props: {
     open: boolean,
     setOpen: (open: boolean) => void,
+    imageset: Images.BuiltinImageItem[],
     header?: string,
     value: ID.ID,
     onChange?: (newValue: ID.ID) => void,
@@ -135,7 +136,7 @@ export function ModalBuiltinImagePicker(props: {
                 <UI.Cell span={ 2 }>
                     <UI.HierarchicalList<Images.BuiltinImageItem>
                         is2D
-                        items={ Images.builtinImages }
+                        items={ props.imageset }
                         value={ options.id }
                         onChange={ setId }
                         getItemIcon={ item => Defs.getImageIconElement(Filesystem.BUILTIN_IMAGE_PREFIX + item.id) }

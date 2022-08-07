@@ -13,6 +13,7 @@ import { ModalBuiltinImagePicker } from "./ModalBuiltinImagePicker"
 export function InputImagePicker(props: {
     value: string,
     onChange?: (newValue: string) => void,
+    imageset: Images.BuiltinImageItem[],
     header?: string,
     placeholder?: string,
 })
@@ -26,7 +27,7 @@ export function InputImagePicker(props: {
         const decode = Images.decodeBuiltinImagePath(props.value)
         if (decode)
             displayName =
-                Images.builtinImages.find(i => i.id === decode.id)?.name ??
+                Images.builtinObjectImages.find(i => i.id === decode.id)?.name ??
                 decode.id
     }
 
@@ -105,6 +106,7 @@ export function InputImagePicker(props: {
         <ModalBuiltinImagePicker
             open={ open }
             setOpen={ setOpen }
+            imageset={ props.imageset }
             header={ props.header }
             value={ props.value }
             onChange={ props.onChange }

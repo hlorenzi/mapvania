@@ -236,6 +236,7 @@ export function DefsObjects(props: {
                         <InputImagePicker
                             value={ curObject.imageSrc }
                             onChange={ chooseImage }
+                            imageset={ Images.builtinObjectImages }
                         />
                     </UI.Cell>
                     
