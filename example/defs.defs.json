@@ -1,0 +1,325 @@
+{
+	generalDefs: {
+		jsonExportType: "merge-friendly",
+		jsonMinimize: false,
+		jsonUseBareIdentifiers: true,
+		jsonUseTrailingCommas: true,
+		roomHeightMultiple: 16,
+		roomWidthMultiple: 16,
+	},
+	layerDefs: [
+		{
+			folder: [],
+			gridCellHeight: 16,
+			gridCellWidth: 16,
+			id: "lor1",
+			name: "objects",
+			sortAfter: "",
+			type: "object",
+		},
+		{
+			folder: [],
+			gridCellHeight: 16,
+			gridCellWidth: 16,
+			id: "lor2",
+			name: "tiles2",
+			sortAfter: "lor1",
+			type: "tile",
+		},
+		{
+			folder: [],
+			gridCellHeight: 16,
+			gridCellWidth: 16,
+			id: "lor3",
+			name: "tiles1",
+			sortAfter: "lor2",
+			type: "tile",
+		},
+	],
+	nextIDs: {
+
+		"": 1,
+
+		lor: 12,
+
+	},
+	objectDefs: [
+		{
+			folder: [],
+			id: "lor10",
+			imageRect: {
+				height: 16,
+				width: 16,
+				x: 0,
+				y: 0,
+			},
+			imageSrc: "/assets/hook.png",
+			inheritPropertiesFromObjectDefs: [],
+			interactionRect: {
+				height: 16,
+				width: 16,
+				x: 0,
+				y: 0,
+			},
+			name: "hook",
+			pivotPercent: {
+				x: 0,
+				y: 0,
+			},
+			properties: [],
+			resizeable: false,
+			sortAfter: "lor9",
+		},
+		{
+			folder: [],
+			id: "lor6",
+			imageRect: {
+				height: 32,
+				width: 32,
+				x: 0,
+				y: 0,
+			},
+			imageSrc: "/assets/ninja.png",
+			inheritPropertiesFromObjectDefs: [],
+			interactionRect: {
+				height: 16,
+				width: 16,
+				x: 8,
+				y: 16,
+			},
+			name: "ninja",
+			pivotPercent: {
+				x: 0,
+				y: 0,
+			},
+			properties: [],
+			resizeable: false,
+			sortAfter: "",
+		},
+		{
+			folder: [],
+			id: "lor7",
+			imageRect: {
+				height: 32,
+				width: 32,
+				x: 0,
+				y: 0,
+			},
+			imageSrc: "/assets/dragon.png",
+			inheritPropertiesFromObjectDefs: [],
+			interactionRect: {
+				height: 16,
+				width: 16,
+				x: 8,
+				y: 16,
+			},
+			name: "dragon",
+			pivotPercent: {
+				x: 0,
+				y: 0,
+			},
+			properties: [
+				{
+					defaultValue: 10,
+					id: "life",
+					optional: false,
+					type: "number",
+				},
+				{
+					defaultValue: 3,
+					id: "coins",
+					optional: false,
+					type: "number",
+				},
+				{
+					defaultValue: false,
+					id: "angry",
+					optional: false,
+					type: "bool",
+				},
+				{
+					color: "#ff0000",
+					defaultValue: null,
+					id: "patrolArea",
+					optional: false,
+					relative: true,
+					type: "rect",
+				},
+			],
+			resizeable: false,
+			sortAfter: "lor6",
+		},
+		{
+			folder: [],
+			id: "lor8",
+			imageRect: {
+				height: 32,
+				width: 32,
+				x: 0,
+				y: 0,
+			},
+			imageSrc: "/assets/apple.png",
+			inheritPropertiesFromObjectDefs: [],
+			interactionRect: {
+				height: 16,
+				width: 16,
+				x: 8,
+				y: 16,
+			},
+			name: "apple",
+			pivotPercent: {
+				x: 0,
+				y: 0,
+			},
+			properties: [],
+			resizeable: false,
+			sortAfter: "lor7",
+		},
+		{
+			folder: [],
+			id: "lor9",
+			imageRect: {
+				height: 16,
+				width: 16,
+				x: 0,
+				y: 0,
+			},
+			imageSrc: "/assets/coin.png",
+			inheritPropertiesFromObjectDefs: [],
+			interactionRect: {
+				height: 16,
+				width: 16,
+				x: 0,
+				y: 0,
+			},
+			name: "coin",
+			pivotPercent: {
+				x: 0,
+				y: 0,
+			},
+			properties: [],
+			resizeable: false,
+			sortAfter: "lor8",
+		},
+	],
+	tileAttributeDefs: [],
+	tileBrushDefs: [
+		{
+			folder: [],
+			id: "lor11",
+			name: "rocks",
+			sortAfter: "lor5",
+			tiles: {
+				"21": {
+					connections: [0,0,0,0,1,1,0,1,1,],
+				},
+				"22": {
+					connections: [0,0,0,1,1,1,1,1,1,],
+				},
+				"23": {
+					connections: [0,0,0,1,1,0,1,1,0,],
+				},
+				"24": {
+					connections: [0,1,1,1,1,1,1,1,1,],
+				},
+				"25": {
+					connections: [1,1,0,1,1,1,1,1,1,],
+				},
+				"37": {
+					connections: [0,1,1,0,1,1,0,1,1,],
+				},
+				"38": {
+					connections: [1,1,1,1,1,1,1,1,1,],
+				},
+				"39": {
+					connections: [1,1,0,1,1,0,1,1,0,],
+				},
+				"40": {
+					connections: [1,1,1,1,1,1,0,1,1,],
+				},
+				"41": {
+					connections: [1,1,1,1,1,1,1,1,0,],
+				},
+				"53": {
+					connections: [0,1,1,0,1,1,0,0,0,],
+				},
+				"54": {
+					connections: [1,1,1,1,1,1,0,0,0,],
+				},
+				"55": {
+					connections: [1,1,0,1,1,0,0,0,0,],
+				},
+			},
+			tilesetDefId: "lor4",
+		},
+		{
+			folder: [],
+			id: "lor5",
+			name: "ground",
+			sortAfter: "",
+			tiles: {
+				"16": {
+					connections: [0,0,0,0,1,1,0,1,1,],
+				},
+				"17": {
+					connections: [0,0,0,1,1,1,1,1,1,],
+				},
+				"18": {
+					connections: [0,0,0,1,1,0,1,1,0,],
+				},
+				"19": {
+					connections: [0,1,1,1,1,1,1,1,1,],
+				},
+				"20": {
+					connections: [1,1,0,1,1,1,1,1,1,],
+				},
+				"32": {
+					connections: [0,1,1,0,1,1,0,1,1,],
+				},
+				"33": {
+					connections: [1,1,1,1,1,1,1,1,1,],
+				},
+				"34": {
+					connections: [1,1,0,1,1,0,1,1,0,],
+				},
+				"35": {
+					connections: [1,1,1,1,1,1,0,1,1,],
+				},
+				"36": {
+					connections: [1,1,1,1,1,1,1,1,0,],
+				},
+				"48": {
+					connections: [0,1,1,0,1,1,0,0,0,],
+				},
+				"49": {
+					connections: [1,1,1,1,1,1,0,0,0,],
+				},
+				"50": {
+					connections: [1,1,0,1,1,0,0,0,0,],
+				},
+			},
+			tilesetDefId: "lor4",
+		},
+	],
+	tilesetDefs: [
+		{
+			folder: [],
+			gridCellHeight: 16,
+			gridCellWidth: 16,
+			gridGapX: 0,
+			gridGapY: 0,
+			gridOffsetX: 0,
+			gridOffsetY: 0,
+			height: 128,
+			id: "lor4",
+			imageSrc: ":tileset/example_forest.png:#ffffffff:#00000000",
+			name: "forest",
+			sortAfter: "",
+			tileAttributes: {
+			},
+			width: 256,
+		},
+	],
+	type: "defs",
+	version: 2,
+}
