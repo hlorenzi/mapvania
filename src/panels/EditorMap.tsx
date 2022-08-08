@@ -295,8 +295,8 @@ export function EditorMap(props: {
 
         <div style={{
             gridRow: 1,
-            gridColumn: 1,
-            justifySelf: "start",
+            gridColumn: 3,
+            justifySelf: "end",
             alignSelf: "end",
             margin: "1em",
             backgroundColor: "#111",
