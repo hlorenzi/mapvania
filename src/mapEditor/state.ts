@@ -1130,13 +1130,18 @@ export function pasteObjects(state: State)
         return
     
     const editor = (global.editors.editors[state.editorIndex] as Editors.EditorMap)
-    let map = editor.map
 
-    const room = map.rooms[state.roomId]
-    if (!room)
-        return
-
-    const layer = room.layers[global.editors.mapEditing.layerDefId]
+    editor.map = Map.ensureRoomLayer(
+        editor.defs,
+        editor.map,
+        state.roomId,
+        global.editors.mapEditing.layerDefId)
+    
+    const layer = Map.getRoomLayer(
+        editor.map,
+        state.roomId,
+        global.editors.mapEditing.layerDefId)
+    
     if (!layer || layer.type !== "object")
         return
 
@@ -1168,8 +1173,8 @@ export function pasteObjects(state: State)
         state.mouse.posSnapped.y
 
     const result = Map.cloneObjects(
-        map,
-        room.id,
+        editor.map,
+        state.roomId,
         layer.layerDefId,
         global.editors.mapEditing.objectsCopied,
         (obj) => ({
