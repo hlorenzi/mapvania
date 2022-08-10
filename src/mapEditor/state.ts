@@ -741,6 +741,9 @@ export function onMouseUp(state: State, ev: MouseEvent)
 
 export function onMouseWheel(state: State, ev: WheelEvent)
 {
+    if (state.onMouseMove)
+        return
+    
     onMouseMove(state, ev)
 
     const mousePrevious = state.mouse.pos
