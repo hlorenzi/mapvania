@@ -164,10 +164,10 @@ export function makeNew(): Defs
             roomWidthMultiple: 16,
             roomHeightMultiple: 16,
 
-            jsonExportType: "merge-friendly",
+            jsonExportType: "standard",
             jsonMinimize: false,
-            jsonUseTrailingCommas: true,
-            jsonUseBareIdentifiers: true,
+            jsonUseTrailingCommas: false,
+            jsonUseBareIdentifiers: false,
         },
         layerDefs: [],
         tilesetDefs: [],

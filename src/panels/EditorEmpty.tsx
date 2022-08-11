@@ -1,17 +1,66 @@
 import * as React from "react"
 import styled from "styled-components"
 import { global } from "../global"
-import * as Actions from "../actions"
 import * as Filesystem from "../data/filesystem"
 import * as Dev from "../data/dev"
 import * as ID from "../data/id"
 import * as UI from "../ui"
 
 
+const githubRepoHref = "https://github.com/hlorenzi/mapvania"
+const githubHashTreeHref = "https://github.com/hlorenzi/mapvania/tree/"
+
+
+interface VersionData
+{
+    major: number
+    minor: number
+    hash: string
+}
+
+
+function decodeVersionData(str: string): VersionData
+{
+    const data: VersionData =
+    {
+        major: 0,
+        minor: 0,
+        hash: "development",
+    }
+
+    const matches = str.match(/v(.*?)-(.*?)-g(.*)/)
+    if (!matches)
+        return data
+
+    data.major = parseInt(matches[1])
+    data.minor = parseInt(matches[2])
+    data.hash = matches[3]
+
+    return data
+}
+
+
 export function EditorEmpty()
 {
     const [refresh, setRefresh] = React.useState(0)
     const [hasCachedFolder, setHasCachedFolder] = React.useState(false)
+    
+    const [versionDataStr, setVersionDataStr] = React.useState("")
+    const versionData = decodeVersionData(versionDataStr)
+
+    document.title = `Mapvania v${ versionData.major }.${ versionData.minor }`
+
+
+    React.useEffect(() =>
+    {
+        window.requestAnimationFrame(async () =>
+        {
+            const versionFile = await fetch("build/version.txt")
+            const versionStr = await versionFile.text()
+            setVersionDataStr(versionStr.trim())
+        })
+
+    }, [])
 
 
     React.useEffect(() =>
@@ -29,15 +78,50 @@ export function EditorEmpty()
 
         { !global.filesystem.root.handle &&
             <>
-            To start, open a project folder.
-
+            <div>
+                <span style={{
+                    fontSize: "5em",
+                }}>
+                    Mapvania
+                </span>
+    
+                <span style={{
+                    position: "relative",
+                    top: "0.25em",
+                    marginLeft: "0.5em",
+                    opacity: 0.85,
+                }}>
+                    v{ versionData.major }.{ versionData.minor }
+                </span>
+    
+                <br/>
+    
+                <span>
+                    <a
+                        href={ githubRepoHref }
+                    >
+                        GitHub Repository
+                    </a>
+    
+                    { " — " }
+    
+                    Git: <a
+                        href={ githubHashTreeHref + versionData.hash }
+                    >
+                        { versionData.hash }
+                    </a>
+                </span>
+            </div>
+    
+            <br/>
+            <br/>
             <br/>
             <br/>
 
             <UI.Button
-                onClick={ Actions.openFolder.func }
+                onClick={ Filesystem.openRootDirectory }
             >
-                📁 Choose folder...
+                📁 Open project folder...
             </UI.Button>
 
             { hasCachedFolder &&
@@ -51,6 +135,9 @@ export function EditorEmpty()
                 </UI.Button>
                 </>
             }
+
+            <br/>
+            <br/>
             
             <br/>
             <br/>
@@ -76,14 +163,14 @@ export function EditorEmpty()
             <UI.HorizontalBar/>
             <br/>
 
-            Write a { Filesystem.DEV_FILENAME } file with useful dev information,<br/>
+            Automatically write a { Filesystem.DEV_FILENAME } file with useful dev information,<br/>
             like the current map and room being edited.
 
             <br/>
             <br/>
 
             <UI.Checkbox
-                label="Write dev file"
+                label={ `Write ${ Filesystem.DEV_FILENAME } file` }
                 value={ Dev.getCurrentWriteDevFile() }
                 onChange={ value => {
                     Dev.setCurrentWriteDevFile(value)

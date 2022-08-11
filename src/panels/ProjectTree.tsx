@@ -1,7 +1,6 @@
 import * as React from "react"
 import styled from "styled-components"
 import { global } from "../global"
-import * as Actions from "../actions"
 import * as Editors from "../data/editors"
 import * as Filesystem from "../data/filesystem"
 import * as Images from "../data/images"
@@ -14,7 +13,7 @@ export function ProjectTree()
 
 
     if (!global.filesystem.root.handle)
-        return <StyledRoot/>
+        return <div/>
 
 
     return <StyledRoot>
@@ -38,15 +37,15 @@ export function ProjectTree()
             <UI.HorizontalBar/>
 
             <UI.Button
-                onClick={ Actions.createDefFile.func }
+                onClick={ Filesystem.showNewDefsFilePicker }
             >
-                ➕ Defs
+                ➕&#xFE0E; Defs
             </UI.Button>
 
             <UI.Button
-                onClick={ Actions.createMapFile.func }
+                onClick={ Filesystem.showNewMapFilePicker }
             >
-                ➕ Map
+                ➕&#xFE0E; Map
             </UI.Button>
 
         </StyledHeader>

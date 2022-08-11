@@ -9,18 +9,6 @@ import * as Filesystem from "./data/filesystem"
 import * as Editors from "./data/editors"
 
 
-window.requestAnimationFrame(async () =>
-{
-    const versionFile = await fetch("build/version.txt")
-    const versionTxt = await versionFile.text()
-    if (versionTxt.startsWith("v0-"))
-    {
-        const version = versionTxt.match(".*?\-(.*?)\-")![1]
-        document.title = "Mapvania v0." + version
-    }
-})
-
-
 function App()
 {
     const filesystemRefreshToken = useRefreshToken("filesystem")

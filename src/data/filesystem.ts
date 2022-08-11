@@ -1,6 +1,11 @@
 import { RefreshToken } from "../util/refreshToken"
 import { global } from "../global"
 import * as IndexedDBKeyVal from "idb-keyval"
+import * as Defs from "../data/defs"
+import * as DefsSerialization from "../data/defs_serialization"
+import * as Map from "../data/map"
+import * as MapSerialization from "../data/map_serialization"
+import * as Editors from "../data/editors"
 
 
 export const DIRECTORY_SEPARATOR = "/"
@@ -9,6 +14,11 @@ export const MAP_EXTENSION = ".map.json"
 export const DEV_FILENAME = "dev.json"
 export const BUILTIN_IMAGE_PREFIX = ":"
 export const BUILTIN_IMAGE_SEPARATOR = ":"
+
+
+const fileNotContainedInRootFolderMessage =
+    "The selected file is not contained in the " +
+    "currently opened folder or any of its subfolders!"
 
 
 export interface Global
@@ -48,6 +58,23 @@ export function makeNew(refreshToken: RefreshToken): Global
             childFiles: [],
         }
     }
+}
+
+
+export async function openRootDirectory()
+{
+    if (!("showOpenFilePicker" in window))
+    {
+        window.alert(
+            "Your browser does not support the File System Access API!\n\n" +
+            "It's currently supported in Chrome, Edge, and Safari.")
+    }
+    
+    const handle = await window.showDirectoryPicker({ id: "mainFolder" })
+    if (!handle)
+        return
+
+    await setRootDirectory(handle)
 }
 
 
@@ -241,6 +268,108 @@ export async function getRootRelativePath(fileHandle: FileSystemFileHandle): Pro
         return undefined
 
     return DIRECTORY_SEPARATOR + resolved.join(DIRECTORY_SEPARATOR)
+}
+
+
+export async function showNewDefsFilePicker()
+{
+    const handle = await window.showSaveFilePicker({
+        suggestedName: "defs" + DEFS_EXTENSION,
+        types: [
+            {
+                description: "Mapvania Definitions File",
+                accept: {
+                    "text/json": [DEFS_EXTENSION],
+                }
+            },
+        ]
+    })
+    if (!handle)
+        return
+
+    try
+    {
+        const rootRelativePath = await getRootRelativePath(handle)
+        if (!rootRelativePath)
+        {
+            window.alert(fileNotContainedInRootFolderMessage)
+            return
+        }
+
+        const defs = Defs.makeNew()
+        const serDefs = DefsSerialization.serialize(defs)
+        const serDefsText = DefsSerialization.stringify(serDefs)
+
+        const writable = await handle.createWritable()
+        await writable.write(serDefsText)
+        await writable.close()
+
+        await refreshEntries()
+
+        await Editors.openEditorDefs(rootRelativePath)
+    }
+    catch (e)
+    {
+        console.error(e)
+        window.alert("An error occurred!\n\n" + e)
+    }
+}
+
+
+export async function showNewMapFilePicker()
+{
+    const handle = await window.showSaveFilePicker({
+        suggestedName: "map" + MAP_EXTENSION,
+        types: [
+            {
+                description: "Mapvania Map File",
+                accept: {
+                    "text/json": [MAP_EXTENSION],
+                }
+            },
+        ]
+    })
+
+    if (!handle)
+        return
+
+    try
+    {
+        const rootRelativePath = await getRootRelativePath(handle)
+        if (!rootRelativePath)
+        {
+            window.alert(fileNotContainedInRootFolderMessage)
+            return
+        }
+
+        const defsFile = await findNearestDefsFile(rootRelativePath)
+        if (!defsFile)
+        {
+            window.alert("No defs file found!\n\nPlease create a defs file first.")
+            return
+        }
+        
+        const serDefsText = await readFileText(defsFile.rootRelativePath)
+        const serDefs = DefsSerialization.parse(serDefsText)
+        const defs = DefsSerialization.deserialize(serDefs)
+    
+        const map = Map.makeNew()
+        const serMap = MapSerialization.serialize(defs, map)
+        const serMapText = MapSerialization.stringify(defs, serMap)
+
+        const writable = await handle.createWritable()
+        await writable.write(serMapText)
+        await writable.close()
+
+        await refreshEntries()
+
+        await Editors.openEditorMap(rootRelativePath)
+    }
+    catch (e)
+    {
+        console.error(e)
+        window.alert("An error occurred!\n\n" + e)
+    }
 }
 
 

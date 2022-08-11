@@ -1,5 +1,4 @@
 import * as React from "react"
-import * as Actions from "./actions"
 import * as Editors from "./data/editors"
 import { global } from "./global"
 
@@ -39,7 +38,7 @@ export function useKeyboardShortcuts()
                     if (ev.ctrlKey)
                     {
                         ev.preventDefault()
-                        Actions.save.func()
+                        Editors.saveCurrentEditor()
                     }
                     return
             }
