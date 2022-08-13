@@ -13,6 +13,7 @@ export function ModalTilesetPicker(props: {
     open: boolean,
     setOpen: (open: boolean) => void,
     defs: Defs.Defs,
+    basePath: string,
     header?: string,
     value: ID.ID,
     onChange?: (newValue: ID.ID) => void,
@@ -42,7 +43,7 @@ export function ModalTilesetPicker(props: {
                     items={ props.defs.tilesetDefs }
                     value={ props.value }
                     onChange={ onChangeInner }
-                    getItemIcon={ item => Defs.getTilesetDefIconElement(item) }
+                    getItemIcon={ item => Defs.getTilesetDefIconElement(props.basePath, item) }
                     getItemLabel={ item => item.name }
                 />
 

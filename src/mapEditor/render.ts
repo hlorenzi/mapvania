@@ -1,5 +1,6 @@
 import * as MapEditor from "./index"
 import * as ID from "../data/id"
+import * as Filesystem from "../data/filesystem"
 import * as Editors from "../data/editors"
 import * as Defs from "../data/defs"
 import * as Map from "../data/map"
@@ -214,6 +215,8 @@ export function renderRoom(
     currentlyEditing: boolean,
     editingLayerDef: Defs.DefLayer | undefined)
 {
+    const editor = global.editors.editors[state.editorIndex] as Editors.EditorMap
+
     ctx.save()
     
     for (var i = defs.layerDefs.length - 1; i >= 0; i--)
@@ -301,7 +304,11 @@ export function renderRoom(
                         if (!cachedTileset)
                             continue
 
-                        cachedImage = Images.getImageLazy(cachedTileset.imageSrc)
+                        const imagePath = Filesystem.resolveRelativePath(
+                            editor.defsBasePath,
+                            cachedTileset.imageSrc)
+                        
+                        cachedImage = Images.getImageLazy(imagePath)
                     }
                     
                     if (!cachedTileset || !cachedImage)
@@ -420,7 +427,13 @@ function renderObject(
     if (!objectDef)
         return
 
-    const image = Images.getImageLazy(objectDef.imageSrc)
+    const editor = global.editors.editors[state.editorIndex] as Editors.EditorMap
+
+    const imagePath = Filesystem.resolveRelativePath(
+        editor.defsBasePath,
+        objectDef.imageSrc)
+
+    const image = Images.getImageLazy(imagePath)
 
     const topleftX = -(object.width * objectDef.pivotPercent.x)
     const topleftY = -(object.height * objectDef.pivotPercent.y)
@@ -712,6 +725,8 @@ export function renderTileLayerForeground(
     room: Map.Room,
     editingLayerDef: Defs.DefLayer | undefined)
 {
+    const editor = global.editors.editors[state.editorIndex] as Editors.EditorMap
+
     if (!editingLayerDef || editingLayerDef.type !== "tile")
         return
 
@@ -754,7 +769,11 @@ export function renderTileLayerForeground(
                 if (!tileset)
                     continue
 
-                const image = Images.getImageLazy(tileset.imageSrc)
+                const imagePath = Filesystem.resolveRelativePath(
+                    editor.defsBasePath,
+                    tileset.imageSrc)
+                
+                const image = Images.getImageLazy(imagePath)
                 if (!image)
                     continue
 
@@ -782,7 +801,11 @@ export function renderTileLayerForeground(
                 if (!tileset)
                     continue
 
-                const image = Images.getImageLazy(tileset.imageSrc)
+                const imagePath = Filesystem.resolveRelativePath(
+                    editor.defsBasePath,
+                    tileset.imageSrc)
+                
+                const image = Images.getImageLazy(imagePath)
                 if (!image)
                     continue
 
@@ -862,6 +885,8 @@ export function renderObjectLayerForeground(
     room: Map.Room,
     editingLayerDef: Defs.DefLayer | undefined)
 {
+    const editor = global.editors.editors[state.editorIndex] as Editors.EditorMap
+
     if (!editingLayerDef || editingLayerDef.type !== "object")
         return
         
@@ -881,7 +906,11 @@ export function renderObjectLayerForeground(
         if (!objectDef)
             return
 
-        const image = Images.getImageLazy(objectDef.imageSrc)
+        const imagePath = Filesystem.resolveRelativePath(
+            editor.defsBasePath,
+            objectDef.imageSrc)
+        
+        const image = Images.getImageLazy(imagePath)
         if (!image)
             return
 

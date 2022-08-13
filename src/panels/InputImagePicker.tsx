@@ -12,8 +12,9 @@ import { ModalBuiltinImagePicker } from "./ModalBuiltinImagePicker"
 
 export function InputImagePicker(props: {
     value: string,
-    onChange?: (newValue: string) => void,
+    onChange?: (newValue: string, image: Images.Image) => void,
     imageset: Images.BuiltinImageItem[],
+    basePath: string,
     header?: string,
     placeholder?: string,
 })
@@ -34,15 +35,31 @@ export function InputImagePicker(props: {
     
     const chooseFile = async () =>
     {
-        const imageRootRelativePath = await Filesystem.showImagePicker()
-        if (!imageRootRelativePath)
+        const imageRelativePath = await Filesystem.showImagePicker(
+            props.basePath)
+
+        if (!imageRelativePath)
             return
 
-        const image = await Images.loadImage(imageRootRelativePath)
+        const imageRootPath = Filesystem.resolveRelativePath(
+            props.basePath,
+            imageRelativePath)
+
+        const image = await Images.loadImage(imageRootPath)
         if (!image)
             return
 
-        props.onChange?.(imageRootRelativePath)
+        props.onChange?.(imageRelativePath, image)
+    }
+
+
+    const chooseBuiltin = async (builtinPath: string) =>
+    {
+        const image = await Images.loadImage(builtinPath)
+        if (!image)
+            return
+
+        props.onChange?.(builtinPath, image)
     }
 
 
@@ -78,7 +95,7 @@ export function InputImagePicker(props: {
                     overflow: "hidden",
                     justifySelf: "center",
                 }}>
-                    { Defs.getImageIconElement(props.value) }
+                    { Defs.getImageIconElement(props.basePath, props.value) }
                 </div>
 
                 <div>
@@ -109,7 +126,7 @@ export function InputImagePicker(props: {
             imageset={ props.imageset }
             header={ props.header }
             value={ props.value }
-            onChange={ props.onChange }
+            onChange={ chooseBuiltin }
         />
     </div>
 }

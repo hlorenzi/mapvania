@@ -56,7 +56,8 @@ export type Editor =
 export interface EditorCommon
 {
     name: string
-    rootRelativePath: string
+    rootPath: string
+    basePath: string
 }
 
 
@@ -83,7 +84,8 @@ export interface EditorMap extends EditorCommon
     type: "map"
     defs: Defs.Defs
     defsSerialized: string
-    defsRootRelativePath: string
+    defsRootPath: string
+    defsBasePath: string
     map: Map.Map
     lastSavedMap: Map.Map
     mapEditor: MapEditor.State
@@ -166,7 +168,7 @@ export function openEditor(editor: Editor)
 export async function openEditorByFile(rootRelativePath: string)
 {
     const alreadyOpenedEditorIndex = global.editors.editors
-        .findIndex(e => e.rootRelativePath == rootRelativePath)
+        .findIndex(e => e.rootPath == rootRelativePath)
 
     if (alreadyOpenedEditorIndex >= 0)
     {
@@ -262,7 +264,8 @@ export async function openEditorDefs(rootRelativePath: string)
         const editor: EditorDefs = {
             type: "defs",
             name: Filesystem.getFileDisplayName(rootRelativePath),
-            rootRelativePath,
+            rootPath: rootRelativePath,
+            basePath: Filesystem.removeLastPathComponent(rootRelativePath),
             defs,
             lastSavedDefs: defs,
             history: [],
@@ -291,7 +294,7 @@ export async function saveEditorDefs(editorIndex: number)
         const serDefs = DefsSerialization.serialize(editorData.defs)
         const serDefsText = DefsSerialization.stringify(serDefs)
 
-        const file = await Filesystem.findFile(editorData.rootRelativePath)
+        const file = await Filesystem.findFile(editorData.rootPath)
 
         const writable = await (file.handle as any).createWritable()
         await writable.write(serDefsText)
@@ -343,10 +346,12 @@ export async function openEditorMap(rootRelativePath: string)
         const editor: EditorMap = {
             type: "map",
             name: Filesystem.getFileDisplayName(rootRelativePath),
-            rootRelativePath,
+            rootPath: rootRelativePath,
+            basePath: Filesystem.removeLastPathComponent(rootRelativePath),
             defs,
             defsSerialized: serDefsText,
-            defsRootRelativePath: defsFile.rootRelativePath,
+            defsRootPath: defsFile.rootRelativePath,
+            defsBasePath: Filesystem.removeLastPathComponent(defsFile.rootRelativePath),
             map,
             lastSavedMap: map,
             mapEditor: null!,
@@ -380,7 +385,7 @@ export async function saveEditorMap(editorIndex: number)
         const serMap = MapSerialization.serialize(editorData.defs, editorData.map)
         const serMapText = MapSerialization.stringify(editorData.defs, serMap)
 
-        const file = await Filesystem.findFile(editorData.rootRelativePath)
+        const file = await Filesystem.findFile(editorData.rootPath)
 
         const writable = await (file.handle as any).createWritable()
         await writable.write(serMapText)
@@ -403,7 +408,7 @@ export async function refreshDefsForOpenEditors()
     {
         if (editor.type === "map")
         {
-            const defsFile = await Filesystem.findNearestDefsFile(editor.defsRootRelativePath)
+            const defsFile = await Filesystem.findNearestDefsFile(editor.defsRootPath)
             if (!defsFile)
                 continue
             

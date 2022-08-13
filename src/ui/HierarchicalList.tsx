@@ -1,7 +1,7 @@
 import * as React from "react"
 import styled from "styled-components"
 import * as Hierarchy from "../data/hierarchy"
-import { Button } from "./Button"
+import * as UI from "../ui"
 
 
 const StyledRoot = styled.div`
@@ -425,19 +425,19 @@ export function HierarchicalList<T extends Hierarchy.Item>(props: {
         :
             <StyledHeader>
 
-                <Button
+                <UI.Button
                     label="➕&#xFE0E; Create"
                     title="Create new item"
                     onClick={ onCreate }
                 />
 
-                <Button
+                <UI.Button
                     label="▲"
                     title="Move selected items up"
                     onClick={ onMoveUp }
                 />
 
-                <Button
+                <UI.Button
                     label="▼"
                     title="Move selected items down"
                     onClick={ onMoveDown }
@@ -445,7 +445,7 @@ export function HierarchicalList<T extends Hierarchy.Item>(props: {
 
                 <div style={{ flexGrow: 1 }}/>
 
-                <Button
+                <UI.Button
                     label="❌"
                     title="Delete selected items"
                     onClick={ onRemove }
@@ -462,12 +462,14 @@ export function HierarchicalList<T extends Hierarchy.Item>(props: {
         :
             <StyledHeader>
 
-                <Button
+                <UI.Button
                     label={
                         "◀ 📁 " +
                         state.currentFolder.join("/") + "/"
                     }
                     title="Go to parent folder"
+                    fullWidth
+                    textAlign="left"
                     onClick={ onMoveUpOneFolderLevel }
                 />
 

@@ -110,7 +110,7 @@ export function ObjectProperties(props: {
                     <UI.Cell justifyEnd style={{ alignSelf: "center" }}>
 
                         { objectDefs.length == 1 ?
-                            Defs.getObjectDefIconElement(objectDefs[0]) :
+                            Defs.getObjectDefIconElement(editor.defsBasePath, objectDefs[0]) :
                             null
                         }
 

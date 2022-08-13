@@ -158,16 +158,16 @@ export function invalidateImages()
 }
 
 
-export function getImageLazy(rootRelativePath: string): Image | undefined
+export function getImageLazy(path: string): Image | undefined
 {
-    if (!rootRelativePath)
+    if (!path)
         return undefined
     
-    const cachedImage = global.images.images[rootRelativePath]
+    const cachedImage = global.images.images[path]
     if (cachedImage)
         return cachedImage
     
-    loadImage(rootRelativePath)
+    loadImage(path)
     return undefined
 }
 
@@ -176,8 +176,6 @@ export function encodeBuiltinImagePath(
     opts: BuiltinImageOptions)
     : string
 {
-    console.log("encode", opts, colorRgbToHex(opts.color), colorRgbToHex(opts.bkgColor))
-
     return Filesystem.BUILTIN_IMAGE_PREFIX +
         opts.id + Filesystem.BUILTIN_IMAGE_SEPARATOR +
         colorRgbToHex(opts.color) + Filesystem.BUILTIN_IMAGE_SEPARATOR +

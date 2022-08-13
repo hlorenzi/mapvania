@@ -5,6 +5,7 @@ import styled from "styled-components"
 const StyledButton = styled.button<{
     fullWidth: boolean,
     selected: boolean,
+    textAlign: string,
     backgroundColor: string,
 }>`
     font-size: 1em;
@@ -22,7 +23,7 @@ const StyledButton = styled.button<{
     outline: none;
     border-radius: 0.25em;
     cursor: pointer;
-    text-align: center;
+    text-align: ${ props => props.textAlign };
 
     padding: 0.25em 0.25em;
 
@@ -42,6 +43,7 @@ export function Button(props: {
     disabled?: boolean,
     selected?: boolean,
     fullWidth?: boolean,
+    textAlign?: string,
     backgroundColor?: string,
     style?: React.CSSProperties,
 })
@@ -53,6 +55,7 @@ export function Button(props: {
         disabled={ props.disabled }
         selected={ !!props.selected }
         fullWidth={ !!props.fullWidth }
+        textAlign={ props.textAlign ?? "center" }
         backgroundColor={ props.backgroundColor ?? "transparent" }
         style={ props.style }
     >

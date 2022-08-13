@@ -16,7 +16,8 @@ export function DefsTilesets(props: {
     editorIndex: number,
 })
 {
-    const defs = global.editors.editors[props.editorIndex].defs
+    const editor = global.editors.editors[props.editorIndex]
+    const defs = editor.defs
     
     const [listState, setListState] = useCachedState(
         "DefsTilesets_ListState",
@@ -27,7 +28,13 @@ export function DefsTilesets(props: {
 
     const curTilesetIndex = defs.tilesetDefs.findIndex(t => t.id === curTilesetId)
     const curTileset = defs.tilesetDefs.find(t => t.id === curTilesetId)
-    const curTilesetImg = Images.getImageLazy(curTileset?.imageSrc ?? "")
+
+    const curTilesetImgPath = !curTileset ? "" :
+        Filesystem.resolveRelativePath(
+            editor.basePath,
+            curTileset.imageSrc)
+    
+    const curTilesetImg = Images.getImageLazy(curTilesetImgPath)
     
 
     const setDefs = (fn: (old: Defs.Defs) => Defs.Defs) =>
@@ -58,18 +65,14 @@ export function DefsTilesets(props: {
     }
 
 
-    const chooseImage = async (rootRelativePath: string) =>
+    const chooseImage = async (relativePath: string, image: Images.Image) =>
     {
         if (!curTileset)
             return
 
-        const image = await Images.loadImage(rootRelativePath)
-        if (!image)
-            return
-
         set({
             ...curTileset,
-            imageSrc: rootRelativePath,
+            imageSrc: relativePath,
             width: image.width,
             height: image.height,
         })
@@ -206,7 +209,7 @@ export function DefsTilesets(props: {
             createItem={ create }
             state={ listState }
             setState={ setListState }
-            getItemIcon={ item => Defs.getTilesetDefIconElement(item) }
+            getItemIcon={ item => Defs.getTilesetDefIconElement(editor.basePath, item) }
             getItemLabel={ item => item.name }
         />
 
@@ -257,6 +260,7 @@ export function DefsTilesets(props: {
                         value={ curTileset.imageSrc }
                         onChange={ chooseImage }
                         imageset={ Images.builtinTilesetImages }
+                        basePath={ editor.basePath }
                     />
                 </UI.Cell>
                 

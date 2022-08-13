@@ -9,11 +9,29 @@ import * as UI from "../ui"
 
 export function ProjectTree()
 {
-    const [currentDirectory, setCurrentDirectory] = React.useState(global.filesystem.root)
+    const [currentDirectory, setCurrentDirectory] =
+        React.useState<string[]>([])
 
+    let directoryEntry = Filesystem.findDirectory(
+        Filesystem.PROJECT_ROOT_PATH + currentDirectory.join(Filesystem.DIRECTORY_SEPARATOR))
+
+    if (!directoryEntry)
+        directoryEntry = global.filesystem.root
 
     if (!global.filesystem.root.handle)
         return <div/>
+
+
+    const enterDirectory = (name: string) =>
+    {
+        setCurrentDirectory(c => [...c, name])
+    }
+
+
+    const leaveDirectory = () =>
+    {
+        setCurrentDirectory(c => c.slice(0, c.length - 1))
+    }
 
 
     return <StyledRoot>
@@ -37,31 +55,45 @@ export function ProjectTree()
             <UI.HorizontalBar/>
 
             <UI.Button
-                onClick={ Filesystem.showNewDefsFilePicker }
+                onClick={ () => Filesystem.showNewDefsFilePicker(directoryEntry?.handle) }
             >
                 ➕&#xFE0E; Defs
             </UI.Button>
 
             <UI.Button
-                onClick={ Filesystem.showNewMapFilePicker }
+                onClick={ () => Filesystem.showNewMapFilePicker(directoryEntry?.handle) }
             >
                 ➕&#xFE0E; Map
             </UI.Button>
+
+            <UI.HorizontalBar/>
+            
+            <UI.Button
+                label={
+                    "◀ 📁 " +
+                    currentDirectory.join(Filesystem.DIRECTORY_SEPARATOR) + "/"
+                }
+                title="Go to parent directory"
+                onClick={ leaveDirectory }
+                fullWidth
+                textAlign="left"
+            />
 
         </StyledHeader>
 
         <StyledTree>
 
-            { currentDirectory.childDirectories.map((directory, i) =>
+            { directoryEntry.childDirectories.map((directory, i) =>
                 <StyledEntry
                     key={ i }
+                    onDoubleClick={ () => enterDirectory(directory.name) }
                     isRecognized
                 >
                     📁 { directory.name }/
                 </StyledEntry>
             )}
 
-            { currentDirectory.childFiles.map((file, i) =>
+            { directoryEntry.childFiles.map((file, i) =>
                 <StyledEntry
                     key={ i }
                     onDoubleClick={ () => Editors.openEditorByFile(file.rootRelativePath) }
@@ -105,17 +137,37 @@ const StyledTree = styled.div`
 `
 
 
-const StyledEntry = styled.div<{
+const StyledEntry = styled.button<{
     isRecognized: boolean,
 }>`
+    display: block;
+    border: 0;
+    outline: none;
+    
+    font-family: inherit;
+    font-weight: inherit;
+    font-size: 1em;
+
+    width: 100%;
     padding: 0.25em 1em;
     
     cursor: pointer;
 
+    color: inherit;
+    background-color: transparent;
     opacity: ${ props => props.isRecognized ? "1" : "0.6" };
+    text-align: left;
 
     &:hover
     {
-        background-color: #333333;
+        background-color: #2d2d2d;
+    }
+
+    &:focus
+    {
+        background-color: #373737;
+        outline: solid #666666;
+        outline-width: 1px;
+        outline-offset: -1px;
     }
 `

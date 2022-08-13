@@ -139,7 +139,7 @@ export function ModalBuiltinImagePicker(props: {
                         items={ props.imageset }
                         value={ options.id }
                         onChange={ setId }
-                        getItemIcon={ item => Defs.getImageIconElement(Filesystem.BUILTIN_IMAGE_PREFIX + item.id) }
+                        getItemIcon={ item => Defs.getImageIconElement("", Filesystem.BUILTIN_IMAGE_PREFIX + item.id) }
                         getItemLabel={ item => item.name }
                         style={{
                             width: "30em",

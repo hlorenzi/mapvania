@@ -1,6 +1,7 @@
 import * as React from "react"
 import { RefreshToken } from "../util/refreshToken"
 import * as ID from "./id"
+import * as Filesystem from "./filesystem"
 import * as Hierarchy from "./hierarchy"
 import * as Images from "./images"
 import * as Properties from "./properties"
@@ -656,7 +657,9 @@ export function getMatchingTileInTileBrush(
 }
 
 
-export function getLayerDefIconElement(layerDef: DefLayer): React.ReactNode | null
+export function getLayerDefIconElement(
+    layerDef: DefLayer)
+    : React.ReactNode | null
 {
     return layerDef.type == "tile" ? "🧱" :
         layerDef.type == "object" ? "🍎" :
@@ -664,9 +667,16 @@ export function getLayerDefIconElement(layerDef: DefLayer): React.ReactNode | nu
 }
 
 
-export function getTilesetDefIconElement(tilesetDef: DefTileset): React.ReactNode | null
+export function getTilesetDefIconElement(
+    basePath: string,
+    tilesetDef: DefTileset)
+    : React.ReactNode | null
 {
-    const image = Images.getImageLazy(tilesetDef.imageSrc)
+    const imagePath = Filesystem.resolveRelativePath(
+        basePath,
+        tilesetDef.imageSrc)
+
+    const image = Images.getImageLazy(imagePath)
     if (!image)
         return <span/>
 
@@ -703,7 +713,11 @@ export function getTileAttributeDefIconElement(tileAttributeDef: DefTileAttribut
 }
 
 
-export function getTileBrushDefIconElement(defs: Defs, tileBrushDef: DefTileBrush): React.ReactNode | null
+export function getTileBrushDefIconElement(
+    basePath: string,
+    defs: Defs,
+    tileBrushDef: DefTileBrush)
+    : React.ReactNode | null
 {
     const tileset = getTileset(defs, tileBrushDef.tilesetDefId)
     if (!tileset)
@@ -715,7 +729,11 @@ export function getTileBrushDefIconElement(defs: Defs, tileBrushDef: DefTileBrus
 
     const tilePx = getPixelForTileIndex(tileset, topmostLeftmostTile)
     
-    const image = Images.getImageLazy(tileset.imageSrc)
+    const imagePath = Filesystem.resolveRelativePath(
+        basePath,
+        tileset.imageSrc)
+
+    const image = Images.getImageLazy(imagePath)
     if (!image)
         return <span/>
 
@@ -740,9 +758,16 @@ export function getTileBrushDefIconElement(defs: Defs, tileBrushDef: DefTileBrus
 }
 
 
-export function getObjectDefIconElement(objectDef: DefObject): React.ReactNode | null
+export function getObjectDefIconElement(
+    basePath: string,
+    objectDef: DefObject)
+    : React.ReactNode | null
 {
-    const image = Images.getImageLazy(objectDef.imageSrc)
+    const imagePath = Filesystem.resolveRelativePath(
+        basePath,
+        objectDef.imageSrc)
+
+    const image = Images.getImageLazy(imagePath)
     if (!image)
         return <span/>
 
@@ -767,9 +792,16 @@ export function getObjectDefIconElement(objectDef: DefObject): React.ReactNode |
 }
 
 
-export function getImageIconElement(rootRelativePath: string): React.ReactNode | null
+export function getImageIconElement(
+    basePath: string,
+    relativePath: string)
+    : React.ReactNode | null
 {
-    const image = Images.getImageLazy(rootRelativePath)
+    const imagePath = Filesystem.resolveRelativePath(
+        basePath,
+        relativePath)
+
+    const image = Images.getImageLazy(imagePath)
     if (!image)
         return <span/>
 

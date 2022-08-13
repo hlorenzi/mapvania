@@ -13,6 +13,7 @@ export function ModalObjectPicker(props: {
     open: boolean,
     setOpen: (open: boolean) => void,
     defs: Defs.Defs,
+    basePath: string,
     header?: string,
     value: ID.ID,
     onChange?: (newValue: ID.ID) => void,
@@ -42,7 +43,7 @@ export function ModalObjectPicker(props: {
                     items={ props.defs.objectDefs }
                     value={ props.value }
                     onChange={ onChangeInner }
-                    getItemIcon={ item => Defs.getObjectDefIconElement(item) }
+                    getItemIcon={ item => Defs.getObjectDefIconElement(props.basePath, item) }
                     getItemLabel={ item => item.name }
                 />
 

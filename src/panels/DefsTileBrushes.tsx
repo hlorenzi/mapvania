@@ -1,6 +1,7 @@
 import * as React from "react"
 import * as ID from "../data/id"
 import * as Defs from "../data/defs"
+import * as Filesystem from "../data/filesystem"
 import * as Editors from "../data/editors"
 import * as Images from "../data/images"
 import * as Hierarchy from "../data/hierarchy"
@@ -15,7 +16,8 @@ export function DefsTileBrushes(props: {
     editorIndex: number,
 })
 {
-    const defs = global.editors.editors[props.editorIndex].defs
+    const editor = global.editors.editors[props.editorIndex]
+    const defs = editor.defs
 
     const [listState, setListState] = useCachedState(
         "DefsTileBrushes_ListState",
@@ -25,7 +27,13 @@ export function DefsTileBrushes(props: {
     const curBrushIndex = defs.tileBrushDefs.findIndex(l => l.id === curBrushId)
     const curBrush = defs.tileBrushDefs.find(l => l.id === curBrushId)
     const curTileset = Defs.getTileset(defs, curBrush?.tilesetDefId ?? "")
-    const curTilesetImg = Images.getImageLazy(curTileset?.imageSrc ?? "")
+    
+    const curTilesetImgPath = !curTileset ? "" :
+        Filesystem.resolveRelativePath(
+            editor.basePath,
+            curTileset.imageSrc)
+    
+    const curTilesetImg = Images.getImageLazy(curTilesetImgPath)
     
 
     const setDefs = (fn: (old: Defs.Defs) => Defs.Defs) =>
@@ -271,7 +279,7 @@ export function DefsTileBrushes(props: {
             createItem={ create }
             state={ listState }
             setState={ setListState }
-            getItemIcon={ item => Defs.getTileBrushDefIconElement(defs, item) }
+            getItemIcon={ item => Defs.getTileBrushDefIconElement(editor.basePath, defs, item) }
             getItemLabel={ item => item.name }
         />
 
@@ -321,6 +329,7 @@ export function DefsTileBrushes(props: {
                     <InputTilesetPicker
                         defs={ defs }
                         value={ curBrush.tilesetDefId }
+                        basePath={ editor.basePath }
                         onChange={ (value) => setBrush({ ...curBrush, tilesetDefId: value }) }
                     />
                 </UI.Cell>

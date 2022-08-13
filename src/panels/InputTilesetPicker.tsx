@@ -13,6 +13,7 @@ export function InputTilesetPicker(props: {
     defs: Defs.Defs,
     value: ID.ID,
     onChange?: (newValue: ID.ID) => void,
+    basePath: string,
     header?: string,
     placeholder?: string,
 })
@@ -55,7 +56,7 @@ export function InputTilesetPicker(props: {
                     overflow: "hidden",
                     justifySelf: "center",
                 }}>
-                    { tileset && Defs.getTilesetDefIconElement(tileset) }
+                    { tileset && Defs.getTilesetDefIconElement(props.basePath, tileset) }
                 </div>
 
                 <div>
@@ -86,6 +87,7 @@ export function InputTilesetPicker(props: {
             defs={ props.defs }
             value={ props.value }
             onChange={ props.onChange }
+            basePath={ props.basePath }
         />
     </div>
 }

@@ -49,7 +49,7 @@ export function ObjectPicker(props: {
                     onChange={ chooseObject }
                     state={ state }
                     setState={ setState }
-                    getItemIcon={ item => Defs.getObjectDefIconElement(item) }
+                    getItemIcon={ item => Defs.getObjectDefIconElement(editor.defsBasePath, item) }
                     getItemLabel={ item => item.name }
                 />
 

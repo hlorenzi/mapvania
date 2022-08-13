@@ -9,8 +9,11 @@ import * as Editors from "../data/editors"
 
 
 export const DIRECTORY_SEPARATOR = "/"
+export const PROJECT_ROOT_PATH = "./"
 export const DEFS_EXTENSION = ".defs.json"
+export const DEFS_DEFAULT_FILENAME = "defs"
 export const MAP_EXTENSION = ".map.json"
+export const MAP_DEFAULT_FILENAME = "map"
 export const DEV_FILENAME = "dev.json"
 export const BUILTIN_IMAGE_PREFIX = ":"
 export const BUILTIN_IMAGE_SEPARATOR = ":"
@@ -18,7 +21,7 @@ export const BUILTIN_IMAGE_SEPARATOR = ":"
 
 const fileNotContainedInRootFolderMessage =
     "The selected file is not contained in the " +
-    "currently opened folder or any of its subfolders!"
+    "currently opened project folder or any of its subfolders!"
 
 
 export interface Global
@@ -33,6 +36,7 @@ export interface Directory
     rootRelativePath: string
     name: string
     handle: FileSystemDirectoryHandle | undefined
+    parentDirectory: Directory | null
     childDirectories: Directory[]
     childFiles: File[]
 }
@@ -51,9 +55,10 @@ export function makeNew(refreshToken: RefreshToken): Global
     return {
         refreshToken,
         root: {
-            rootRelativePath: "./",
+            rootRelativePath: PROJECT_ROOT_PATH,
             name: "",
             handle: undefined,
+            parentDirectory: null,
             childDirectories: [],
             childFiles: [],
         }
@@ -119,7 +124,6 @@ export async function refreshEntries()
         throw "invalid global folder handle"
 
     await refreshDirectory(global.filesystem.root, global.filesystem.root.rootRelativePath)
-    console.log("Filesystem.refreshEntries finished", global.filesystem.root)
 }
 
 
@@ -150,6 +154,7 @@ export async function refreshDirectory(directory: Directory, path: string)
                 rootRelativePath: path + name,
                 name,
                 handle,
+                parentDirectory: directory,
                 childDirectories: [],
                 childFiles: [],
             }
@@ -167,6 +172,38 @@ export async function refreshDirectory(directory: Directory, path: string)
 export function isIgnorableFile(rootRelativePath: string)
 {
     return rootRelativePath.endsWith(".meta")
+}
+
+
+export function findDirectory(
+    rootPath: string)
+    : Directory | undefined
+{
+    let rootComponents = rootPath
+        .split(DIRECTORY_SEPARATOR)
+        .filter(d => !!d)
+        .filter(d => d !== ".")
+
+    let currentDirectory = global.filesystem.root
+    while (rootComponents.length > 1)
+    {
+        const nextDirectory = currentDirectory.childDirectories
+            .find(d => d.name === rootComponents[0])
+
+        if (!nextDirectory)
+            return undefined // Intermediary directory not found
+    
+        currentDirectory = nextDirectory
+        rootComponents = rootComponents.slice(1)
+    }
+
+    const directory = currentDirectory.childDirectories
+        .find(dir => dir.name === rootComponents[0])
+
+    if (!directory)
+        return currentDirectory
+    
+    return directory
 }
 
 
@@ -216,8 +253,12 @@ export async function findNearestDefsFile(
     startingFromRootRelativePath: string)
     : Promise<File | null>
 {
+    const startingDirectory = findDirectory(startingFromRootRelativePath)
+    if (!startingDirectory)
+        return null
+
     return findNearestFileRecursive(
-        global.filesystem.root,
+        startingDirectory,
         f => f.name.endsWith(DEFS_EXTENSION))
 }
 
@@ -231,14 +272,125 @@ async function findNearestFileRecursive(
     if (file)
         return file
 
-    for (const childDirectory of currentDirectory.childDirectories)
+    // Recurse up to parent directory.
+    if (currentDirectory.parentDirectory)
     {
-        const innerFile = await findNearestFileRecursive(childDirectory, filter)
-        if (innerFile)
-            return innerFile
+        return findNearestFileRecursive(
+            currentDirectory.parentDirectory,
+            filter)
     }
 
     return null
+}
+
+
+export function removeLastPathComponent(path: string): string
+{
+    let components = path.split(DIRECTORY_SEPARATOR)
+    if (components.length <= 1)
+        return PROJECT_ROOT_PATH
+
+    return components
+        .slice(0, components.length - 1)
+        .join(DIRECTORY_SEPARATOR)
+}
+
+
+export function makeRelativePath(
+    basePath: string,
+    destinationPath: string)
+    : string
+{
+    if (destinationPath.startsWith(BUILTIN_IMAGE_PREFIX))
+        return destinationPath
+    
+    let baseComponents = basePath
+        .split(DIRECTORY_SEPARATOR)
+        .filter(d => !!d)
+        .filter(d => d !== ".")
+
+    let destComponents = destinationPath
+        .split(DIRECTORY_SEPARATOR)
+        .filter(d => !!d)
+        .filter(d => d !== ".")
+
+    let result: string[] = []
+
+    let lastCommonPrefix = 0
+    while (lastCommonPrefix < baseComponents.length &&
+        lastCommonPrefix < destComponents.length)
+    {
+        if (baseComponents[lastCommonPrefix] !== destComponents[lastCommonPrefix])
+            break
+
+        lastCommonPrefix++
+    }
+
+    for (let i = lastCommonPrefix; i < baseComponents.length; i++)
+        result.push("..")
+
+    for (let i = lastCommonPrefix; i < destComponents.length; i++)
+        result.push(destComponents[i])
+
+    let resultPath = result.join(DIRECTORY_SEPARATOR)
+    if (result.length === 0 || result[0] !== "..")
+        resultPath = PROJECT_ROOT_PATH + resultPath
+
+    /*console.log(
+        "makeRelativePath",
+        basePath,
+        destinationPath,
+        baseComponents,
+        destComponents,
+        lastCommonPrefix,
+        resultPath)*/
+
+    return resultPath
+}
+
+
+export function resolveRelativePath(
+    basePath: string,
+    relativePath: string)
+    : string
+{
+    if (relativePath.startsWith(BUILTIN_IMAGE_PREFIX))
+        return relativePath
+    
+    let baseComponents = basePath
+        .split(DIRECTORY_SEPARATOR)
+        .filter(d => !!d)
+
+    let relativeComponents = relativePath
+        .split(DIRECTORY_SEPARATOR)
+        .filter(d => !!d)
+
+    for (let i = 0; i < relativeComponents.length; i++)
+    {
+        if (relativeComponents[i] === "..")
+        {
+            baseComponents = baseComponents.slice(0, baseComponents.length - 1)
+        }
+        else if (relativeComponents[i] === "." ||
+            relativeComponents[i] === "")
+        {
+            continue
+        }
+        else
+        {
+            baseComponents = [...baseComponents, relativeComponents[i]]
+        }
+    }
+
+    const resultPath = baseComponents.join(DIRECTORY_SEPARATOR)
+
+    /*console.log(
+        "resolveRelativePath",
+        basePath,
+        relativePath,
+        resultPath)*/
+
+    return resultPath
 }
 
 
@@ -267,14 +419,15 @@ export async function getRootRelativePath(fileHandle: FileSystemFileHandle): Pro
     if (!resolved)
         return undefined
 
-    return DIRECTORY_SEPARATOR + resolved.join(DIRECTORY_SEPARATOR)
+    return PROJECT_ROOT_PATH + resolved.join(DIRECTORY_SEPARATOR)
 }
 
 
-export async function showNewDefsFilePicker()
+export async function showNewDefsFilePicker(startIn?: FileSystemHandle)
 {
     const handle = await window.showSaveFilePicker({
-        suggestedName: "defs" + DEFS_EXTENSION,
+        suggestedName: DEFS_DEFAULT_FILENAME,
+        startIn,
         types: [
             {
                 description: "Mapvania Definitions File",
@@ -283,7 +436,8 @@ export async function showNewDefsFilePicker()
                 }
             },
         ]
-    })
+    } as SaveFilePickerOptions)
+
     if (!handle)
         return
 
@@ -316,10 +470,11 @@ export async function showNewDefsFilePicker()
 }
 
 
-export async function showNewMapFilePicker()
+export async function showNewMapFilePicker(startIn?: FileSystemHandle)
 {
     const handle = await window.showSaveFilePicker({
-        suggestedName: "map" + MAP_EXTENSION,
+        suggestedName: MAP_DEFAULT_FILENAME,
+        startIn,
         types: [
             {
                 description: "Mapvania Map File",
@@ -328,7 +483,7 @@ export async function showNewMapFilePicker()
                 }
             },
         ]
-    })
+    } as SaveFilePickerOptions)
 
     if (!handle)
         return
@@ -373,7 +528,9 @@ export async function showNewMapFilePicker()
 }
 
 
-export async function showImagePicker(): Promise<string | undefined>
+export async function showImagePicker(
+    basePath: string)
+    : Promise<string | undefined>
 {
     const [handle] = await window.showOpenFilePicker({
         multiple: false,
@@ -388,24 +545,24 @@ export async function showImagePicker(): Promise<string | undefined>
     if (!handle)
         return undefined
 
-    const rootRelativePath = await getRootRelativePath(handle)
-    if (!rootRelativePath)
+    const imageRootPath = await getRootRelativePath(handle)
+    if (!imageRootPath)
     {
-        window.alert("The selected file is not contained in the root folder!")
+        window.alert(fileNotContainedInRootFolderMessage)
         throw "file not contained in root folder"
     }
 
     // Refresh entries in case the file is not yet cached
     try
     {
-        await findFile(rootRelativePath)
+        await findFile(imageRootPath)
     }
     catch
     {
         await refreshEntries()
     }
 
-    return rootRelativePath
+    return makeRelativePath(basePath, imageRootPath)
 }
 
 

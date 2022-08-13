@@ -1476,7 +1476,7 @@ export function screenshotRoomSelection(
     }
 
     const roomIdsDisplay = 
-        Filesystem.getFileDisplayName(editor.rootRelativePath) +
+        Filesystem.getFileDisplayName(editor.rootPath) +
         "/" +
         (rooms.length === 1 ?
             rooms[0].id :

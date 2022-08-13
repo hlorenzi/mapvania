@@ -28,8 +28,7 @@
     align="right"
     width="50%">
 
-- ⚙️ ***Project-oriented***: All asset definitions are centralized in a project file, so the level designer always sees the same set of tilesets and objects to use, no matter how many maps they create. Created a new object asset? It's readily available in all map files, new and old.
-
+- ⚙️ ***Project-oriented***: All asset definitions are centralized in a "defs" file, so the level designer always sees the same set of tilesets and objects to use, no matter how many maps they create. Created a new object asset? It's readily available in all map files, new and old. You can also create multiple defs files for different folders in your project, in case you also have to design, for example, level select screens alongside your actual levels.
 
 - 🚪 ***Room-based***: Create an unlimited number of rooms within each map! Move them around, easily expand their boundaries, match their borders, and effortlessly create an interconnected world!
 

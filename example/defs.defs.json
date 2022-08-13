@@ -156,22 +156,22 @@
 			"id": "lor6",
 			"name": "ninja",
 			"folder": [],
-			"imageSrc": "/assets/ninja.png",
+			"imageSrc": "./assets/ninja.png",
 			"imageRect": {
-				"height": 32,
-				"width": 32,
 				"x": 0,
-				"y": 0
+				"y": 0,
+				"width": 32,
+				"height": 32
 			},
 			"pivotPercent": {
 				"x": 0,
 				"y": 0
 			},
 			"interactionRect": {
-				"height": 16,
-				"width": 16,
 				"x": 8,
-				"y": 16
+				"y": 16,
+				"width": 16,
+				"height": 16
 			},
 			"resizeable": false,
 			"inheritPropertiesFromObjectDefs": [],
@@ -181,22 +181,22 @@
 			"id": "lor7",
 			"name": "dragon",
 			"folder": [],
-			"imageSrc": "/assets/dragon.png",
+			"imageSrc": "./assets/dragon.png",
 			"imageRect": {
-				"height": 32,
-				"width": 32,
 				"x": 0,
-				"y": 0
+				"y": 0,
+				"width": 32,
+				"height": 32
 			},
 			"pivotPercent": {
 				"x": 0,
 				"y": 0
 			},
 			"interactionRect": {
-				"height": 16,
-				"width": 16,
 				"x": 8,
-				"y": 16
+				"y": 16,
+				"width": 16,
+				"height": 16
 			},
 			"resizeable": false,
 			"inheritPropertiesFromObjectDefs": [],
@@ -233,22 +233,22 @@
 			"id": "lor8",
 			"name": "apple",
 			"folder": [],
-			"imageSrc": "/assets/apple.png",
+			"imageSrc": "./assets/apple.png",
 			"imageRect": {
-				"height": 32,
-				"width": 32,
 				"x": 0,
-				"y": 0
+				"y": 0,
+				"width": 32,
+				"height": 32
 			},
 			"pivotPercent": {
 				"x": 0,
 				"y": 0
 			},
 			"interactionRect": {
-				"height": 16,
-				"width": 16,
 				"x": 8,
-				"y": 16
+				"y": 16,
+				"width": 16,
+				"height": 16
 			},
 			"resizeable": false,
 			"inheritPropertiesFromObjectDefs": [],
@@ -258,22 +258,22 @@
 			"id": "lor9",
 			"name": "coin",
 			"folder": [],
-			"imageSrc": "/assets/coin.png",
+			"imageSrc": "./assets/coin.png",
 			"imageRect": {
-				"height": 16,
-				"width": 16,
 				"x": 0,
-				"y": 0
+				"y": 0,
+				"width": 16,
+				"height": 16
 			},
 			"pivotPercent": {
 				"x": 0,
 				"y": 0
 			},
 			"interactionRect": {
-				"height": 16,
-				"width": 16,
 				"x": 0,
-				"y": 0
+				"y": 0,
+				"width": 16,
+				"height": 16
 			},
 			"resizeable": false,
 			"inheritPropertiesFromObjectDefs": [],
@@ -283,22 +283,22 @@
 			"id": "lor10",
 			"name": "hook",
 			"folder": [],
-			"imageSrc": "/assets/hook.png",
+			"imageSrc": "./assets/hook.png",
 			"imageRect": {
-				"height": 16,
-				"width": 16,
 				"x": 0,
-				"y": 0
+				"y": 0,
+				"width": 16,
+				"height": 16
 			},
 			"pivotPercent": {
 				"x": 0,
 				"y": 0
 			},
 			"interactionRect": {
-				"height": 16,
-				"width": 16,
 				"x": 0,
-				"y": 0
+				"y": 0,
+				"width": 16,
+				"height": 16
 			},
 			"resizeable": false,
 			"inheritPropertiesFromObjectDefs": [],

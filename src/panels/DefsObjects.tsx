@@ -18,7 +18,8 @@ export function DefsObjects(props: {
     editorIndex: number,
 })
 {
-    const defs = global.editors.editors[props.editorIndex].defs
+    const editor = global.editors.editors[props.editorIndex]
+    const defs = editor.defs
     
     const [listState, setListState] = useCachedState(
         "DefsObjects_ListState",
@@ -31,7 +32,13 @@ export function DefsObjects(props: {
     const curObjectId = listState.lastSelectedId
     const curObjectIndex = defs.objectDefs.findIndex(o => o.id === curObjectId)
     const curObject = defs.objectDefs.find(o => o.id === curObjectId)
-    const curObjectImg = Images.getImageLazy(curObject?.imageSrc ?? "")
+    
+    const curObjectImgPath = !curObject ? "" :
+        Filesystem.resolveRelativePath(
+            editor.basePath,
+            curObject.imageSrc)
+    
+    const curObjectImg = Images.getImageLazy(curObjectImgPath)
 
 
     const setDefs = (fn: (old: Defs.Defs) => Defs.Defs) =>
@@ -62,18 +69,14 @@ export function DefsObjects(props: {
     }
 
 
-    const chooseImage = async (rootRelativePath: string) =>
+    const chooseImage = async (relativePath: string, image: Images.Image) =>
     {
         if (!curObject)
             return
 
-        const image = await Images.loadImage(rootRelativePath)
-        if (!image)
-            return
-
         set({
             ...curObject,
-            imageSrc: rootRelativePath,
+            imageSrc: relativePath,
             imageRect: {
                 x: 0,
                 y: 0,
@@ -169,7 +172,7 @@ export function DefsObjects(props: {
             createItem={ create }
             state={ listState }
             setState={ setListState }
-            getItemIcon={ item => Defs.getObjectDefIconElement(item) }
+            getItemIcon={ item => Defs.getObjectDefIconElement(editor.basePath, item) }
             getItemLabel={ item => item.name }
         />
 
@@ -237,6 +240,7 @@ export function DefsObjects(props: {
                             value={ curObject.imageSrc }
                             onChange={ chooseImage }
                             imageset={ Images.builtinObjectImages }
+                            basePath={ editor.basePath }
                         />
                     </UI.Cell>
                     
@@ -347,6 +351,7 @@ export function DefsObjects(props: {
                             defs={ defs }
                             value={ curObject.inheritPropertiesFromObjectDefs }
                             onChange={ (value) => set({ ...curObject, inheritPropertiesFromObjectDefs: value }) }
+                            basePath={ editor.basePath }
                         />
                     </UI.Cell>
 

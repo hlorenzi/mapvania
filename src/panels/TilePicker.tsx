@@ -3,6 +3,7 @@ import styled from "styled-components"
 import * as ID from "../data/id"
 import * as Defs from "../data/defs"
 import * as Editors from "../data/editors"
+import * as Filesystem from "../data/filesystem"
 import * as Images from "../data/images"
 import * as MapEditor from "../mapEditor"
 import * as UI from "../ui"
@@ -14,7 +15,8 @@ export function TilePicker(props: {
     editorIndex: number,
 })
 {
-    const defs = (global.editors.editors[props.editorIndex] as Editors.EditorMap).defs
+    const editor = global.editors.editors[props.editorIndex] as Editors.EditorMap
+    const defs = editor.defs
     
     const [brushListState, setBrushListState] = useCachedState(
         "TilePicker_BrushListState",
@@ -29,7 +31,13 @@ export function TilePicker(props: {
         0)
         
     const curTileset = defs.tilesetDefs.find(t => t.id === (global.editors.mapEditing.tilesetDefId || selectedTileset))
-    const curTilesetImg = Images.getImageLazy(curTileset?.imageSrc ?? "")
+    
+    const curTilesetImgPath = !curTileset ? "" :
+        Filesystem.resolveRelativePath(
+            editor.basePath,
+            curTileset.imageSrc)
+    
+    const curTilesetImg = Images.getImageLazy(curTilesetImgPath)
 
     
     React.useEffect(() =>
@@ -195,7 +203,7 @@ export function TilePicker(props: {
                         items={ defs.tileBrushDefs }
                         value={ global.editors.mapEditing.tileBrushDefId }
                         onChange={ chooseBrush }
-                        getItemIcon={ item => Defs.getTileBrushDefIconElement(defs, item) }
+                        getItemIcon={ item => Defs.getTileBrushDefIconElement(editor.defsBasePath, defs, item) }
                         getItemLabel={ item => item.name }
                         state={ brushListState }
                         setState={ setBrushListState }

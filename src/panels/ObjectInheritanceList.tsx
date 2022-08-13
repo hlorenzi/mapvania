@@ -15,6 +15,7 @@ export function ObjectInheritanceList(props: {
     defs: Defs.Defs,
     value: Defs.DefObject["inheritPropertiesFromObjectDefs"],
     onChange: (newList: Defs.DefObject["inheritPropertiesFromObjectDefs"]) => void,
+    basePath: string,
 })
 {
     const set = (index: number, newValue: ID.ID) =>
@@ -57,6 +58,7 @@ export function ObjectInheritanceList(props: {
                     defs={ props.defs }
                     value={ id }
                     onChange={ value => set(i, value) }
+                    basePath={ props.basePath }
                     header="Select a parent object"
                 />
 

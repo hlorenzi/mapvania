@@ -13,6 +13,7 @@ export function InputObjectPicker(props: {
     defs: Defs.Defs,
     value: ID.ID,
     onChange?: (newValue: ID.ID) => void,
+    basePath: string,
     header?: string,
     placeholder?: string,
 })
@@ -55,7 +56,7 @@ export function InputObjectPicker(props: {
                     overflow: "hidden",
                     justifySelf: "center",
                 }}>
-                    { objDef && Defs.getObjectDefIconElement(objDef) }
+                    { objDef && Defs.getObjectDefIconElement(props.basePath, objDef) }
                 </div>
 
                 <div>
@@ -86,6 +87,7 @@ export function InputObjectPicker(props: {
             defs={ props.defs }
             value={ props.value }
             onChange={ props.onChange }
+            basePath={ props.basePath }
         />
     </div>
 }

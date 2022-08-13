@@ -42,11 +42,11 @@ export function refreshDevFile()
         return
 
     const contents: DevFileContents = {
-        currentMapFilename: editor.rootRelativePath,
+        currentMapFilename: editor.rootPath,
         currentRoomId: editor.mapEditor.roomId,
     }
 
-    writeDevFile(editor.defsRootRelativePath, contents)
+    writeDevFile(editor.defsRootPath, contents)
 }
 
 
