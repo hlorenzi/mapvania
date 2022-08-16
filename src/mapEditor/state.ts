@@ -824,7 +824,6 @@ export function onKey(state: State, ev: KeyboardEvent, down: boolean)
                 }
 
                 MapEditor.render(state)
-                ev.preventDefault()
             }
             break
 
@@ -853,7 +852,6 @@ export function onKey(state: State, ev: KeyboardEvent, down: boolean)
                 
                 Editors.historyAdd(state.editorIndex)
                 MapEditor.render(state)
-                ev.preventDefault()
             }
             break
 
@@ -873,7 +871,6 @@ export function onKey(state: State, ev: KeyboardEvent, down: boolean)
 
                 Editors.historyAdd(state.editorIndex)
                 MapEditor.render(state)
-                ev.preventDefault()
             }
             break
     
