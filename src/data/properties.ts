@@ -454,14 +454,17 @@ export function serializeDefs(
 
 
 export function deserializeDefs(
-    serFields: DefProperties)
+    serFields: DefProperties | undefined)
     : DefProperties
 {
     const fields: DefProperties = []
 
-    for (const serField of serFields)
+    if (serFields !== undefined)
     {
-        fields.push(deserializeDefField(serField))
+        for (const serField of serFields)
+        {
+            fields.push(deserializeDefField(serField))
+        }
     }
 
     return fields
@@ -549,7 +552,7 @@ export function deserializeValues(
     {
         values[field.id] = deserializeValue(
             field,
-            serValues[field.id])
+            serValues ? serValues[field.id] : undefined)
     }
 
     return values
@@ -558,7 +561,7 @@ export function deserializeValues(
 
 function deserializeValue(
     field: DefField,
-    serValue: FieldValue)
+    serValue: FieldValue | undefined)
     : FieldValue
 {
     switch (field.type)

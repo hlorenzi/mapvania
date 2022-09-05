@@ -194,11 +194,15 @@ export function FieldString(props: {
     modifyValue: (modifyFn: (value: Properties.FieldValue) => Properties.FieldValue) => void,
 })
 {
-    const value = props.values.reduce<string | null>(
+    let value = props.values.reduce<string | null>(
         (accum, x) => x !== null && x == accum ? accum : null,
         props.values[0] as string)
 
-    const hasNewlines = !value ? false : value.indexOf("\n") >= 0
+    if (typeof value !== "string")
+        value = null
+
+    const hasNewlines = !value ? false :
+        value.indexOf("\n") >= 0
 
     const [codeEditorOpen, setCodeEditorOpen] = React.useState(hasNewlines)
 

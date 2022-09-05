@@ -91,6 +91,9 @@ export function serialize(
         version: 3,
         nextIDs: map.nextIDs,
         rooms: [],
+        properties: Properties.serializeValues(
+            defs.mapDef.properties,
+            map.properties),
     }
 
     serMap.rooms = Object.values(map.rooms)
@@ -115,6 +118,9 @@ export function serializeRoom(
         width: room.width,
         height: room.height,
         layers: [],
+        properties: Properties.serializeValues(
+            Defs.getRoomPropertyDefs(defs),
+            room.properties),
     }
 
     serRoom.layers = Object.values(room.layers)
@@ -254,11 +260,14 @@ export function deserialize(
         throw "not a serialized map"
 
     if (serMap.version <= 1)
-        return { ...Map.makeNew(), ...serMap as any }
+        return { ...Map.makeNew(defs), ...serMap as any }
 
     const map: Map.Map = {
         nextIDs: serMap.nextIDs,
         rooms: {},
+        properties: Properties.deserializeValues(
+            defs.mapDef.properties,
+            serMap.properties),
     }
 
     for (const serRoom of serMap.rooms)
@@ -288,6 +297,9 @@ export function deserializeRoom(
         width: serRoom.width,
         height: serRoom.height,
         layers: {},
+        properties: Properties.deserializeValues(
+            Defs.getRoomPropertyDefs(defs),
+            serRoom.properties),
     }
 
     for (const serLayer of serRoom.layers)

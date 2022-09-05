@@ -8,6 +8,7 @@ import { global } from "../global"
 import { useRefreshByEvent } from "../util/refreshToken"
 import { LayerPicker } from "./LayerPicker"
 import { TilePicker } from "./TilePicker"
+import { MapProperties } from "./MapProperties"
 import { RoomProperties } from "./RoomProperties"
 import { ObjectPicker } from "./ObjectPicker"
 import { ObjectProperties } from "./ObjectProperties"
@@ -326,33 +327,42 @@ export function EditorMap(props: {
             pointerEvents: "none",
         }}>
 
-            { editor.mapEditor && editor.mapEditor.objectSelection.size > 0 ?
+            { editingLayerDef &&
+                editingLayerDef.type === "object" &&
+                editor.mapEditor &&
+                editor.mapEditor.objectSelection.size > 0 ?
                 <ObjectProperties
                     editorIndex={ props.editorIndex }
                 />
-            : editor.mapEditor && editor.mapEditor.roomSelection.size > 0 ?
-                <>
-                <LayerPicker
-                    editorIndex={ props.editorIndex }
-                />
-                <RoomProperties
-                    editorIndex={ props.editorIndex }
-                />
-                </>
             :
                 <>
                 <LayerPicker
                     editorIndex={ props.editorIndex }
                 />
 
-                { editingLayerDef && editingLayerDef.type === "tile" &&
-                    <TilePicker
+                { !editingLayerDef &&
+                    editor.mapEditor &&
+                    editor.mapEditor.roomSelection.size == 0 ?
+                    <MapProperties
                         editorIndex={ props.editorIndex }
                     />
-                }
 
-                { editingLayerDef && editingLayerDef.type === "object" &&
+                : !editingLayerDef &&
+                    editor.mapEditor &&
+                    editor.mapEditor.roomSelection.size > 0 ?
+                    <RoomProperties
+                        editorIndex={ props.editorIndex }
+                    />
+                    
+                : editingLayerDef &&
+                    editingLayerDef.type === "object" ?
                     <ObjectPicker
+                        editorIndex={ props.editorIndex }
+                    />
+
+                : editingLayerDef &&
+                    editingLayerDef.type === "tile" &&
+                    <TilePicker
                         editorIndex={ props.editorIndex }
                     />
                 }

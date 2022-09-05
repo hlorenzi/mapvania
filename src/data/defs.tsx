@@ -14,6 +14,8 @@ export interface Defs
 {
     nextIDs: ID.NextIDs
     generalDefs: DefGeneral
+    mapDef: DefMap
+    roomDef: DefRoom
     layerDefs: Hierarchy.Items<DefLayer>
     tilesetDefs: Hierarchy.Items<DefTileset>
     tileAttributeDefs: Hierarchy.Items<DefTileAttribute>
@@ -31,6 +33,19 @@ export interface DefGeneral
     jsonMinimize: boolean
     jsonUseTrailingCommas: boolean
     jsonUseBareIdentifiers: boolean
+}
+
+
+export interface DefMap
+{
+    properties: Properties.DefProperties
+}
+
+
+export interface DefRoom
+{
+    inheritPropertiesFromMap: boolean
+    properties: Properties.DefProperties
 }
 
 
@@ -170,12 +185,33 @@ export function makeNew(): Defs
             jsonUseTrailingCommas: false,
             jsonUseBareIdentifiers: false,
         },
+        mapDef: {
+            properties: [],
+        },
+        roomDef: {
+            inheritPropertiesFromMap: false,
+            properties: [],
+        },
         layerDefs: [],
         tilesetDefs: [],
         tileAttributeDefs: [],
         tileBrushDefs: [],
         objectDefs: [],
     }
+}
+
+
+export function getRoomPropertyDefs(
+    defs: Defs)
+    : Properties.DefProperties
+{
+    if (!defs.roomDef.inheritPropertiesFromMap)
+        return defs.roomDef.properties
+
+    const properties: Properties.DefProperties = []
+    properties.push(...defs.mapDef.properties)
+    properties.push(...defs.roomDef.properties)
+    return properties
 }
 
 

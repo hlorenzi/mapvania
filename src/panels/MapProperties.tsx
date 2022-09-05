@@ -11,41 +11,23 @@ import { global } from "../global"
 import { PropertyValuesPanel } from "./PropertyValuesPanel"
 
 
-export function RoomProperties(props: {
+export function MapProperties(props: {
     editorIndex: number,
 })
 {
     const editor = global.editors.editors[props.editorIndex] as Editors.EditorMap
 
-    if (global.editors.mapEditing.layerDefId !== Editors.LAYERDEF_ID_MAP)
-        return null
+    const propertiesDef = editor.defs.mapDef.properties
 
-    const roomSelection = [...editor.mapEditor.roomSelection]
-
-    if (roomSelection.length == 0)
-        return null
-
-
-    const propertiesDef = Defs.getRoomPropertyDefs(editor.defs)
-
-    const properties = roomSelection.map(id => editor.map.rooms[id].properties)
+    const properties = [editor.map.properties]
 
     const setProperties = (modifyFn: (values: Properties.PropertyValues) => Properties.PropertyValues) =>
     {
-        let newMap: Map.Map = editor.map
-        
-        for (const roomId of roomSelection)
-        {
-            const room = newMap.rooms[roomId]
-            const newRoom = {
-                ...room,
-                properties: modifyFn(room.properties),
-            }
-
-            newMap = Map.setRoom(newMap, roomId, newRoom)
+        editor.map = {
+            ...editor.map,
+            properties: modifyFn(editor.map.properties)
         }
 
-        editor.map = newMap
         global.editors.refreshToken.commit()
     }
 
@@ -58,7 +40,7 @@ export function RoomProperties(props: {
         backgroundColor: "#242424",
     }}>
         <UI.HeaderAndBody
-            header="ROOM PROPERTIES"
+            header="MAP PROPERTIES"
         >
             <div style={{
                 width: "100%",
@@ -72,21 +54,9 @@ export function RoomProperties(props: {
                     padding: "1em",
                     overflowY: "auto",
                 }}>
-                    <UI.Cell span={ 2 } justifyStart>
-
-                        { roomSelection.length == 1 ?
-                            "ID: " + roomSelection[0] :
-                            roomSelection.length + " rooms selected"
-                        }
-
-                    </UI.Cell>
-
-                    <UI.Cell span={ 2 } divider/>
-                    
                     <UI.Cell span={ 2 } justifyStretch>
                         
                         <PropertyValuesPanel
-                            key={ roomSelection.join(",") }
                             defProperties={ propertiesDef }
                             properties={ properties }
                             setProperties={ setProperties }

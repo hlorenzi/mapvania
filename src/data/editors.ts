@@ -337,7 +337,7 @@ export async function openEditorMap(rootRelativePath: string)
             // an empty file automatically.
             serMapText = MapSerialization.stringify(defs,
                 MapSerialization.serialize(defs,
-                    Map.makeNew()))
+                    Map.makeNew(defs)))
         }
 
         const serMap = MapSerialization.parse(serMapText)

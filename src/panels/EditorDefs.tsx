@@ -5,6 +5,8 @@ import * as Editors from "../data/editors"
 import * as UI from "../ui"
 import { global } from "../global"
 import { DefsGeneral } from "./DefsGeneral"
+import { DefsMap } from "./DefsMap"
+import { DefsRoom } from "./DefsRoom"
 import { DefsLayers } from "./DefsLayers"
 import { DefsTilesets } from "./DefsTilesets"
 import { DefsTileAttributes } from "./DefsTileAttributes"
@@ -30,6 +32,8 @@ export function EditorDefs(props: {
                     onChange={ setTab }
                     labels={[
                         "General",
+                        "Maps",
+                        "Rooms",
                         "Layers",
                         "Tilesets",
                         "Tile Attributes",
@@ -45,30 +49,42 @@ export function EditorDefs(props: {
             }
 
             { tab === 1 &&
-                <DefsLayers
+                <DefsMap
                     editorIndex={ props.editorIndex }
                 />
             }
 
             { tab === 2 &&
-                <DefsTilesets
+                <DefsRoom
                     editorIndex={ props.editorIndex }
                 />
             }
 
             { tab === 3 &&
-                <DefsTileAttributes
+                <DefsLayers
                     editorIndex={ props.editorIndex }
                 />
             }
 
             { tab === 4 &&
-                <DefsTileBrushes
+                <DefsTilesets
                     editorIndex={ props.editorIndex }
                 />
             }
 
             { tab === 5 &&
+                <DefsTileAttributes
+                    editorIndex={ props.editorIndex }
+                />
+            }
+
+            { tab === 6 &&
+                <DefsTileBrushes
+                    editorIndex={ props.editorIndex }
+                />
+            }
+
+            { tab === 7 &&
                 <DefsObjects
                     editorIndex={ props.editorIndex }
                 />

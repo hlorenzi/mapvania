@@ -9,6 +9,7 @@ export interface Map
 {
     nextIDs: ID.NextIDs
     rooms: { [roomId: ID.ID]: Room }
+    properties: Properties.PropertyValues
 }
 
 
@@ -25,6 +26,8 @@ export interface Room
     height: number
 
     layers: { [layerId: ID.ID]: Layer }
+
+    properties: Properties.PropertyValues
 }
 
 
@@ -82,7 +85,7 @@ export interface Obj
 }
 
 
-export function makeNew(): Map
+export function makeNew(defs: Defs.Defs): Map
 {
     let [nextIDs, newID] = ID.getNextID(ID.makeNewNextIDs())
 
@@ -96,8 +99,10 @@ export function makeNew(): Map
                 width: 16 * 18,
                 height: 16 * 10,
                 layers: {},
+                properties: Properties.makeNewValues(Defs.getRoomPropertyDefs(defs)),
             },
         },
+        properties: Properties.makeNewValues(defs.mapDef.properties),
     }
 }
 

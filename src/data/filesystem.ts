@@ -508,7 +508,7 @@ export async function showNewMapFilePicker(startIn?: FileSystemHandle)
         const serDefs = DefsSerialization.parse(serDefsText)
         const defs = DefsSerialization.deserialize(serDefs)
     
-        const map = Map.makeNew()
+        const map = Map.makeNew(defs)
         const serMap = MapSerialization.serialize(defs, map)
         const serMapText = MapSerialization.stringify(defs, serMap)
 

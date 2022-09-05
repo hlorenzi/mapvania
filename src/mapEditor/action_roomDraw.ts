@@ -3,6 +3,7 @@ import * as ID from "../data/id"
 import * as Defs from "../data/defs"
 import * as Map from "../data/map"
 import * as Editors from "../data/editors"
+import * as Properties from "../data/properties"
 import { global } from "../global"
 
 
@@ -74,6 +75,8 @@ export function setupRoomDraw(state: MapEditor.State)
             height: (ty2 - ty1 + 1) * defs.generalDefs.roomHeightMultiple,
 
             layers: {},
+
+            properties: Properties.makeNewValues(Defs.getRoomPropertyDefs(defs)),
         }
 
         editor.mapEditor.roomSelection.clear()

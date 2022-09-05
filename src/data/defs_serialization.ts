@@ -80,6 +80,8 @@ export function serialize(
         version: 2,
         nextIDs: defs.nextIDs,
         generalDefs: defs.generalDefs,
+        mapDef: defs.mapDef,
+        roomDef: defs.roomDef,
         layerDefs: defs.layerDefs,
         tilesetDefs: defs.tilesetDefs,
         tileAttributeDefs: defs.tileAttributeDefs,
@@ -181,6 +183,15 @@ export function deserialize(
         jsonUseTrailingCommas: serDefs.generalDefs.jsonUseTrailingCommas ?? true,
         jsonUseBareIdentifiers: serDefs.generalDefs.jsonUseBareIdentifiers ?? true
     }
+
+    defs.mapDef.properties = Properties.deserializeDefs(
+        serDefs.mapDef?.properties)
+    
+    defs.roomDef.inheritPropertiesFromMap =
+        serDefs.roomDef?.inheritPropertiesFromMap ?? false
+    
+    defs.roomDef.properties = Properties.deserializeDefs(
+        serDefs.roomDef?.properties)
 
     defs.layerDefs = serDefs.layerDefs
         .map(l => deserializeLayer(defs, serDefs, l))
