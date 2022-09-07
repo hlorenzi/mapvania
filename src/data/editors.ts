@@ -418,18 +418,35 @@ export async function refreshDefsForOpenEditors()
             
             const serDefs = DefsSerialization.parse(serDefsText)
             const defs = DefsSerialization.deserialize(serDefs)
-    
-            const serializedMap = MapSerialization.serialize(
+
+            // Serialize the original map under the old defs,
+            // then immediately deserialize it under the new defs
+            // and compare differences
+            const serMap = MapSerialization.serialize(
                 editor.defs,
                 editor.map)
 
+            const serMapText = MapSerialization.stringify(
+                editor.defs,
+                serMap)
+
             const reloadedMap = MapSerialization.deserialize(
                 defs,
-                serializedMap)
+                serMap)
 
+            const serReloadedMap = MapSerialization.serialize(
+                defs,
+                reloadedMap)
+    
+            const serReloadedMapText = MapSerialization.stringify(
+                defs,
+                serReloadedMap)
+    
             editor.defs = defs
             editor.defsSerialized = serDefsText
-            editor.map = reloadedMap
+
+            if (serReloadedMapText !== serMapText)
+                editor.map = reloadedMap
         }
     }
 }
