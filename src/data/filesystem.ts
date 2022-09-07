@@ -19,9 +19,13 @@ export const BUILTIN_IMAGE_PREFIX = ":"
 export const BUILTIN_IMAGE_SEPARATOR = ":"
 
 
-const fileNotContainedInRootFolderMessage =
+export const fileNotContainedInRootFolderMessage =
     "The selected file is not contained in the " +
     "currently opened project folder or any of its subfolders!"
+
+export const noDefsFileFoundMessage =
+    "No defs file found!\n\n" +
+    "Please create a defs file first."
 
 
 export interface Global
@@ -123,7 +127,18 @@ export async function refreshEntries()
     if (!global.filesystem.root.handle)
         throw "invalid global folder handle"
 
-    await refreshDirectory(global.filesystem.root, global.filesystem.root.rootRelativePath)
+    global.filesystem.root = {
+        rootRelativePath: PROJECT_ROOT_PATH,
+        name: "",
+        handle: global.filesystem.root.handle,
+        parentDirectory: null,
+        childDirectories: [],
+        childFiles: [],
+    }
+
+    await refreshDirectory(
+        global.filesystem.root,
+        global.filesystem.root.rootRelativePath)
 }
 
 
@@ -500,7 +515,7 @@ export async function showNewMapFilePicker(startIn?: FileSystemHandle)
         const defsFile = await findNearestDefsFile(rootRelativePath)
         if (!defsFile)
         {
-            window.alert("No defs file found!\n\nPlease create a defs file first.")
+            window.alert(noDefsFileFoundMessage)
             return
         }
         

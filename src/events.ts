@@ -24,6 +24,24 @@ export function endMouseCapture()
 }
 
 
+function handleFocusChange(ev: FocusEvent)
+{
+    Editors.handleExternalFileChanges()
+}
+
+
+export function useWindowFocusEvent()
+{
+    React.useEffect(() =>
+    {
+        window.addEventListener("focus", handleFocusChange)
+
+        return () => window.removeEventListener("focus", handleFocusChange)
+    
+    }, [])
+}
+
+
 export function useKeyboardShortcuts()
 {
     React.useEffect(() =>

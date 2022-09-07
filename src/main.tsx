@@ -17,6 +17,7 @@ function App()
 
     
     Events.useKeyboardShortcuts()
+    Events.useWindowFocusEvent()
 
 
     const initialized = React.useRef(false)

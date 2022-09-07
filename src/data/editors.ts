@@ -65,6 +65,7 @@ export interface EditorDefs extends EditorCommon
 {
     type: "defs"
     defs: Defs.Defs
+    lastSavedDefsSerialized: string
     lastSavedDefs: Defs.Defs
 
     history: EditorDefsHistoryStep[]
@@ -83,10 +84,11 @@ export interface EditorMap extends EditorCommon
 {
     type: "map"
     defs: Defs.Defs
-    defsSerialized: string
+    lastSavedDefsSerialized: string
     defsRootPath: string
     defsBasePath: string
     map: Map.Map
+    lastSavedMapSerialized: string
     lastSavedMap: Map.Map
     mapEditor: MapEditor.State
 
@@ -204,14 +206,8 @@ export function isAnyEditorUnsaved()
 }
 
 
-export function askAndCloseEditor(index: number)
+export function closeEditor(index: number)
 {
-    if (isEditorUnsaved(global.editors.editors[index]))
-    {
-        if (!window.confirm("Lose unsaved changes?"))
-            return
-    }
-
     global.editors.editors.splice(index, 1)
 
     if (global.editors.currentEditor > index)
@@ -232,6 +228,18 @@ export function askAndCloseEditor(index: number)
 }
 
 
+export function askAndCloseEditor(index: number)
+{
+    if (isEditorUnsaved(global.editors.editors[index]))
+    {
+        if (!window.confirm("Lose unsaved changes?"))
+            return
+    }
+
+    closeEditor(index)
+}
+
+
 export async function saveCurrentEditor()
 {
     const editor = global.editors.editors[global.editors.currentEditor]
@@ -248,29 +256,19 @@ export async function openEditorDefs(rootRelativePath: string)
 {
     try
     {
-        let serDefsText = await Filesystem.readFileText(rootRelativePath)
-        if (serDefsText.length === 0)
-        {
-            // Create new defs in case the file was empty,
-            // which can happen due to showSaveFilePicker creating
-            // an empty file automatically.
-            serDefsText = DefsSerialization.stringify(
-                DefsSerialization.serialize(
-                    Defs.makeNew()))
-        }
-
-        const serDefs = DefsSerialization.parse(serDefsText)
-        const defs = DefsSerialization.deserialize(serDefs)
         const editor: EditorDefs = {
             type: "defs",
             name: Filesystem.getFileDisplayName(rootRelativePath),
             rootPath: rootRelativePath,
             basePath: Filesystem.removeLastPathComponent(rootRelativePath),
-            defs,
-            lastSavedDefs: defs,
+            defs: null!,
+            lastSavedDefsSerialized: null!,
+            lastSavedDefs: null!,
             history: [],
             historyPointer: -1,
         }
+
+        await loadEditorDefs(editor)
 
         const editorIndex = openEditor(editor)
         historyAdd(editorIndex, "initial")
@@ -280,6 +278,33 @@ export async function openEditorDefs(rootRelativePath: string)
         console.error(e)
         window.alert("An error occurred reading the file!\n\n" + e)
     }
+}
+
+
+export async function loadEditorDefs(editor: EditorDefs)
+{
+    let serDefsText = await Filesystem.readFileText(editor.rootPath)
+    if (serDefsText.length === 0)
+    {
+        // Create new defs in case the file was empty,
+        // which can happen due to showSaveFilePicker creating
+        // an empty file automatically.
+        serDefsText = DefsSerialization.stringify(
+            DefsSerialization.serialize(
+                Defs.makeNew()))
+    }
+
+    if (serDefsText === editor.lastSavedDefsSerialized)
+        return true
+
+    const serDefs = DefsSerialization.parse(serDefsText)
+    const defs = DefsSerialization.deserialize(serDefs)
+
+    editor.defs = defs
+    editor.lastSavedDefsSerialized = serDefsText
+    editor.lastSavedDefs = defs
+
+    return true
 }
 
 
@@ -300,6 +325,7 @@ export async function saveEditorDefs(editorIndex: number)
         await writable.write(serDefsText)
         await writable.close()
 
+        editorData.lastSavedDefsSerialized = serDefsText
         editorData.lastSavedDefs = editorData.defs
 
         await refreshDefsForOpenEditors()
@@ -318,51 +344,30 @@ export async function openEditorMap(rootRelativePath: string)
 {
     try
     {
-        const defsFile = await Filesystem.findNearestDefsFile(rootRelativePath)
-        if (!defsFile)
-        {
-            window.alert("No project file found!\n\nPlease create a project file first.")
-            return
-        }
-        
-        const serDefsText = await Filesystem.readFileText(defsFile.rootRelativePath)
-        const serDefs = DefsSerialization.parse(serDefsText)
-        const defs = DefsSerialization.deserialize(serDefs)
-
-        let serMapText = await Filesystem.readFileText(rootRelativePath)
-        if (serMapText.length === 0)
-        {
-            // Create a new map in case the file was empty,
-            // which can happen due to showSaveFilePicker creating
-            // an empty file automatically.
-            serMapText = MapSerialization.stringify(defs,
-                MapSerialization.serialize(defs,
-                    Map.makeNew(defs)))
-        }
-
-        const serMap = MapSerialization.parse(serMapText)
-        const map = MapSerialization.deserialize(defs, serMap)
-
         const editor: EditorMap = {
             type: "map",
             name: Filesystem.getFileDisplayName(rootRelativePath),
             rootPath: rootRelativePath,
             basePath: Filesystem.removeLastPathComponent(rootRelativePath),
-            defs,
-            defsSerialized: serDefsText,
-            defsRootPath: defsFile.rootRelativePath,
-            defsBasePath: Filesystem.removeLastPathComponent(defsFile.rootRelativePath),
-            map,
-            lastSavedMap: map,
+            defs: null!,
+            lastSavedDefsSerialized: null!,
+            defsRootPath: null!,
+            defsBasePath: null!,
+            map: null!,
+            lastSavedMapSerialized: null!,
+            lastSavedMap: null!,
             mapEditor: null!,
             history: [],
             historyPointer: -1,
         }
 
+        if (!(await loadEditorMap(editor)))
+            return
+
         const editorIndex = openEditor(editor)
 
         editor.mapEditor = MapEditor.createState(editorIndex, "")
-        editor.mapEditor.camera.pos = Map.getDefaultCameraPosition(map)
+        editor.mapEditor.camera.pos = Map.getDefaultCameraPosition(editor.map)
 
         historyAdd(editorIndex, "initial")
     }
@@ -371,6 +376,49 @@ export async function openEditorMap(rootRelativePath: string)
         console.error(e)
         window.alert("An error occurred reading the file!\n\n" + e)
     }
+}
+
+
+export async function loadEditorMap(editor: EditorMap)
+{
+    const defsFile = await Filesystem.findNearestDefsFile(editor.rootPath)
+    if (!defsFile)
+    {
+        window.alert(Filesystem.noDefsFileFoundMessage)
+        return false
+    }
+    
+    const serDefsText = await Filesystem.readFileText(defsFile.rootRelativePath)
+    const serDefs = DefsSerialization.parse(serDefsText)
+    const defs = DefsSerialization.deserialize(serDefs)
+
+    let serMapText = await Filesystem.readFileText(editor.rootPath)
+    if (serMapText.length === 0)
+    {
+        // Create a new map in case the file was empty,
+        // which can happen due to showSaveFilePicker creating
+        // an empty file automatically.
+        serMapText = MapSerialization.stringify(defs,
+            MapSerialization.serialize(defs,
+                Map.makeNew(defs)))
+    }
+
+    if (serDefsText === editor.lastSavedDefsSerialized &&
+        serMapText === editor.lastSavedMapSerialized)
+        return true
+
+    const serMap = MapSerialization.parse(serMapText)
+    const map = MapSerialization.deserialize(defs, serMap)
+
+    editor.defs = defs
+    editor.lastSavedDefsSerialized = serDefsText,
+    editor.defsRootPath = defsFile.rootRelativePath,
+    editor.defsBasePath = Filesystem.removeLastPathComponent(defsFile.rootRelativePath),
+    editor.map = map
+    editor.lastSavedMapSerialized = serMapText
+    editor.lastSavedMap = map
+
+    return true
 }
 
 
@@ -391,6 +439,7 @@ export async function saveEditorMap(editorIndex: number)
         await writable.write(serMapText)
         await writable.close()
 
+        editorData.lastSavedMapSerialized = serMapText
         editorData.lastSavedMap = editorData.map
         global.editors.refreshToken.commit()
     }
@@ -413,7 +462,7 @@ export async function refreshDefsForOpenEditors()
                 continue
             
             const serDefsText = await Filesystem.readFileText(defsFile.rootRelativePath)
-            if (serDefsText == editor.defsSerialized)
+            if (serDefsText === editor.lastSavedDefsSerialized)
                 continue
             
             const serDefs = DefsSerialization.parse(serDefsText)
@@ -443,12 +492,33 @@ export async function refreshDefsForOpenEditors()
                 serReloadedMap)
     
             editor.defs = defs
-            editor.defsSerialized = serDefsText
+            editor.lastSavedDefsSerialized = serDefsText
 
             if (serReloadedMapText !== serMapText)
                 editor.map = reloadedMap
         }
     }
+}
+
+
+export async function handleExternalFileChanges()
+{
+    await Filesystem.refreshEntries()
+
+    for (let i = 0; i < global.editors.editors.length; i++)
+    {
+        const editor = global.editors.editors[i]
+        historyAdd(i)
+
+        if (editor.type === "defs")
+            await loadEditorDefs(editor)
+        else if (editor.type === "map")
+            await loadEditorMap(editor)
+        
+        historyAdd(i, "reload")
+    }
+
+    global.editors.refreshToken.commit()
 }
 
 
