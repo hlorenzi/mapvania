@@ -31,7 +31,7 @@ export function ObjectProperties(props: {
     const objectSelection = [...editor.mapEditor.objectSelection]
         .filter(id => !!layer.objects[id])
 
-    if (objectSelection.length == 0)
+    if (objectSelection.length === 0)
         return null
 
     const objectDefIdsSet = new Set<ID.ID>()

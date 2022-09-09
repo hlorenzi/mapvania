@@ -22,13 +22,20 @@ export function RoomProperties(props: {
 
     const roomSelection = [...editor.mapEditor.roomSelection]
 
-    if (roomSelection.length == 0)
+    if (roomSelection.length === 0)
         return null
 
 
+    const rooms = roomSelection
+        .map(id => editor.map.rooms[id])
+        .filter(room => !!room)
+
+    if (rooms.length === 0)
+        return null
+
     const propertiesDef = Defs.getRoomPropertyDefs(editor.defs)
 
-    const properties = roomSelection.map(id => editor.map.rooms[id].properties)
+    const properties = rooms.map(room => room.properties)
 
     const setProperties = (modifyFn: (values: Properties.PropertyValues) => Properties.PropertyValues) =>
     {
@@ -74,9 +81,9 @@ export function RoomProperties(props: {
                 }}>
                     <UI.Cell span={ 2 } justifyStart>
 
-                        { roomSelection.length == 1 ?
-                            "ID: " + roomSelection[0] :
-                            roomSelection.length + " rooms selected"
+                        { rooms.length == 1 ?
+                            "ID: " + rooms[0].id :
+                            rooms.length + " rooms selected"
                         }
 
                     </UI.Cell>
