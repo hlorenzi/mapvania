@@ -453,8 +453,9 @@ export async function saveEditorMap(editorIndex: number)
 
 export async function refreshDefsForOpenEditors()
 {
-    for (const editor of global.editors.editors)
+    for (let i = 0; i < global.editors.editors.length; i++)
     {
+        const editor = global.editors.editors[i]
         if (editor.type === "map")
         {
             const defsFile = await Filesystem.findNearestDefsFile(editor.defsRootPath)
@@ -495,7 +496,10 @@ export async function refreshDefsForOpenEditors()
             editor.lastSavedDefsSerialized = serDefsText
 
             if (serReloadedMapText !== serMapText)
+            {
                 editor.map = reloadedMap
+                clearCache(i)
+            }
         }
     }
 }
@@ -516,6 +520,7 @@ export async function handleExternalFileChanges()
             await loadEditorMap(editor)
         
         historyAdd(i, "reload")
+        clearCache(i)
     }
 
     global.editors.refreshToken.commit()
@@ -571,13 +576,13 @@ export function undo(editorIndex: number)
     if (editor.type === "map")
     {
         editor.map = editor.history[editor.historyPointer].map
-        editor.mapEditor.cachedCanvases.clear()
     }
     else if (editor.type === "defs")
     {
         editor.defs = editor.history[editor.historyPointer].defs
     }
 
+    clearCache(editorIndex)
     render(editorIndex)
     global.editors.refreshToken.commit()
 }
@@ -595,15 +600,32 @@ export function redo(editorIndex: number)
     if (editor.type === "map")
     {
         editor.map = editor.history[editor.historyPointer].map
-        editor.mapEditor.cachedCanvases.clear()
     }
     else if (editor.type === "defs")
     {
         editor.defs = editor.history[editor.historyPointer].defs
     }
     
+    clearCache(editorIndex)
     render(editorIndex)
     global.editors.refreshToken.commit()
+}
+
+
+export function clearCache(editorIndex: number)
+{
+    const editor = global.editors.editors[editorIndex]
+    if (editor.type === "map")
+    {
+        editor.mapEditor.cachedCanvases.clear()
+    }
+}
+
+
+export function clearCacheAll()
+{
+    for (let i = 0; i < global.editors.editors.length; i++)
+        clearCache(i)
 }
 
 

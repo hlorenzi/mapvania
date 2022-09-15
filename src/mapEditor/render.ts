@@ -29,7 +29,7 @@ export function render(state: MapEditor.State)
         prevShowGrid = global.editors.mapEditing.showGrid
         prevShowOtherLayers = global.editors.mapEditing.showOtherLayers
         prevLayerDefId = global.editors.mapEditing.layerDefId
-        state.cachedCanvases.clear()
+        Editors.clearCacheAll()
     }
 
     if (state.editorIndex < 0 || state.editorIndex >= global.editors.editors.length)
