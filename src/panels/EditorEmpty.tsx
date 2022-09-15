@@ -13,6 +13,7 @@ const githubHashTreeHref = "https://github.com/hlorenzi/mapvania/tree/"
 
 interface VersionData
 {
+    displayStr: string
     major: number
     minor: number
     hash: string
@@ -23,6 +24,7 @@ function decodeVersionData(str: string): VersionData
 {
     const data: VersionData =
     {
+        displayStr: "",
         major: 0,
         minor: 0,
         hash: "development",
@@ -36,39 +38,46 @@ function decodeVersionData(str: string): VersionData
     data.minor = parseInt(matches[2])
     data.hash = matches[3]
 
+    if (data.major !== 0 ||
+        data.minor !== 0)
+    {
+        data.displayStr = `v${ data.major }.${ data.minor }`
+    }
+
     return data
 }
 
 
 export function EditorEmpty()
 {
+    const [ready, setReady] = React.useState(false)
+
     const [refresh, setRefresh] = React.useState(0)
     const [hasCachedFolder, setHasCachedFolder] = React.useState(false)
     
     const [versionDataStr, setVersionDataStr] = React.useState("")
     const versionData = decodeVersionData(versionDataStr)
 
-    document.title = `Mapvania v${ versionData.major }.${ versionData.minor }`
+    document.title = `Mapvania ${ versionData.displayStr }`
 
 
     React.useEffect(() =>
     {
         window.requestAnimationFrame(async () =>
         {
-            const versionFile = await fetch("build/version.txt")
-            const versionStr = await versionFile.text()
-            setVersionDataStr(versionStr.trim())
-        })
-
-    }, [])
-
-
-    React.useEffect(() =>
-    {
-        window.requestAnimationFrame(async () =>
-        {
-            if (await Filesystem.retrieveCachedRootFolder())
-                setHasCachedFolder(true)
+            try
+            {
+                if (await Filesystem.retrieveCachedRootFolder())
+                    setHasCachedFolder(true)
+                
+                const versionFile = await fetch("build/version.txt")
+                const versionStr = await versionFile.text()
+                setVersionDataStr(versionStr.trim())
+            }
+            finally
+            {
+                setReady(true)
+            }
         })
 
     }, [])
@@ -76,7 +85,7 @@ export function EditorEmpty()
 
     return <StyledEditorEmpty>
 
-        { !global.filesystem.root.handle &&
+        { ready && !global.filesystem.root.handle &&
             <>
             <div>
                 <span style={{
