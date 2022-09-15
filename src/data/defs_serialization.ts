@@ -148,6 +148,7 @@ export function deserialize(
 
             let countBefore = 0
             let idBefore = list[i].sortAfter
+            const idsSeen = new Set<string>()
             while (idBefore)
             {
                 countBefore++
@@ -156,6 +157,17 @@ export function deserialize(
                     break
                 
                 idBefore = itemBefore.sortAfter
+
+                if (idBefore)
+                {                
+                    if (idsSeen.has(idBefore))
+                    {
+                        countBefore = list.length
+                        break
+                    }
+
+                    idsSeen.add(idBefore)
+                }
             }
 
             sortIndices.set(list[i].id, countBefore)
