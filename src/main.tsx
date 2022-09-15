@@ -1,5 +1,5 @@
 import * as React from "react"
-import * as ReactDOM from "react-dom"
+import * as ReactDOMClient from "react-dom/client"
 import { global, initGlobal } from "./global"
 import * as Events from "./events"
 import { useRefreshToken } from "./util/refreshToken"
@@ -62,5 +62,7 @@ window.addEventListener("beforeunload", (ev) =>
 
 document.body.onload = function()
 {
-	ReactDOM.render(<App/>, document.getElementById("divApp"))
+	const container = document.getElementById("divApp")!
+	const root = ReactDOMClient.createRoot(container)
+	root.render(<App/>)
 }
