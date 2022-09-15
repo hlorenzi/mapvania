@@ -7,11 +7,18 @@ import * as Dev from "../data/dev"
 
 export function Tabs()
 {
-    const changeCurrentEditor = (i: number) =>
+    const changeCurrentEditor = (editorIndex: number) =>
     {
-        global.editors.currentEditor = i
+        global.editors.currentEditor = editorIndex
         global.editors.refreshToken.commit()
         Dev.refreshDevFile()
+    }
+
+
+    const closeEditor = (ev: React.MouseEvent, editorIndex: number) =>
+    {
+        ev.stopPropagation()
+        Editors.askAndCloseEditor(editorIndex)
     }
 
 
@@ -29,7 +36,7 @@ export function Tabs()
                     { Editors.isEditorUnsaved(editor) ? "*" : "" }
 
                     <StyledTabButton
-                        onClick={ () => Editors.askAndCloseEditor(i) }
+                        onClick={ ev => closeEditor(ev, i) }
                     >
                         ×
                     </StyledTabButton>
@@ -79,6 +86,13 @@ const StyledTab = styled.div<{
     cursor: pointer;
 
     background-color: ${ props => props.selected ? "#1e1e1e" : "#2d2d2d" };
+
+    ${ props => props.selected ? "" : `
+        &:hover
+        {
+            background-color: #333333;
+        }
+    `}
 `
 
 
