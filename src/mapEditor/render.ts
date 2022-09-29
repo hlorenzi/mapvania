@@ -15,6 +15,8 @@ let prevShowGrid = ""
 let prevShowOtherLayers = ""
 let prevLayerDefId = ""
 
+let prevRenderedTileLayerContents: Map.LayerTile | undefined = undefined
+
 
 export function render(state: MapEditor.State)
 {
@@ -29,6 +31,7 @@ export function render(state: MapEditor.State)
         prevShowGrid = global.editors.mapEditing.showGrid
         prevShowOtherLayers = global.editors.mapEditing.showOtherLayers
         prevLayerDefId = global.editors.mapEditing.layerDefId
+        prevRenderedTileLayerContents = undefined
         Editors.clearCacheAll()
     }
 
@@ -81,7 +84,7 @@ export function render(state: MapEditor.State)
         state.ctx.translate(room.x, room.y)
     
         renderRoomBkg(state.ctx, state, room)
-        renderRoomCached(state, defs, room, false, editingLayerDef)
+        renderRoomCached(state, defs, room, false, true)
 
         state.ctx.restore()
     }
@@ -94,7 +97,7 @@ export function render(state: MapEditor.State)
         renderRoomBkg(state.ctx, state, editingRoom)
         renderTileLayerBkg(state, defs, editingRoom, editingLayerDef)
         renderObjectLayerBkg(state, defs, editingRoom, editingLayerDef)
-        renderRoom(state.ctx, state, defs, editingRoom, true, editingLayerDef)
+        renderRoom(state.ctx, state, defs, editingRoom, true, true)
         renderTileLayerForeground(state, defs, editingRoom, editingLayerDef)
         renderObjectLayerForeground(state, defs, editingRoom, editingLayerDef)
         
@@ -165,10 +168,10 @@ export function renderRoomCached(
     state: MapEditor.State,
     defs: Defs.Defs,
     room: Map.Room,
-    currentlyEditing: boolean,
-    editingLayerDef: Defs.DefLayer | undefined)
+    roomIsSelected: boolean,
+    useRoomCache: boolean)
 {
-    if (!currentlyEditing)
+    if (useRoomCache)
     {
         const cachedCanvas = state.cachedCanvases.get(
             room.id,
@@ -186,8 +189,8 @@ export function renderRoomCached(
                     state,
                     defs,
                     room,
-                    false,
-                    editingLayerDef)
+                    roomIsSelected,
+                    useRoomCache)
             })
                     
         state.ctx.drawImage(
@@ -201,8 +204,8 @@ export function renderRoomCached(
             state,
             defs,
             room,
-            true,
-            editingLayerDef)
+            roomIsSelected,
+            useRoomCache)
     }
 }
 
@@ -212,8 +215,8 @@ export function renderRoom(
     state: MapEditor.State,
     defs: Defs.Defs,
     room: Map.Room,
-    currentlyEditing: boolean,
-    editingLayerDef: Defs.DefLayer | undefined)
+    roomIsSelected: boolean,
+    useRoomCache: boolean)
 {
     const editor = global.editors.editors[state.editorIndex] as Editors.EditorMap
 
@@ -226,10 +229,12 @@ export function renderRoom(
         if (!layer)
             continue
 
+        const isEditing = global.editors.mapEditing.layerDefId === layer.layerDefId
+
         ctx.save()
 
         if (global.editors.mapEditing.layerDefId !== Editors.LAYERDEF_ID_MAP &&
-            global.editors.mapEditing.layerDefId !== layer.layerDefId)
+            !isEditing)
         {
             if (global.editors.mapEditing.showOtherLayers === "none")
             {
@@ -242,97 +247,22 @@ export function renderRoom(
             }
         }
 
-        if (layer.type === "tile")
+        if (layer.type === "tile" &&
+            layerDef.type === "tile")
         {
-            const layerDef = Defs.getLayerDef(defs, layer.layerDefId)
-            if (!layerDef)
-                continue
-
-            let drawX1 = layer.tileField.width - 1
-            let drawX2 = 0
-            
-            let drawY1 = layer.tileField.height - 1
-            let drawY2 = 0
-
-            for (let x = 0; x < layer.tileField.width; x++)
-            {
-                if (!currentlyEditing ||
-                    isRectVisible(
-                        state,
-                        room.x + x * layerDef.gridCellWidth,
-                        room.y,
-                        layerDef.gridCellWidth,
-                        room.height))
-                {
-                    drawX1 = Math.min(drawX1, x)
-                    drawX2 = Math.max(drawX2, x)
-                }
-            }
-
-            for (let y = 0; y < layer.tileField.height; y++)
-            {
-                if (!currentlyEditing ||
-                    isRectVisible(
-                        state,
-                        room.x,
-                        room.y + y * layerDef.gridCellHeight,
-                        room.width,
-                        layerDef.gridCellHeight))
-                {
-                    drawY1 = Math.min(drawY1, y)
-                    drawY2 = Math.max(drawY2, y)
-                }
-            }
-
-            let cachedTilesetDefId = ""
-            let cachedTileset: Defs.DefTileset | undefined = undefined
-            let cachedImage: Images.Image | undefined = undefined
-
-            for (let y = drawY1; y <= drawY2; y++)
-            {
-                for (let x = drawX1; x <= drawX2; x++)
-                {
-                    const tile = layer.tileField.tiles[y * layer.tileField.width + x]
-                    if (!tile)
-                        continue
-
-                    if (tile.tilesetDefId != cachedTilesetDefId)
-                    {
-                        cachedTilesetDefId = tile.tilesetDefId
-                        cachedTileset = Defs.getTileset(defs, tile.tilesetDefId)
-
-                        if (!cachedTileset)
-                            continue
-
-                        const imagePath = Filesystem.resolveRelativePath(
-                            editor.defsBasePath,
-                            cachedTileset.imageSrc)
-                        
-                        cachedImage = Images.getImageLazy(imagePath)
-                    }
-                    
-                    if (!cachedTileset || !cachedImage)
-                        continue
-
-                    const imagePx = Defs.getPixelForTileIndex(cachedTileset, tile.tileId)
-
-                    drawImage(
-                        ctx,
-                        state,
-                        cachedImage.element,
-                        imagePx.x,
-                        imagePx.y,
-                        cachedTileset.gridCellWidth,
-                        cachedTileset.gridCellHeight,
-                        x * layerDef.gridCellWidth,
-                        y * layerDef.gridCellHeight,
-                        layerDef.gridCellWidth,
-                        layerDef.gridCellHeight)
-                }
-            }
+            renderRoomTileLayerCached(
+                ctx,
+                state,
+                defs,
+                room,
+                layer,
+                layerDef,
+                useRoomCache,
+                useRoomCache && isEditing)
         }
 
-        else if (layer.type === "object")
+        else if (layer.type === "object" &&
+            layerDef.type === "object")
         {
             const hoverObject =
                 state.roomId !== room.id ? undefined :
@@ -342,7 +272,7 @@ export function renderRoom(
             
             for (const object of Object.values(layer.objects))
             {
-                if (currentlyEditing)
+                if (roomIsSelected)
                 {
                     if (state.objectSelection.has(object.id) ||
                         hoverObject === object)
@@ -358,7 +288,7 @@ export function renderRoom(
                     false)
             }
 
-            if (currentlyEditing)
+            if (roomIsSelected)
             {
                 for (const objectId of state.objectSelection)
                 {
@@ -395,6 +325,188 @@ export function renderRoom(
     }
 
     ctx.restore()
+}
+
+
+export function renderRoomTileLayerCached(
+    ctx: CanvasRenderingContext2D,
+    state: MapEditor.State,
+    defs: Defs.Defs,
+    room: Map.Room,
+    layer: Map.LayerTile,
+    layerDef: Defs.DefLayerTile,
+    useRoomCache: boolean,
+    useLayerCache: boolean)
+{
+    if (useRoomCache)
+    {
+        const cachedCanvas = state.cachedCanvases.get(
+            room.id + ":" + layer.layerDefId,
+            room.width, room.height,
+            (canvas, cachedCtx) =>
+            {
+                cachedCtx.imageSmoothingQuality = "low"
+                cachedCtx.imageSmoothingEnabled = false
+                cachedCtx.lineWidth = 1
+
+                cachedCtx.clearRect(0, 0, room.width, room.height)
+
+                renderRoomTileLayer(
+                    cachedCtx,
+                    defs,
+                    state,
+                    room,
+                    layer,
+                    layerDef,
+                    undefined,
+                    false)
+            })
+
+        if (useLayerCache)
+        {
+            renderRoomTileLayer(
+                cachedCanvas.getContext("2d")!,
+                defs,
+                state,
+                room,
+                layer,
+                layerDef,
+                prevRenderedTileLayerContents,
+                true)
+
+            prevRenderedTileLayerContents = layer
+        }
+                
+        ctx.drawImage(
+            cachedCanvas,
+            0, 0)
+    }
+    else
+    {
+        renderRoomTileLayer(
+            ctx,
+            defs,
+            state,
+            room,
+            layer,
+            layerDef,
+            undefined,
+            false)
+    }
+}
+
+
+export function renderRoomTileLayer(
+    ctx: CanvasRenderingContext2D,
+    defs: Defs.Defs,
+    state: MapEditor.State,
+    room: Map.Room,
+    layer: Map.LayerTile,
+    layerDef: Defs.DefLayerTile,
+    lastRendered: Map.LayerTile | undefined,
+    useLayerCache: boolean)
+{
+    const editor = global.editors.editors[state.editorIndex] as Editors.EditorMap
+
+    let drawX1 = 0
+    let drawX2 = layer.tileField.width - 1
+    
+    let drawY1 = 0
+    let drawY2 = layer.tileField.height - 1
+
+    if (useLayerCache &&
+        lastRendered &&
+        lastRendered.layerDefId === layer.layerDefId &&
+        layer.tileField.width === lastRendered.tileField.width &&
+        layer.tileField.height === lastRendered.tileField.height)
+    {
+        drawX1 = layer.tileField.width - 1
+        drawX2 = 0
+
+        drawY1 = layer.tileField.height - 1
+        drawY2 = 0
+
+        for (let y = 0; y < layer.tileField.height; y++)
+        {
+            for (let x = 0; x < layer.tileField.width; x++)
+            {
+                const index1 = Map.getTileFieldCellIndexForCell(layer.tileField, { x, y })!
+                const tile1 =  layer.tileField.tiles[index1]
+                const index2 = Map.getTileFieldCellIndexForCell(lastRendered.tileField, { x, y })!
+                const tile2 =  lastRendered.tileField.tiles[index2]
+
+                if (tile1?.tileId === tile2?.tileId &&
+                    tile1?.tilesetDefId === tile2?.tilesetDefId)
+                    continue
+
+                drawX1 = Math.min(drawX1, x)
+                drawX2 = Math.max(drawX2, x)
+                
+                drawY1 = Math.min(drawY1, y)
+                drawY2 = Math.max(drawY2, y)
+            }
+        }
+    }
+
+    if (drawX2 < drawX1 ||
+        drawY2 < drawY1)
+        return
+
+    let cachedTilesetDefId = ""
+    let cachedTileset: Defs.DefTileset | undefined = undefined
+    let cachedImage: Images.Image | undefined = undefined
+
+    for (let y = drawY1; y <= drawY2; y++)
+    {
+        for (let x = drawX1; x <= drawX2; x++)
+        {
+            if (useLayerCache)
+            {
+                ctx.clearRect(
+                    x * layerDef.gridCellWidth,
+                    y * layerDef.gridCellHeight,
+                    layerDef.gridCellWidth,
+                    layerDef.gridCellHeight)
+            }
+
+            const tile = layer.tileField.tiles[y * layer.tileField.width + x]
+            if (!tile)
+                continue
+
+            if (tile.tilesetDefId != cachedTilesetDefId)
+            {
+                cachedTilesetDefId = tile.tilesetDefId
+                cachedTileset = Defs.getTileset(defs, tile.tilesetDefId)
+
+                if (!cachedTileset)
+                    continue
+
+                const imagePath = Filesystem.resolveRelativePath(
+                    editor.defsBasePath,
+                    cachedTileset.imageSrc)
+                
+                cachedImage = Images.getImageLazy(imagePath)
+            }
+            
+            if (!cachedTileset || !cachedImage)
+                continue
+
+            const imagePx = Defs.getPixelForTileIndex(cachedTileset, tile.tileId)
+
+            drawImage(
+                ctx,
+                state,
+                cachedImage.element,
+                imagePx.x,
+                imagePx.y,
+                cachedTileset.gridCellWidth,
+                cachedTileset.gridCellHeight,
+                x * layerDef.gridCellWidth,
+                y * layerDef.gridCellHeight,
+                layerDef.gridCellWidth,
+                layerDef.gridCellHeight)
+        }
+    }
 }
 
 
@@ -709,10 +821,10 @@ export function renderTileLayerBkg(
         return
 
     if (global.editors.mapEditing.showGrid === "background")
-        drawGrid(
+        renderGridCached(
+            state.ctx,
             state,
             "#444",
-            0, 0,
             room.width, room.height,
             editingLayerDef.gridCellWidth,
             editingLayerDef.gridCellHeight)
@@ -731,10 +843,10 @@ export function renderTileLayerForeground(
         return
 
     if (global.editors.mapEditing.showGrid === "foreground")
-        drawGrid(
+        renderGridCached(
+            state.ctx,
             state,
             "#444",
-            0, 0,
             room.width, room.height,
             editingLayerDef.gridCellWidth,
             editingLayerDef.gridCellHeight)
@@ -869,10 +981,10 @@ export function renderObjectLayerBkg(
         return
         
     if (global.editors.mapEditing.showGrid === "background")
-        drawGrid(
+        renderGridCached(
+            state.ctx,
             state,
             "#444",
-            0, 0,
             room.width, room.height,
             editingLayerDef.gridCellWidth,
             editingLayerDef.gridCellHeight)
@@ -891,10 +1003,10 @@ export function renderObjectLayerForeground(
         return
         
     if (global.editors.mapEditing.showGrid === "foreground")
-        drawGrid(
+        renderGridCached(
+            state.ctx,
             state,
             "#444",
-            0, 0,
             room.width, room.height,
             editingLayerDef.gridCellWidth,
             editingLayerDef.gridCellHeight)
@@ -1060,38 +1172,83 @@ function drawImage(
 }
 
 
-export function drawGrid(
+export function renderGridCached(
+    ctx: CanvasRenderingContext2D,
     state: MapEditor.State,
     strokeColor: string,
-    x: number,
-    y: number,
     width: number,
     height: number,
     gridCellWidth: number,
     gridCellHeight: number)
 {
-    state.ctx.save()
+    const scale = MathUtils.snapRound(Math.max(1 / 16, Math.min(4, state.camera.zoom)), 1 / 16)
 
-    // Draw dashed lines
-    state.ctx.strokeStyle = strokeColor
-    state.ctx.lineDashOffset = 1
-    state.ctx.setLineDash([2, 2])
+    const cacheKey =
+        strokeColor + ":" +
+        state.camera.zoom + ":" +
+        width + ":" + height + ":" +
+        gridCellWidth + ":" + gridCellHeight
 
-    state.ctx.beginPath()
+    const cachedCanvas = state.cachedCanvases.get(
+        cacheKey,
+        width * scale, height * scale,
+        (canvas, cachedCtx) =>
+        {
+            cachedCtx.imageSmoothingQuality = "low"
+            cachedCtx.imageSmoothingEnabled = false
+            cachedCtx.lineWidth = 1 / scale
+
+            cachedCtx.clearRect(0, 0, width * scale, height * scale)
+
+            drawGrid(
+                cachedCtx,
+                strokeColor,
+                scale,
+                width,
+                height,
+                gridCellWidth,
+                gridCellHeight)
+        })
+
+    ctx.drawImage(
+        cachedCanvas,
+        0, 0,
+        width, height)
+}
+
+
+export function drawGrid(
+    ctx: CanvasRenderingContext2D,
+    strokeColor: string,
+    scale: number,
+    width: number,
+    height: number,
+    gridCellWidth: number,
+    gridCellHeight: number)
+{
+    ctx.save()
+    ctx.translate(-0.5, -0.5)
+    ctx.scale(scale, scale)
+
+    ctx.strokeStyle = strokeColor
+    ctx.lineDashOffset = 1
+    ctx.setLineDash([2, 2])
+
+    ctx.beginPath()
     for (let x = gridCellWidth; x < width; x += gridCellWidth)
     {
-        state.ctx.moveTo(x, 0)
-        state.ctx.lineTo(x, height)
+        ctx.moveTo(x, 0)
+        ctx.lineTo(x, height)
     }
 
     for (let y = gridCellHeight; y < height; y += gridCellHeight)
     {
-        state.ctx.moveTo(0, y)
-        state.ctx.lineTo(width, y)
+        ctx.moveTo(0, y)
+        ctx.lineTo(width, y)
     }
-    state.ctx.stroke()
+    ctx.stroke()
 
-    state.ctx.restore()
+    ctx.restore()
 }
 
 

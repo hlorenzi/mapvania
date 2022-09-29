@@ -1453,7 +1453,7 @@ export function screenshotRoomSelection(
             editor.defs,
             room,
             false,
-            undefined)
+            false)
 
         if (renderBorders)
         {
