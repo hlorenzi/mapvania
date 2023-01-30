@@ -80,6 +80,7 @@ export function Checkbox(props: {
             checked={ value }
             onChange={ onChange }
             disabled={ props.disabled }
+            style={ props.style }
         />
 
         { !label ? null :

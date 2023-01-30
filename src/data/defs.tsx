@@ -29,10 +29,20 @@ export interface DefGeneral
     roomWidthMultiple: number
     roomHeightMultiple: number
 
+    displayGrid: DisplayGrid
+
     jsonExportType: "standard" | "merge-friendly"
     jsonMinimize: boolean
     jsonUseTrailingCommas: boolean
     jsonUseBareIdentifiers: boolean
+}
+
+
+export interface DisplayGrid
+{
+    enabled: boolean
+    width: number
+    height: number
 }
 
 
@@ -61,6 +71,8 @@ export interface DefLayerCommon
 
     gridCellWidth: number
     gridCellHeight: number
+
+    displayGrid: DisplayGrid
 }
 
 
@@ -80,7 +92,7 @@ export interface DefTileset
 {
     id: ID.ID
     name: string
-    folder: Hierarchy.FolderId,
+    folder: Hierarchy.FolderId
 
     imageSrc: string
 
@@ -180,6 +192,12 @@ export function makeNew(): Defs
             roomWidthMultiple: 16,
             roomHeightMultiple: 16,
 
+            displayGrid: {
+                enabled: false,
+                width: 16,
+                height: 16,
+            },
+
             jsonExportType: "standard",
             jsonMinimize: false,
             jsonUseTrailingCommas: false,
@@ -223,6 +241,12 @@ export function makeNewLayerDef(id: ID.ID): DefLayer
         type: "tile",
         gridCellWidth: 16,
         gridCellHeight: 16,
+
+        displayGrid: {
+            enabled: false,
+            width: 16,
+            height: 16,
+        },
     }
 }
 

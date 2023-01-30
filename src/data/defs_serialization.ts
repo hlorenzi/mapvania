@@ -190,6 +190,11 @@ export function deserialize(
     defs.generalDefs = {
         roomWidthMultiple: serDefs.generalDefs.roomWidthMultiple ?? 16,
         roomHeightMultiple: serDefs.generalDefs.roomHeightMultiple ?? 16,
+        displayGrid: serDefs.generalDefs.displayGrid ?? {
+            enabled: false,
+            width: 16,
+            height: 16,
+        },
         jsonExportType: serDefs.generalDefs.jsonExportType ?? "merge-friendly",
         jsonMinimize: serDefs.generalDefs.jsonMinimize ?? false,
         jsonUseTrailingCommas: serDefs.generalDefs.jsonUseTrailingCommas ?? true,
@@ -237,6 +242,12 @@ function deserializeLayer(
         type: serLayer.type ?? "tile",
         gridCellWidth: serLayer.gridCellWidth ?? 16,
         gridCellHeight: serLayer.gridCellHeight ?? 16,
+
+        displayGrid: serLayer.displayGrid ?? {
+            enabled: false,
+            width: 16,
+            height: 16,
+        },
     }
 }
 

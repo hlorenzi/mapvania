@@ -32,7 +32,7 @@ export function DefsGeneral(props: {
     return <UI.Grid template="10em auto">
 
         <UI.Cell justifyEnd>
-            Room Grid Size
+            Room Grid
         </UI.Cell>
 
         <UI.Cell>
@@ -43,6 +43,7 @@ export function DefsGeneral(props: {
             />
             { " × " }
             <UI.Input
+                number
                 value={ defs.generalDefs.roomHeightMultiple }
                 onChangeNumber={ (value) => set(d => ({ ...d, roomHeightMultiple: value })) }
             />
@@ -50,6 +51,34 @@ export function DefsGeneral(props: {
         </UI.Cell>
 
         
+        <UI.Cell justifyEnd>
+            Display Room Grid
+        </UI.Cell>
+
+        <UI.Cell>
+            <UI.Input
+                number
+                disabled={ !defs.generalDefs.displayGrid.enabled }
+                value={ defs.generalDefs.displayGrid.width }
+                onChangeNumber={ (value) => set(d => ({ ...d, displayGrid: { ...defs.generalDefs.displayGrid, width: value } })) }
+            />
+            { " × " }
+            <UI.Input
+                number
+                disabled={ !defs.generalDefs.displayGrid.enabled }
+                value={ defs.generalDefs.displayGrid.height }
+                onChangeNumber={ (value) => set(d => ({ ...d, displayGrid: { ...defs.generalDefs.displayGrid, height: value } })) }
+            />
+            { " px " }
+            <UI.Checkbox
+                label="Enable"
+                value={ defs.generalDefs.displayGrid.enabled }
+                onChange={ (value) => set(d => ({ ...d, displayGrid: { ...defs.generalDefs.displayGrid, enabled: value } })) }
+                style={{ marginLeft: "0.5em" }}
+            />
+        </UI.Cell>
+
+
         <UI.Cell span={ 2 } divider/>
 
         

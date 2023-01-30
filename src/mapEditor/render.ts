@@ -718,8 +718,13 @@ export function renderWorldLayerBkg(
     state.ctx.save()
 
     // Draw dashed lines
-    const cellW = defs.generalDefs.roomWidthMultiple
-    const cellH = defs.generalDefs.roomHeightMultiple
+    const cellW = defs.generalDefs.displayGrid.enabled ?
+        defs.generalDefs.displayGrid.width :
+        defs.generalDefs.roomWidthMultiple
+
+    const cellH = defs.generalDefs.displayGrid.enabled ?
+        defs.generalDefs.displayGrid.height :
+        defs.generalDefs.roomHeightMultiple
 
     const dashSize = Math.max(
         Math.ceil(defs.generalDefs.roomWidthMultiple / state.camera.zoom),
@@ -728,17 +733,20 @@ export function renderWorldLayerBkg(
     state.ctx.strokeStyle = "#444"
     state.ctx.lineDashOffset = dashSize / 2
     state.ctx.setLineDash([dashSize, dashSize])
+
+    const wView = state.canvasWidth  / state.camera.zoom
+    const hView = state.canvasHeight / state.camera.zoom
     
-    const horzCells = Math.ceil(state.canvasWidth  / state.camera.zoom / cellW) + 1
-    const vertCells = Math.ceil(state.canvasHeight / state.camera.zoom / cellH) + 1
+    const horzCells = Math.ceil(wView / cellW) + 1
+    const vertCells = Math.ceil(hView / cellH) + 1
 
-    const xView = Math.floor(state.camera.pos.x / state.camera.zoom / cellW) * cellW
-    const yView = Math.floor(state.camera.pos.y / state.camera.zoom / cellH) * cellH
+    const cellXCenter = Math.floor(state.camera.pos.x / state.camera.zoom / cellW) * cellW
+    const cellYCenter = Math.floor(state.camera.pos.y / state.camera.zoom / cellH) * cellH
 
-    const cellXMin = xView - Math.ceil(horzCells / 2) * cellW
-    const cellYMin = yView - Math.ceil(vertCells / 2) * cellH
-    const cellXMax = xView + Math.ceil(horzCells / 2) * cellW
-    const cellYMax = yView + Math.ceil(vertCells / 2) * cellH
+    const cellXMin = cellXCenter - Math.ceil(horzCells / 2) * cellW
+    const cellYMin = cellYCenter - Math.ceil(vertCells / 2) * cellH
+    const cellXMax = cellXCenter + Math.ceil(horzCells / 2 + 1) * cellW
+    const cellYMax = cellYCenter + Math.ceil(vertCells / 2 + 1) * cellH
 
     state.ctx.beginPath()
     if (horzCells < 100 && vertCells < 100)
@@ -756,6 +764,19 @@ export function renderWorldLayerBkg(
         }
     }
     state.ctx.stroke()
+
+    // Draw origin axes
+    const xCenter = state.camera.pos.x / state.camera.zoom
+    const yCenter = state.camera.pos.y / state.camera.zoom
+
+    state.ctx.strokeStyle = "#840"
+    state.ctx.beginPath()
+    state.ctx.moveTo(xCenter - wView, 0)
+    state.ctx.lineTo(xCenter + wView, 0)
+    state.ctx.moveTo(0, yCenter - hView)
+    state.ctx.lineTo(0, yCenter + hView)
+    state.ctx.stroke()
+
 
     state.ctx.restore()
 }
@@ -826,8 +847,12 @@ export function renderTileLayerBkg(
             state,
             "#444",
             room.width, room.height,
-            editingLayerDef.gridCellWidth,
-            editingLayerDef.gridCellHeight)
+            editingLayerDef.displayGrid.enabled ?
+                editingLayerDef.displayGrid.width :
+                editingLayerDef.gridCellWidth,
+            editingLayerDef.displayGrid.enabled ?
+                editingLayerDef.displayGrid.height :
+                editingLayerDef.gridCellHeight)
 }
 
 
@@ -848,8 +873,12 @@ export function renderTileLayerForeground(
             state,
             "#444",
             room.width, room.height,
-            editingLayerDef.gridCellWidth,
-            editingLayerDef.gridCellHeight)
+            editingLayerDef.displayGrid.enabled ?
+                editingLayerDef.displayGrid.width :
+                editingLayerDef.gridCellWidth,
+            editingLayerDef.displayGrid.enabled ?
+                editingLayerDef.displayGrid.height :
+                editingLayerDef.gridCellHeight)
 
     if ((global.editors.mapEditing.tool === "draw" ||
         global.editors.mapEditing.tool === "fill") &&
@@ -986,8 +1015,12 @@ export function renderObjectLayerBkg(
             state,
             "#444",
             room.width, room.height,
-            editingLayerDef.gridCellWidth,
-            editingLayerDef.gridCellHeight)
+            editingLayerDef.displayGrid.enabled ?
+                editingLayerDef.displayGrid.width :
+                editingLayerDef.gridCellWidth,
+            editingLayerDef.displayGrid.enabled ?
+                editingLayerDef.displayGrid.height :
+                editingLayerDef.gridCellHeight)
 }
 
 
@@ -1008,8 +1041,12 @@ export function renderObjectLayerForeground(
             state,
             "#444",
             room.width, room.height,
-            editingLayerDef.gridCellWidth,
-            editingLayerDef.gridCellHeight)
+            editingLayerDef.displayGrid.enabled ?
+                editingLayerDef.displayGrid.width :
+                editingLayerDef.gridCellWidth,
+            editingLayerDef.displayGrid.enabled ?
+                editingLayerDef.displayGrid.height :
+                editingLayerDef.gridCellHeight)
             
     if (global.editors.mapEditing.tool === "draw" &&
         !state.onMouseMove)

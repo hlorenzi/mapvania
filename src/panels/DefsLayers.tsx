@@ -106,7 +106,7 @@ export function DefsLayers(props: {
             </UI.Cell>
 
             <UI.Cell justifyEnd>
-                Grid Size
+                Grid
             </UI.Cell>
 
             <UI.Cell>
@@ -122,6 +122,33 @@ export function DefsLayers(props: {
                     onChangeNumber={ (value) => set({ ...curLayer, gridCellHeight: value }) }
                 />
                 { " px" }
+            </UI.Cell>
+
+            <UI.Cell justifyEnd>
+                Display Grid
+            </UI.Cell>
+
+            <UI.Cell>
+                <UI.Input
+                    number
+                    disabled={ !curLayer.displayGrid.enabled }
+                    value={ curLayer.displayGrid.width }
+                    onChangeNumber={ (value) => set({ ...curLayer, displayGrid: { ...curLayer.displayGrid, width: value }}) }
+                />
+                { " × " }
+                <UI.Input
+                    number
+                    disabled={ !curLayer.displayGrid.enabled }
+                    value={ curLayer.displayGrid.height }
+                    onChangeNumber={ (value) => set({ ...curLayer, displayGrid: { ...curLayer.displayGrid, height: value }}) }
+                />
+                { " px " }
+                <UI.Checkbox
+                    label="Enable"
+                    value={ curLayer.displayGrid.enabled }
+                    onChange={ (value) => set({ ...curLayer, displayGrid: { ...curLayer.displayGrid, enabled: value }}) }
+                    style={{ marginLeft: "0.5em" }}
+                />
             </UI.Cell>
 
         </UI.Grid> }
