@@ -117,6 +117,31 @@ export function useKeyboardShortcuts()
                         Editors.redo(global.editors.currentEditor)
                     }
                     break
+
+                case "1":
+                    if (global.editors.editors.length > 0)
+                        Editors.setCurrentEditor(0)
+                    break
+
+                case "2":
+                    if (global.editors.editors.length > 1)
+                        Editors.setCurrentEditor(1)
+                    break
+
+                case "3":
+                    if (global.editors.editors.length > 2)
+                        Editors.setCurrentEditor(2)
+                    break
+
+                case "4":
+                    if (global.editors.editors.length > 3)
+                        Editors.setCurrentEditor(3)
+                    break
+
+                case "5":
+                    if (global.editors.editors.length > 4)
+                        Editors.setCurrentEditor(4)
+                    break
             }
         }
 
