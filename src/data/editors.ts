@@ -38,6 +38,7 @@ export interface Global
 
         showGrid: "none" | "background" | "foreground"
         showOtherLayers: "none" | "normal" | "faded"
+        syncEditorCameras: boolean
     }
 }
 
@@ -136,6 +137,7 @@ export function makeNew(refreshToken: RefreshToken): Global
 
             showGrid: "background",
             showOtherLayers: "normal",
+            syncEditorCameras: false,
         }
     }
 }
@@ -225,6 +227,37 @@ export function closeEditor(index: number)
     }
 
     global.editors.refreshToken.commit()
+}
+
+
+export function setCurrentEditor(index: number)
+{
+    const prevEditor =
+        global.editors.currentEditor >= 0 &&
+        global.editors.currentEditor < global.editors.editors.length ?
+            global.editors.editors[global.editors.currentEditor] :
+            null
+    
+    global.editors.currentEditor = index
+
+    const curEditor =
+        index >= 0 &&
+        index < global.editors.editors.length ?
+            global.editors.editors[index] :
+            null
+    
+    if (global.editors.mapEditing.syncEditorCameras &&
+        prevEditor &&
+        prevEditor.type == "map" &&
+        curEditor &&
+        curEditor.type == "map")
+    {
+        curEditor.mapEditor.camera = { ...prevEditor.mapEditor.camera }
+        curEditor.mapEditor.camera.pos = { ...prevEditor.mapEditor.camera.pos }
+    }
+
+    global.editors.refreshToken.commit()
+    Dev.refreshDevFile()
 }
 
 

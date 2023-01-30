@@ -144,6 +144,15 @@ export function EditorMap(props: {
         Editors.render(props.editorIndex)
     }
 
+    const toggleLinkEditorCameras = () =>
+    {
+        global.editors.mapEditing.syncEditorCameras =
+            !global.editors.mapEditing.syncEditorCameras
+            
+        global.editors.refreshToken.commit()
+        Editors.render(props.editorIndex)
+    }
+
     const capture = () =>
     {
         MapEditor.screenshotRoomSelection(editor.mapEditor, true)
@@ -291,6 +300,14 @@ export function EditorMap(props: {
                     (global.editors.mapEditing.tileBrushEdgeBehavior === "connectAlways" ? "Connect to OoB" :
                     "Ignore") }
                 onClick={ toggleTileBrushEdgeBehavior }
+            />
+            <br/>
+            <UI.Button
+                label={
+                    "🎥 Sync Editor Cameras: " +
+                    (global.editors.mapEditing.syncEditorCameras ? "On" :
+                    "Off") }
+                onClick={ toggleLinkEditorCameras }
             />
         </div>
 

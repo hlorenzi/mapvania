@@ -9,9 +9,7 @@ export function Tabs()
 {
     const changeCurrentEditor = (editorIndex: number) =>
     {
-        global.editors.currentEditor = editorIndex
-        global.editors.refreshToken.commit()
-        Dev.refreshDevFile()
+        Editors.setCurrentEditor(editorIndex)
     }
 
 
