@@ -104,12 +104,13 @@ export function getItemsAndSubfoldersAt<T extends Item>(
 
     for (const item of allItems)
     {
-        if (isSameFolder(folder, item.folder ?? []))
+        const itemFolder = item.folder ?? []
+
+        if (isSameFolder(folder, itemFolder))
             items.push(item)
 
-        // FIXME: flattens recursive folder hierarchy
-        else if (isSubFolder(folder, item.folder ?? []))
-            subfoldersSet.add(stringifyFolder(item.folder ?? []))
+        else if (isSubFolder(folder, itemFolder))
+            subfoldersSet.add(stringifyFolder(itemFolder.slice(0, folder.length + 1)))
     }
 
     const subfoldersJoined = [...subfoldersSet]
