@@ -33,6 +33,7 @@ export interface DefFieldBool extends DefFieldCommon
 {
     type: "bool"
     defaultValue: boolean
+    omitIfFalse: boolean
 }
 
 
@@ -40,6 +41,7 @@ export interface DefFieldNumber extends DefFieldCommon
 {
     type: "number"
     defaultValue: number
+    omitIfZero: boolean
 }
 
 
@@ -47,6 +49,7 @@ export interface DefFieldString extends DefFieldCommon
 {
     type: "string"
     defaultValue: string
+    omitIfEmpty: boolean
 }
 
 
@@ -149,18 +152,21 @@ export function makeDefFieldOfType(id: string, type: DefField["type"]): DefField
             ...common,
             type: "bool",
             defaultValue: false,
+            omitIfFalse: false,
         }
 
         case "string": return {
             ...common,
             type: "string",
             defaultValue: "",
+            omitIfEmpty: false,
         }
 
         case "number": return {
             ...common,
             type: "number",
             defaultValue: 0,
+            omitIfZero: false,
         }
 
         case "point": return {
@@ -479,16 +485,19 @@ function deserializeDefField(
     {
         case "bool":
         {
+            field.omitIfFalse = field.omitIfFalse ?? false
             return field
         }
         
         case "string":
         {
+            field.omitIfEmpty = field.omitIfEmpty ?? false
             return field
         }
 
         case "number":
         {
+            field.omitIfZero = field.omitIfZero ?? false
             return field
         }
 
@@ -537,7 +546,103 @@ export function serializeValues(
     values: PropertyValues)
     : PropertyValues
 {
-    return values
+    let serValues: PropertyValues = {}
+
+    for (const field of fields)
+    {
+        const serValue = serializeValue(
+            field,
+            values[field.id])
+
+        if (serValue !== null)
+            serValues[field.id] = serValue
+    }
+
+    return serValues
+}
+
+
+function serializeValue(
+    field: DefField,
+    value: FieldValue | undefined)
+    : FieldValue
+{
+    if (value === null || value === undefined)
+        return null
+    
+    switch (field.type)
+    {
+        case "point":
+        case "rect":
+        case "choice":
+            return value
+
+        case "bool":
+        {
+            if (!field.optional && field.omitIfFalse && !value)
+                return null
+            else
+                return value
+        }
+
+        case "string":
+        {
+            if (!field.optional && field.omitIfEmpty && value === "")
+                return null
+            else
+                return value
+        }
+
+        case "number":
+        {
+            if (!field.optional && field.omitIfZero && value === 0)
+                return null
+            else
+                return value
+        }
+
+        case "struct":
+        {
+            const subvalues: FieldValueStruct = {}
+        
+            for (const subfield of field.fields)
+            {
+                const subvalue = serializeValue(
+                    subfield,
+                    (value as FieldValueStruct)[subfield.id])
+
+                if (subvalue !== null)
+                    subvalues[subfield.id] = subvalue
+            }
+
+            return subvalues
+        }
+
+        case "enum":
+        {
+            const valueEnum = value as FieldValueEnum
+            const variantField = field.variants.find(v => v.id === valueEnum.variantId)
+            if (variantField)
+            {
+                const enumValue: FieldValueEnum = {
+                    variantId: valueEnum.variantId,
+                    value: serializeValue(variantField, valueEnum.value)
+                }
+                return enumValue
+            }
+            return value
+        }
+
+        case "list":
+        {
+            const valueList = value as FieldValueList
+            const list: FieldValueList = []
+            for (let i = 0; i < valueList.length; i++)
+                list[i] = serializeValue(field.element, valueList[i])
+
+            return list
+        }
+    }
 }
 
 

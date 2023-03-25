@@ -278,6 +278,18 @@ export function FieldBool(props: {
                     onChange={ (value) => props.setField({ ...props.field, defaultValue: value }) }
                 />
             </UI.Cell>
+
+            <UI.Cell justifyEnd>
+                Omit if False
+            </UI.Cell>
+
+            <UI.Cell justifyStart>
+                <UI.Checkbox
+                    disabled={ props.field.optional }
+                    value={ props.field.omitIfFalse }
+                    onChange={ (value) => props.setField({ ...props.field, omitIfFalse: value }) }
+                />
+            </UI.Cell>
         </UI.Grid>
     </Tabulation>
 }
@@ -299,6 +311,18 @@ export function FieldString(props: {
                     value={ props.field.defaultValue }
                     onChange={ (value) => props.setField({ ...props.field, defaultValue: value }) }
                     fullWidth
+                />
+            </UI.Cell>
+
+            <UI.Cell justifyEnd>
+                Omit if Empty
+            </UI.Cell>
+
+            <UI.Cell justifyStart>
+                <UI.Checkbox
+                    disabled={ props.field.optional }
+                    value={ props.field.omitIfEmpty }
+                    onChange={ (value) => props.setField({ ...props.field, omitIfEmpty: value }) }
                 />
             </UI.Cell>
         </UI.Grid>
@@ -323,6 +347,18 @@ export function FieldNumber(props: {
                     value={ props.field.defaultValue }
                     onChangeNumber={ (value) => props.setField({ ...props.field, defaultValue: value }) }
                     fullWidth
+                />
+            </UI.Cell>
+
+            <UI.Cell justifyEnd>
+                Omit if Zero
+            </UI.Cell>
+
+            <UI.Cell justifyStart>
+                <UI.Checkbox
+                    disabled={ props.field.optional }
+                    value={ props.field.omitIfZero }
+                    onChange={ (value) => props.setField({ ...props.field, omitIfZero: value }) }
                 />
             </UI.Cell>
         </UI.Grid>
