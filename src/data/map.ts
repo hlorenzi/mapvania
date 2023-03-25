@@ -109,15 +109,38 @@ export function makeNew(defs: Defs.Defs): Map
 
 export function getDefaultCameraPosition(map: Map): MathUtils.Point
 {
+    // Find room at the map's origin
     for (const room of Object.values(map.rooms))
     {
-        return {
-            x: room.x + room.width / 2,
-            y: room.y + room.height / 2,
+        if (room.x <= 0 &&
+            room.y <= 0 &&
+            room.x + room.width > 0 &&
+            room.y + room.height > 0)
+        {
+            return {
+                x: room.x + room.width / 2,
+                y: room.y + room.height / 2,
+            }
+        }
+    }
+
+    // Find room near the map's origin
+    let minDistSqr = Infinity
+    let position = { x: 0, y: 0 }
+    for (const room of Object.values(map.rooms))
+    {
+        const cx = room.x + room.width / 2
+        const cy = room.y + room.height / 2
+        const distSqr = cx * cx + cy * cy
+
+        if (distSqr < minDistSqr)
+        {
+            minDistSqr = distSqr
+            position = { x: cx, y: cy }
         }
     }
     
-    return { x: 0, y: 0 }
+    return position
 }
 
 
