@@ -54,6 +54,16 @@ export function stringify(
                 return {
                     useMultilineArray: true,
                 }
+
+            if (path.length === 2 &&
+                (path[0] === "layerDefs" ||
+                path[0] === "tilesetDefs" ||
+                path[0] === "tileAttributeDefs" ||
+                path[0] === "tileBrushDefs" ||
+                path[0] === "objectDefs"))
+                return {
+                    commentDelimiters: value.id,
+                }
         }
 
         return {}

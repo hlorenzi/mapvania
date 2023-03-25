@@ -64,6 +64,27 @@ export function stringify(
                 return {
                     spacedFields: true,
                 }
+
+            if (path.length === 2 &&
+                path[0] === "rooms")
+                return {
+                    commentDelimiters: value.id,
+                }
+
+            if (path.length === 4 &&
+                path[0] === "rooms" &&
+                path[2] === "layers")
+                return {
+                    commentDelimiters: value.layerDefId,
+                }
+
+            if (path.length === 6 &&
+                path[0] === "rooms" &&
+                path[2] === "layers" &&
+                path[4] === "objects")
+                return {
+                    commentDelimiters: value.id,
+                }
         }
 
         return {}

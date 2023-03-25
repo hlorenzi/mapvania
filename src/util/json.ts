@@ -6,6 +6,7 @@ export interface StringifyOptions
     sortFields?: boolean
     spacedFields?: boolean
     useMultilineArray?: boolean
+    commentDelimiters?: string
 }
 
 
@@ -126,6 +127,9 @@ function stringifyObject(
     
     builder.write("{")
 
+    if (options.commentDelimiters)
+        builder.write(" /* " + options.commentDelimiters + " */")
+
     if (!options.minimize)
         builder.indent()
 
@@ -175,6 +179,9 @@ function stringifyObject(
         builder.unindent()
 
     builder.write("}")
+
+    if (options.commentDelimiters)
+        builder.write(" /* " + options.commentDelimiters + " */")
 }
 
 
@@ -315,16 +322,43 @@ class Parser
 
     skipWhitespace()
     {
+        let commentNesting = 0
+
         while (true)
         {
-            const c = this.next()
-            if (c !== " " &&
-                c !== "\t" &&
-                c !== "\r" &&
-                c !== "\n")
-                break
+            const c1 = this.next(0)
 
-            this.advance()
+            if (c1 === " " ||
+                c1 === "\t" ||
+                c1 === "\r" ||
+                c1 === "\n")
+            {
+                this.index++
+                continue
+            }
+
+            const c2 = this.next(1)
+            if (c1 === "/" && c2 === "*")
+            {
+                commentNesting++
+                this.index += 2
+                continue
+            }
+
+            if (c1 === "*" && c2 === "/")
+            {
+                commentNesting--
+                this.index += 2
+                continue
+            }
+
+            if (commentNesting > 0)
+            {
+                this.index++
+                continue
+            }
+
+            break
         }
     }
 
