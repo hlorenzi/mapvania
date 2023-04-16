@@ -60,9 +60,7 @@ export function LayerPicker(props: {
         pointerEvents: "auto",
         backgroundColor: "#242424",
     }}>
-        <UI.HeaderAndBody
-            header="LAYERS"
-        >
+        <UI.HeaderAndBody>
 
             <UI.Grid template="1fr" templateRows="1fr">
 

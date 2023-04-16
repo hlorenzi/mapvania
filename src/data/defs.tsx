@@ -761,6 +761,34 @@ export function getTilesetDefIconElement(
 }
 
 
+export function getChooseTilesetDefIconElement()
+    : React.ReactNode | null
+{
+    const image = Images.getImageLazy(":obj/question.png:#ffffffff:#00000000")
+    if (!image)
+        return <span/>
+
+    return <div style={{
+        objectFit: "contain",
+        display: "inline-block",
+    }}>
+        <div style={{
+            width: Math.min(64, 16) + "px",
+            height: Math.min(64, 16) + "px",
+            overflow: "hidden",
+        }}>
+            <img
+                draggable="false"
+                src={ image.element.src }
+                style={{
+                    marginLeft: "0px",
+                    marginTop: "0px",
+            }}/>
+        </div>
+    </div>
+}
+
+
 export function getTileAttributeDefIconElement(tileAttributeDef: DefTileAttribute): React.ReactNode | null
 {
     return <div style={{

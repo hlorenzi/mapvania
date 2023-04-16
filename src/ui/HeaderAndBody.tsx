@@ -9,15 +9,19 @@ import { global } from "../global"
 
 
 export function HeaderAndBody(props: {
-    header: React.ReactNode,
+    header?: React.ReactNode,
     children: React.ReactNode,
 })
 {
     return <StyledRoot>
 
-        <StyledHeader>
-            { props.header }
-        </StyledHeader>
+        { !props.header ?
+            <div/>
+        :
+            <StyledHeader>
+                { props.header }
+            </StyledHeader>
+        }
 
         { props.children }
 

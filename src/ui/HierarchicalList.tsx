@@ -36,6 +36,7 @@ const StyledHeader = styled.div`
 
 const StyledList = styled.div<{
     is2D: boolean,
+    singleLine: boolean,
 }>`
     font-size: 1em;
     font-family: inherit;
@@ -43,10 +44,10 @@ const StyledList = styled.div<{
     background-color: #242424;
 
     width: 100%;
-    height: 100%;
+    height: ${ props => props.singleLine ? "6.15em" : "100%" };
 
     overflow-x: hidden;
-    overflow-y: scroll;
+    overflow-y: ${ props => props.singleLine ? "hidden" : "scroll" };
 
     box-sizing: border-box;
     outline: none;
@@ -90,6 +91,7 @@ const StyledListItem = styled.button<{
     text-decoration: none;
     text-align: left;
     cursor: pointer;
+    user-select: none;
     
     box-sizing: border-box;
     margin: 0;
@@ -132,6 +134,7 @@ const StyledListInner = styled.div<{
     justify-items: start;
     align-content: center;
     align-items: center;
+    user-select: none;
 
     ${ props => !props.is2D ? "" : `
         grid-template: 1fr auto / 1fr;
@@ -152,6 +155,7 @@ const StyledListLabel = styled.div`
     text-overflow: ellipsis;
     white-space: nowrap;
     overflow: hidden;
+    user-select: none;
 `
 
 
@@ -191,6 +195,7 @@ export function HierarchicalList<T extends Hierarchy.Item>(props: {
     is2D?: boolean,
     disallowFolders?: boolean,
     disabled?: boolean,
+    singleLine?: boolean,
     style?: React.CSSProperties,
 })
 {
@@ -376,10 +381,13 @@ export function HierarchicalList<T extends Hierarchy.Item>(props: {
         if (props.value === undefined)
             return
 
+        const item = props.items.find(item => item.id === props.value)
+
         setState(s => ({
             ...s,
             lastSelectedId: props.value!,
             selectedIds: new Set([props.value!]),
+            currentFolder: item?.folder ?? s.currentFolder,
         }))
 
     }, [props.value])
@@ -478,6 +486,7 @@ export function HierarchicalList<T extends Hierarchy.Item>(props: {
 
         <StyledList
             is2D={ !!props.is2D }
+            singleLine={ !!props.singleLine }
             ref={ scrollParentRef }
             onDragOver={ ev => onDragOver(ev, DRAGOVER_ID_LAST) }
             onDrop={ ev => onDrop(ev, DRAGOVER_ID_LAST) }

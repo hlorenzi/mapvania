@@ -43,6 +43,7 @@ const StyledModalBkg = styled.div`
 
     display: grid;
     grid-template: 1fr auto 1fr / 1fr auto 1fr;
+    pointer-events: auto;
     
     animation: 0.1s linear 0s 1 forwards ${ keyframesModalBkg };
 `
@@ -62,6 +63,7 @@ const StyledModal = styled.div`
     border: 1px solid transparent;
     border-radius: 0;
     outline: none;
+    pointer-events: auto;
 
     animation: 0.1s ease-out 0s 1 forwards ${ keyframesModal };
 `
@@ -85,8 +87,15 @@ export function Modal(props: {
 
         props.setOpen(open)
     }
+
+    const onClickBkg = (ev: React.MouseEvent) =>
+    {
+        ev.preventDefault()
+        ev.stopPropagation()
+        setOpen(false)
+    }
     
-	return <StyledModalBkg onClick={ () => setOpen(false) }>
+	return <StyledModalBkg onClick={ onClickBkg }>
         <StyledModal
             onClick={ ev => ev.stopPropagation() }
             style={ props.style }
