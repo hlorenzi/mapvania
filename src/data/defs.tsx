@@ -470,6 +470,16 @@ export function setTileAttributesForTile(
 }
 
 
+export function isTileIndexInBrush(
+    brush: DefTileBrush,
+    tileIndex: number)
+    : boolean
+{
+    const data = brush.tiles[tileIndex.toString()]
+    return data !== undefined
+}
+
+
 export function getTileBrushData(
     brush: DefTileBrush,
     tileIndex: number)
@@ -556,13 +566,11 @@ export function getTileBrushTopmostLeftmostTile(
 
 
 export function getTileBrushDefaultTile(
-    defs: Defs,
     brush: DefTileBrush,
     type: BrushTileType)
     : number | undefined
 {
     let tile = getTileWithCenterTypeInTileBrush(
-        defs,
         brush,
         type)
 
@@ -572,7 +580,6 @@ export function getTileBrushDefaultTile(
     if (type !== BrushTileType.Full)
     {
         tile = getTileWithCenterTypeInTileBrush(
-            defs,
             brush,
             BrushTileType.Full)
     }
@@ -588,7 +595,6 @@ export function getTileBrushDefaultTile(
 
 
 export function getTileTypeInTileBrush(
-    defs: Defs,
     brush: DefTileBrush,
     tileIndex: number)
     : BrushTileType
@@ -602,12 +608,15 @@ export function getTileTypeInTileBrush(
 
 
 export function getTileWithCenterTypeInTileBrush(
-    defs: Defs,
     brush: DefTileBrush,
     centerType: BrushTileType)
     : number | undefined
 {
-    const matches: { score: number, tileIndex: number }[] = []
+    const matches: {
+        score: number,
+        tileIndex: number,
+        connections: BrushTileConnections,
+    }[] = []
 
     for (const [tileIndexKey, data] of Object.entries(brush.tiles))
     {
@@ -629,6 +638,7 @@ export function getTileWithCenterTypeInTileBrush(
         matches.push({
             score,
             tileIndex,
+            connections: data.connections,
         })
     }
 
@@ -636,17 +646,48 @@ export function getTileWithCenterTypeInTileBrush(
         return undefined
 
     matches.sort((a, b) => b.score - a.score)
-    return matches[0].tileIndex
+
+    const bestScoringMatches = matches.filter(m =>
+        m.score === matches[0].score &&
+        m.connections.every((c, i) => c === matches[0].connections[i]))
+
+    const randomMatch =
+        bestScoringMatches[Math.floor(Math.random() * bestScoringMatches.length)]
+
+    return randomMatch.tileIndex
 }
 
 
 export function getMatchingTileInTileBrush(
-    defs: Defs,
     brush: DefTileBrush,
     desiredConnections: BrushTileConnections)
     : number | undefined
 {
-    const matches: { score: number, tileIndex: number }[] = []
+    const matches: {
+        score: number,
+        tileIndex: number,
+        connections: BrushTileConnections,
+    }[] = []
+
+    const dontCareConnections = [
+        true, true, true,
+        true, true, true,
+        true, true, true,
+    ]
+
+
+    for (const [tileIndexKey, data] of Object.entries(brush.tiles))
+    {
+        if (data.connections[4] !== desiredConnections[4])
+            continue
+
+        for (let c = 0; c < 9; c++)
+        {
+            if (data.connections[c] !== BrushTileType.None)
+                dontCareConnections[c] = false
+        }
+    }
+
 
     for (const [tileIndexKey, data] of Object.entries(brush.tiles))
     {
@@ -660,7 +701,8 @@ export function getMatchingTileInTileBrush(
         // Prioritize 4-way connection
         for (const c of [1, 3, 5, 7])
         {
-            if (data.connections[c] === desiredConnections[c])
+            if (data.connections[c] === desiredConnections[c] ||
+                dontCareConnections[c])
             {
                 score += 100000
                 continue
@@ -689,7 +731,8 @@ export function getMatchingTileInTileBrush(
         // Add score for diagonal connections
         for (const c of [0, 2, 6, 8])
         {
-            if (data.connections[c] === desiredConnections[c])
+            if (data.connections[c] === desiredConnections[c] ||
+                dontCareConnections[c])
                 score += 1000
 
             else if (data.connections[c] === BrushTileType.Full &&
@@ -706,14 +749,23 @@ export function getMatchingTileInTileBrush(
         matches.push({
             score,
             tileIndex,
+            connections: data.connections,
         })
     }
+
+    matches.sort((a, b) => b.score - a.score)
     
     if (matches.length == 0)
         return undefined
 
-    matches.sort((a, b) => b.score - a.score)
-    return matches[0].tileIndex
+    const bestScoringMatches = matches.filter(m =>
+        m.score === matches[0].score &&
+        m.connections.every((c, i) => c === matches[0].connections[i]))
+
+    const randomMatch =
+        bestScoringMatches[Math.floor(Math.random() * bestScoringMatches.length)]
+    
+    return randomMatch.tileIndex
 }
 
 

@@ -68,13 +68,11 @@ export function setupTileDraw(state: MapEditor.State)
             const fillType = drawnMultiple ?
                 Defs.BrushTileType.Full :
                 Map.getBrushTileTypeForMousePosition(
-                    editor.defs,
                     brush,
                     layerDef,
                     state.mouse.posInRoom)
 
             const defaultTileIndex = Defs.getTileWithCenterTypeInTileBrush(
-                editor.defs,
                 brush,
                 fillType)
             
@@ -85,10 +83,18 @@ export function setupTileDraw(state: MapEditor.State)
                 tilesetDefId: brush.tilesetDefId,
                 tileId: defaultTileIndex,
             }
-            
-            layer = Map.setTile(layer, state.mouse.tile, defaultTile)
+
+            if (lastPlacedTile.x !== state.mouse.tile.x ||
+                lastPlacedTile.y !== state.mouse.tile.y ||
+                Map.isNewTileOfDifferentBrushType(layer, brush, state.mouse.tile, defaultTile))
+            {
+                layer = Map.setTile(
+                    layer,
+                    state.mouse.tile,
+                    defaultTile)
+            }
+
             layer = Map.fixBrushTileRegion(
-                editor.defs,
                 brush,
                 layer,
                 state.mouse.tile)
@@ -97,9 +103,15 @@ export function setupTileDraw(state: MapEditor.State)
             {
                 // Fix first placed tile to become
                 // a Full tile.
-                layer = Map.setTile(layer, lastPlacedTile, defaultTile)
+                if (Map.isNewTileOfDifferentBrushType(layer, brush, lastPlacedTile, defaultTile))
+                {
+                    layer = Map.setTile(
+                        layer,
+                        lastPlacedTile,
+                        defaultTile)
+                }
+                
                 layer = Map.fixBrushTileRegion(
-                    editor.defs,
                     brush,
                     layer,
                     lastPlacedTile)

@@ -893,13 +893,11 @@ export function renderTileLayerForeground(
             for (const _ of [0])
             {
                 const fillType = Map.getBrushTileTypeForMousePosition(
-                    defs,
                     brush,
                     editingLayerDef,
                     state.mouse.posInRoom)
     
                 const tileIndex = Defs.getTileBrushDefaultTile(
-                    defs,
                     brush,
                     fillType)
 

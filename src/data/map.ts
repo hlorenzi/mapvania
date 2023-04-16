@@ -477,6 +477,94 @@ export function setTile(
 }
 
 
+export function isNewTileOfDifferentBrushType(
+    layer: LayerTile,
+    brush: Defs.DefTileBrush,
+    cell: { x: number, y: number },
+    tile: Tile | undefined)
+    : boolean
+{
+    const cellIndex = getTileFieldCellIndexForCell(layer.tileField, cell)
+    if (cellIndex === undefined)
+        return false
+
+    const origTile = layer.tileField.tiles[cellIndex]
+
+    if (origTile &&
+        tile &&
+        origTile.tilesetDefId === tile.tilesetDefId)
+    {
+        const origType = Defs.getTileTypeInTileBrush(
+            brush,
+            origTile.tileId)
+
+        const newType = Defs.getTileTypeInTileBrush(
+            brush,
+            tile.tileId)
+
+        if (origType === newType)
+            return false
+    }
+
+    return true
+}
+
+
+export function isNewTileOfDifferentBrushConnections(
+    layer: LayerTile,
+    brush: Defs.DefTileBrush,
+    cell: { x: number, y: number },
+    tile: Tile | undefined)
+    : boolean
+{
+    const cellIndex = getTileFieldCellIndexForCell(layer.tileField, cell)
+    if (cellIndex === undefined)
+        return false
+
+    const origTile = layer.tileField.tiles[cellIndex]
+
+    if (origTile &&
+        tile &&
+        origTile.tilesetDefId === tile.tilesetDefId)
+    {
+        const origType = Defs.getTileBrushData(
+            brush,
+            origTile.tileId)
+
+        const newType = Defs.getTileBrushData(
+            brush,
+            tile.tileId)
+
+        let allSame = true
+        for (let c = 0; c < 9; c++)
+            if (origType.connections[c] !== newType.connections[c])
+                allSame = false
+
+        return !allSame
+    }
+
+    return true
+}
+
+
+export function setTileIfDifferentBrushConnections(
+    layer: LayerTile,
+    brush: Defs.DefTileBrush,
+    cell: { x: number, y: number },
+    tile: Tile | undefined)
+    : LayerTile
+{
+    const cellIndex = getTileFieldCellIndexForCell(layer.tileField, cell)
+    if (cellIndex === undefined)
+        return layer
+
+    if (!isNewTileOfDifferentBrushType(layer, brush, cell, tile))
+        return layer
+
+    return setTile(layer, cell, tile)
+}
+
+
 export function resizeTileField(
     tileField: TileField,
     xOffsetInTiles: number,
@@ -511,7 +599,6 @@ export function resizeTileField(
 
 
 export function getBrushTileTypeForMousePosition(
-    defs: Defs.Defs,
     brush: Defs.DefTileBrush,
     layerDef: Defs.DefLayerTile,
     mousePosInRoom: MathUtils.Point)
@@ -541,24 +628,12 @@ export function getBrushTileTypeForMousePosition(
 
 
 export function getBrushTileDecisionAt(
-    defs: Defs.Defs,
     brush: Defs.DefTileBrush,
     tileField: TileField,
     cell: { x: number, y: number },
     secondPass: boolean)
-    : number | undefined
+    : number | null | undefined
 {
-    const cellIndex = getTileFieldCellIndexForCell(
-        tileField,
-        cell)
-
-    if (cellIndex === undefined)
-        return undefined
-
-    const tile = tileField.tiles[cellIndex]
-    if (!tile)
-        return undefined
-
     const connections: Defs.BrushTileConnections = [
         Defs.BrushTileType.None, Defs.BrushTileType.None, Defs.BrushTileType.None,
         Defs.BrushTileType.None, Defs.BrushTileType.None, Defs.BrushTileType.None,
@@ -568,6 +643,8 @@ export function getBrushTileDecisionAt(
     for (let cx = -1; cx <= 1; cx++)
     for (let cy = -1; cy <= 1; cy++)
     {
+        const connection = (cx + 1) + (cy + 1) * 3
+
         const neighborCell = { x: cell.x + cx, y: cell.y + cy }
         const neighborCellIndex = getTileFieldCellIndexForCell(
             tileField,
@@ -576,19 +653,16 @@ export function getBrushTileDecisionAt(
         if (neighborCellIndex === undefined)
         {
             if (global.editors.mapEditing.tileBrushEdgeBehavior === "connectAlways")
-                connections[(cx + 1) + (cy + 1) * 3] = Defs.BrushTileType.Full
+                connections[connection] = Defs.BrushTileType.Full
 
             continue
         }
 
         const neighborTile = tileField.tiles[neighborCellIndex]
-        if (!neighborTile || neighborTile.tilesetDefId !== tile.tilesetDefId)
+        if (!neighborTile || neighborTile.tilesetDefId !== brush.tilesetDefId)
             continue
 
-        const connection = (cx + 1) + (cy + 1) * 3
-
         connections[connection] = Defs.getTileTypeInTileBrush(
-            defs,
             brush,
             neighborTile.tileId)
     }
@@ -612,7 +686,7 @@ export function getBrushTileDecisionAt(
                 continue
 
             const neighborTile = tileField.tiles[neighborCellIndex]
-            if (!neighborTile || neighborTile.tilesetDefId !== tile.tilesetDefId)
+            if (!neighborTile || neighborTile.tilesetDefId !== brush.tilesetDefId)
                 continue
 
             const neighborData = Defs.getTileBrushData(
@@ -637,13 +711,20 @@ export function getBrushTileDecisionAt(
         }
     }
 
-    return Defs.getMatchingTileInTileBrush(defs, brush, connections) ??
-        Defs.getTileBrushDefaultTile(defs, brush, connections[4])
+    const decidedTileIndex =
+        Defs.getMatchingTileInTileBrush(brush, connections)
+
+    if (decidedTileIndex !== undefined)
+        return decidedTileIndex
+
+    if (connections[4] === Defs.BrushTileType.None)
+        return null
+
+    return Defs.getTileBrushDefaultTile(brush, connections[4])
 }
 
 
 export function fixBrushTileAt(
-    defs: Defs.Defs,
     brush: Defs.DefTileBrush,
     layer: LayerTile,
     cell: { x: number, y: number },
@@ -658,20 +739,15 @@ export function fixBrushTileAt(
         return layer
 
     const neighborTile = layer.tileField.tiles[neighborTileIndex]
-    if (neighborTile === undefined ||
+    if (neighborTile &&
         neighborTile.tilesetDefId !== brush.tilesetDefId)
         return layer
 
-    const type = Defs.getTileTypeInTileBrush(
-        defs,
-        brush,
-        neighborTile.tileId)
-
-    if (type === Defs.BrushTileType.None)
+    if (neighborTile &&
+        !Defs.isTileIndexInBrush(brush, neighborTile.tileId))
         return layer
 
     const modifiedTileIndex = getBrushTileDecisionAt(
-        defs,
         brush,
         layer.tileField,
         cell,
@@ -680,37 +756,50 @@ export function fixBrushTileAt(
     if (modifiedTileIndex === undefined)
         return layer
 
+    if (modifiedTileIndex === null)
+        return layer
+
+    const newType = Defs.getTileTypeInTileBrush(
+        brush,
+        modifiedTileIndex)
+        
     const modifiedTile: Tile = {
         tilesetDefId: brush.tilesetDefId,
         tileId: modifiedTileIndex,
     }
 
-    return setTile(layer, cell, modifiedTile)
+    if (!isNewTileOfDifferentBrushConnections(layer, brush, cell, modifiedTile))
+        return layer
+
+    return setTile(
+        layer,
+        cell,
+        modifiedTile)
 }
 
 
 export function fixBrushTileRegion(
-    defs: Defs.Defs,
     brush: Defs.DefTileBrush,
     layer: LayerTile,
     aroundCell: { x: number, y: number })
     : LayerTile
 {
     for (let pass = 0; pass < 2; pass++)
-    for (let cx = -1; cx <= 1; cx++)
-    for (let cy = -1; cy <= 1; cy++)
     {
-        const neighborCell = {
-            x: aroundCell.x + cx,
-            y: aroundCell.y + cy,
-        }
+        for (let cy = -1; cy <= 1; cy++)
+        for (let cx = -1; cx <= 1; cx++)
+        {
+            const neighborCell = {
+                x: aroundCell.x + cx,
+                y: aroundCell.y + cy,
+            }
 
-        layer = fixBrushTileAt(
-            defs,
-            brush,
-            layer,
-            neighborCell,
-            pass !== 0)
+            layer = fixBrushTileAt(
+                brush,
+                layer,
+                neighborCell,
+                pass !== 0)
+        }
     }
 
     return layer
