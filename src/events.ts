@@ -82,6 +82,11 @@ export function useKeyboardShortcuts()
                     global.editors.mapEditing.tool = "fill"
                     global.editors.refreshToken.commit()
                     break
+
+                case "r":
+                    global.editors.mapEditing.tool = "replace"
+                    global.editors.refreshToken.commit()
+                    break
                     
                 case "e":
                     global.editors.mapEditing.tool = "erase"

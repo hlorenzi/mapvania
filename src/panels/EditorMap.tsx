@@ -230,6 +230,12 @@ export function EditorMap(props: {
                 />
 
                 <UI.Button
+                    label="💱 Replace (R)"
+                    selected={ global.editors.mapEditing.tool === "replace" }
+                    onClick={ () => chooseTool("replace") }
+                />
+
+                <UI.Button
                     label="❌ Erase (E)"
                     selected={ global.editors.mapEditing.tool === "erase" }
                     onClick={ () => chooseTool("erase") }

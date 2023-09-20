@@ -46,7 +46,13 @@ export interface Global
 export const LAYERDEF_ID_MAP = "world"
 
 
-export type Tool = "move" | "draw" | "fill" | "erase" | "select"
+export type Tool =
+    "move" |
+    "draw" |
+    "fill" |
+    "replace" |
+    "erase" |
+    "select"
 
 
 export type Editor =

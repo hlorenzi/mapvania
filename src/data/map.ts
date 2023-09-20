@@ -441,6 +441,19 @@ export function *enumerateTileFieldCellsCentered(tileField: TileField): Generato
 }
 
 
+export function getTile(
+    layer: LayerTile,
+    cell: { x: number, y: number })
+    : Tile | undefined
+{
+    const cellIndex = getTileFieldCellIndexForCell(layer.tileField, cell)
+    if (cellIndex === undefined)
+        return undefined
+
+    return layer.tileField.tiles[cellIndex]
+}
+
+
 export function setTile(
     layer: LayerTile,
     cell: { x: number, y: number },

@@ -881,7 +881,8 @@ export function renderTileLayerForeground(
                 editingLayerDef.gridCellHeight)
 
     if ((global.editors.mapEditing.tool === "draw" ||
-        global.editors.mapEditing.tool === "fill") &&
+        global.editors.mapEditing.tool === "fill" ||
+        global.editors.mapEditing.tool === "replace") &&
         !state.onMouseMove)
     {
         state.ctx.save()

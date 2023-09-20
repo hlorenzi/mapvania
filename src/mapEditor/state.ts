@@ -612,6 +612,9 @@ export function onMouseDown(state: State, ev: MouseEvent)
                     else if (global.editors.mapEditing.tool === "fill")
                         MapEditor.setupTileFill(state)
 
+                    else if (global.editors.mapEditing.tool === "replace")
+                        MapEditor.setupTileReplace(state)
+
                     else if (global.editors.mapEditing.tool === "erase")
                         MapEditor.setupTileErase(state)
 
