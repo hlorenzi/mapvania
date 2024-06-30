@@ -1,51 +1,39 @@
-import * as React from "react"
-import * as ReactDOMClient from "react-dom/client"
-import { global, initGlobal } from "./global"
-import * as Events from "./events"
-import { useRefreshToken } from "./util/refreshToken"
-import { EditorRoot } from "./panels/EditorRoot"
-import { ProjectTree } from "./panels/ProjectTree"
-import * as Filesystem from "./data/filesystem"
-import * as Editors from "./data/editors"
+import * as Solid from "solid-js"
+import * as SolidWeb from "solid-js/web"
+import * as Global from "./global.ts"
+import * as Filesystem from "./data/filesystem.ts"
+import { ProjectTree } from "./panels/ProjectTree.tsx"
+import { EditorRoot } from "./panels/EditorRoot.tsx"
+
+
+SolidWeb.render(App, document.getElementById("app")!)
 
 
 function App()
 {
-    const filesystemRefreshToken = useRefreshToken("filesystem")
-    const editorsRefreshToken = useRefreshToken("editors")
-    const imagesRefreshToken = useRefreshToken("images")
+    const filesystem = Solid.createSignal(Filesystem.makeNew())
 
-    
-    Events.useKeyboardShortcuts()
-    Events.useWindowFocusEvent()
+    //Events.useKeyboardShortcuts()
+    //Events.useWindowFocusEvent()
 
 
-    const initialized = React.useRef(false)
-    if (!initialized.current)
-    {
-        initialized.current = true
+    return <>
+        <Global.CtxFilesystem.Provider value={ filesystem }>
+            <div style={{
+                display: "grid",
+                "grid-template": "auto 1fr / auto 1fr",
+                width: "100%",
+                height: "100vh",
+                "font-size": "0.8em",
+            }}>
 
-        initGlobal(
-            filesystemRefreshToken,
-            editorsRefreshToken,
-            imagesRefreshToken,
-        )
-    }
+                <ProjectTree/>
 
+                <EditorRoot/>
 
-    return <div style={{
-        display: "grid",
-        gridTemplate: "auto 1fr / auto 1fr",
-        width: "100%",
-        height: "100vh",
-        fontSize: "0.8em",
-    }}>
-
-        <ProjectTree/>
-
-        <EditorRoot/>
-
-    </div>
+            </div>
+        </Global.CtxFilesystem.Provider>
+    </>
 }
 
 
@@ -58,11 +46,3 @@ window.addEventListener("beforeunload", (ev) =>
         return ev.returnValue
     }
 })
-
-
-document.body.onload = function()
-{
-	const container = document.getElementById("divApp")!
-	const root = ReactDOMClient.createRoot(container)
-	root.render(<App/>)
-}

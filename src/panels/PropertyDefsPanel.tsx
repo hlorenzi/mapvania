@@ -227,7 +227,7 @@ export function Field(props: {
 
         <UI.Cell justifyStretch>
             <UI.Input
-                value={ props.field.id }
+                valueSignal={ props.field.id }
                 onChange={ (value) => props.setField({ ...props.field, id: value }) }
                 fullWidth
             />
@@ -308,7 +308,7 @@ export function FieldString(props: {
 
             <UI.Cell>
                 <UI.Input
-                    value={ props.field.defaultValue }
+                    valueSignal={ props.field.defaultValue }
                     onChange={ (value) => props.setField({ ...props.field, defaultValue: value }) }
                     fullWidth
                 />
@@ -344,7 +344,7 @@ export function FieldNumber(props: {
             <UI.Cell>
                 <UI.Input
                     number
-                    value={ props.field.defaultValue }
+                    valueSignal={ props.field.defaultValue }
                     onChangeNumber={ (value) => props.setField({ ...props.field, defaultValue: value }) }
                     fullWidth
                 />
@@ -531,7 +531,7 @@ export function FieldChoice(props: {
                     </UI.Cell>
                     <UI.Cell justifyStretch>
                         <UI.Input
-                            value={ choice }
+                            valueSignal={ choice }
                             onChange={ (value) => modifyChoice(i, value) }
                             fullWidth
                         />

@@ -75,7 +75,7 @@ export function DefsLayers(props: {
 
             <UI.Cell justifyStretch>
                 <UI.Input
-                    value={ curLayer.name }
+                    valueSignal={ curLayer.name }
                     onChange={ (value) => set({ ...curLayer, name: value }) }
                     fullWidth
                 />
@@ -112,13 +112,13 @@ export function DefsLayers(props: {
             <UI.Cell>
                 <UI.Input
                     number
-                    value={ curLayer.gridCellWidth }
+                    valueSignal={ curLayer.gridCellWidth }
                     onChangeNumber={ (value) => set({ ...curLayer, gridCellWidth: value }) }
                 />
                 { " × " }
                 <UI.Input
                     number
-                    value={ curLayer.gridCellHeight }
+                    valueSignal={ curLayer.gridCellHeight }
                     onChangeNumber={ (value) => set({ ...curLayer, gridCellHeight: value }) }
                 />
                 { " px" }
@@ -132,14 +132,14 @@ export function DefsLayers(props: {
                 <UI.Input
                     number
                     disabled={ !curLayer.displayGrid.enabled }
-                    value={ curLayer.displayGrid.width }
+                    valueSignal={ curLayer.displayGrid.width }
                     onChangeNumber={ (value) => set({ ...curLayer, displayGrid: { ...curLayer.displayGrid, width: value }}) }
                 />
                 { " × " }
                 <UI.Input
                     number
                     disabled={ !curLayer.displayGrid.enabled }
-                    value={ curLayer.displayGrid.height }
+                    valueSignal={ curLayer.displayGrid.height }
                     onChangeNumber={ (value) => set({ ...curLayer, displayGrid: { ...curLayer.displayGrid, height: value }}) }
                 />
                 { " px " }

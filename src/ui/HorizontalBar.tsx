@@ -1,5 +1,5 @@
-import * as React from "react"
-import styled from "styled-components"
+import * as Solid from "solid-js"
+import { styled } from "solid-styled-components"
 
 
 const StyledBar = styled.hr<{
@@ -10,7 +10,7 @@ const StyledBar = styled.hr<{
 
 
 export function HorizontalBar(props: {
-    style?: React.CSSProperties,
+    style?: Solid.JSX.CSSProperties,
 })
 {
     return <StyledBar style={ props.style }/>

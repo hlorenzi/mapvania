@@ -1,5 +1,5 @@
-import * as React from "react"
-import styled from "styled-components"
+import * as Solid from "solid-js"
+import { styled } from "solid-styled-components"
 
 
 const StyledInput = styled.input<{
@@ -43,7 +43,8 @@ const StyledInput = styled.input<{
 export function Input(props: {
     id?: string,
     number?: boolean,
-    value?: number | string,
+    initialValue?: string,
+    valueSignal?: Solid.Signal<string>,
     onChange?: (newValue: string) => void,
     onChangeNumber?: (newValue: number) => void,
     placeholder?: string,
@@ -58,27 +59,14 @@ export function Input(props: {
     autoCapitalize?: string,
     spellCheck?: boolean,
     fullWidth?: boolean,
-    style?: React.CSSProperties,
+    style?: Solid.JSX.CSSProperties,
 })
 {
-    const inputRef = React.useRef<HTMLInputElement>(null)
-
-    const [needsRefresh, setNeedsRefresh] = React.useState(0)
-
-    const propValue = props.value !== undefined ? props.value.toString() : ""
-
-    const [value, setValue] = props.dontManage ?
-        [propValue.toString(), props.onChange || (() => {})] :
-        React.useState(propValue.toString())
-
-
     const onChange = (ev: any) =>
     {
         const newValue = ev.target.value as string
-        if (newValue === value)
-            return
         
-        setValue(newValue)
+        props.valueSignal?.[1](newValue)
 
         if (props.onChange && !props.onlyOnBlur)
             props.onChange(newValue)
@@ -92,22 +80,7 @@ export function Input(props: {
     }
 
 
-    const onBlur = (ev: any) =>
-    {
-        setNeedsRefresh(r => r + 1)
-
-        const newValue = ev.target.value as string
-        if (newValue === value)
-            return
-        
-        setValue(newValue)
-
-        if (props.onChange)
-            props.onChange(newValue)
-    }
-
-
-    React.useEffect(() =>
+    /*React.useEffect(() =>
     {
         if (props.dontManage)
             return
@@ -123,24 +96,23 @@ export function Input(props: {
         if (!hasFocus)
             setValue(propValue)
 
-    }, [inputRef.current, value, propValue, needsRefresh])
+    }, [inputRef.current, value, propValue, needsRefresh])*/
 
 
     return <StyledInput
         id={ props.id }
-        ref={ inputRef }
-        value={ value }
+        //ref={ inputRef }
+        value={ props.valueSignal ? props.valueSignal[0]() : props.initialValue }
         onChange={ onChange }
-        onBlur={ onBlur }
         onKeyDown={ props.onKeyDown }
         placeholder={ props.placeholder }
         disabled={ props.disabled }
         lang={ props.lang }
         aria-label={ props.ariaLabel }
-        autoComplete={ props.autoComplete }
-        autoCorrect={ props.autoCorrect }
-        autoCapitalize={ props.autoCapitalize }
-        spellCheck={ props.spellCheck }
+        auto-complete={ props.autoComplete }
+        auto-correct={ props.autoCorrect }
+        auto-capitalize={ props.autoCapitalize }
+        spell-check={ props.spellCheck }
         fullWidth={ !!props.fullWidth }
         style={ props.style }
     />

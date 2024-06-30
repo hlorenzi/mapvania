@@ -1,11 +1,16 @@
 {
     "compilerOptions": {
-      "sourceMap": true,
-      "target": "esnext",
-      "module": "esnext",
-      "moduleResolution": "node",
-      "baseUrl": "./src",
-      "strict": true,
-      "jsx": "preserve"
+        "baseUrl": "./src/",
+        "jsx": "preserve",
+        "jsxImportSource": "solid-js",
+        "sourceMap": true,
+        "module": "esnext",
+        "moduleResolution": "bundler",
+        "target": "esnext",
+        "allowImportingTsExtensions": true,
+        "noEmit": true,
+        "strictNullChecks": true,
+        "noImplicitAny": true,
+        "strict": true
     }
 }

@@ -1,5 +1,5 @@
-import * as React from "react"
-import styled from "styled-components"
+import * as Solid from "solid-js"
+import { styled } from "solid-styled-components"
 
 
 const StyledButton = styled.button<{
@@ -35,17 +35,17 @@ const StyledButton = styled.button<{
 
 
 export function Button(props: {
-    label?: React.ReactNode,
+    label?: Solid.JSX.Element,
     title?: string,
-    children?: React.ReactNode,
-    onClick?: React.MouseEventHandler<HTMLButtonElement>,
-    onMouseDown?: React.MouseEventHandler<HTMLButtonElement>,
+    children?: Solid.JSX.Element,
+    onClick?: any,//MouseEventHandler<HTMLButtonElement>,
+    onMouseDown?: any,//MouseEventHandler<HTMLButtonElement>,
     disabled?: boolean,
     selected?: boolean,
     fullWidth?: boolean,
     textAlign?: string,
     backgroundColor?: string,
-    style?: React.CSSProperties,
+    style?: Solid.JSX.CSSProperties,
 })
 {
     return <StyledButton

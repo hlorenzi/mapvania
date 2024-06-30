@@ -1,24 +1,29 @@
-import * as React from "react"
-import styled from "styled-components"
-import { global } from "../global"
-import * as Editors from "../data/editors"
-import * as Filesystem from "../data/filesystem"
-import * as Images from "../data/images"
-import * as UI from "../ui"
+import * as Solid from "solid-js"
+import { styled } from "solid-styled-components"
+import * as Filesystem from "../data/filesystem.ts"
+import * as UI from "../ui/index.ts"
+import * as Global from "../global.ts"
 
 
 export function ProjectTree()
 {
+    const [filesystem] = Global.useFilesystem()
+
     const [currentDirectory, setCurrentDirectory] =
-        React.useState<string[]>([])
+        Solid.createSignal<string[]>([])
 
-    let directoryEntry = Filesystem.findDirectory(
-        Filesystem.PROJECT_ROOT_PATH + currentDirectory.join(Filesystem.DIRECTORY_SEPARATOR))
+    let directoryEntry = Solid.createMemo(() =>
+        Filesystem.findDirectory(
+            filesystem(),
+            Filesystem.PROJECT_ROOT_PATH +
+                currentDirectory().join(Filesystem.DIRECTORY_SEPARATOR))
+    )
 
-    if (!directoryEntry)
-        directoryEntry = global.filesystem.root
+    //if (!directoryEntry)
+    //    directoryEntry = global.filesystem.root
 
-    if (!global.filesystem.root.handle)
+    const rootHandle = Solid.createMemo(() => filesystem().root.handle)
+    if (!rootHandle)
         return <div/>
 
 
@@ -34,78 +39,82 @@ export function ProjectTree()
     }
 
 
-    return <StyledRoot>
+    return <Solid.Show when={ !!filesystem().root.handle }>
+        <StyledRoot>
 
-        <StyledHeader>
-            PROJECT
+            <StyledHeader>
+                PROJECT
 
-            { " " }
+                { " " }
 
-            <UI.Button
-                onClick={ async () => {
-                    await Filesystem.refreshEntries()
-                    await Editors.refreshDefsForOpenEditors()
-                    Images.invalidateImages()
-                    global.editors.refreshToken.commit()
-                }}
-            >
-                🔁 Refresh
-            </UI.Button>
-
-            <UI.HorizontalBar/>
-
-            <UI.Button
-                onClick={ () => Filesystem.showNewDefsFilePicker(directoryEntry?.handle) }
-            >
-                ➕&#xFE0E; Defs
-            </UI.Button>
-
-            <UI.Button
-                onClick={ () => Filesystem.showNewMapFilePicker(directoryEntry?.handle) }
-            >
-                ➕&#xFE0E; Map
-            </UI.Button>
-
-            <UI.HorizontalBar/>
-            
-            <UI.Button
-                label={
-                    "◀ 📁 " +
-                    currentDirectory.join(Filesystem.DIRECTORY_SEPARATOR) + "/"
-                }
-                title="Go to parent directory"
-                onClick={ leaveDirectory }
-                fullWidth
-                textAlign="left"
-            />
-
-        </StyledHeader>
-
-        <StyledTree>
-
-            { directoryEntry.childDirectories.map((directory, i) =>
-                <StyledEntry
-                    key={ i }
-                    onDoubleClick={ () => enterDirectory(directory.name) }
-                    isRecognized
+                <UI.Button
+                    onClick={ async () => {
+                        //await Filesystem.refreshEntries()
+                        //await Editors.refreshDefsForOpenEditors()
+                        //Images.invalidateImages()
+                        //global.editors.refreshToken.commit()
+                    }}
                 >
-                    📁 { directory.name }/
-                </StyledEntry>
-            )}
+                    🔁 Refresh
+                </UI.Button>
 
-            { directoryEntry.childFiles.map((file, i) =>
-                <StyledEntry
-                    key={ i }
-                    onDoubleClick={ () => Editors.openEditorByFile(file.rootRelativePath) }
-                    isRecognized={ Filesystem.isRecognizedFile(file.rootRelativePath) }
+                <UI.HorizontalBar/>
+
+                <UI.Button
+                    onClick={ () => Filesystem.showNewDefsFilePicker(directoryEntry()?.handle) }
                 >
-                    { Filesystem.getFileDisplayName(file.name) }
-                </StyledEntry>
-            )}
+                    ➕&#xFE0E; Defs
+                </UI.Button>
 
-        </StyledTree>
+                <UI.Button
+                    onClick={ () => Filesystem.showNewMapFilePicker(directoryEntry()?.handle) }
+                >
+                    ➕&#xFE0E; Map
+                </UI.Button>
 
-    </StyledRoot>
+                <UI.HorizontalBar/>
+                
+                <UI.Button
+                    label={
+                        "◀ 📁 " +
+                        currentDirectory().join(Filesystem.DIRECTORY_SEPARATOR) + "/"
+                    }
+                    title="Go to parent directory"
+                    onClick={ leaveDirectory }
+                    fullWidth
+                    textAlign="left"
+                />
+
+            </StyledHeader>
+
+            <StyledTree>
+
+                <Solid.For each={ directoryEntry()?.childDirectories }>
+                    { (directory) =>
+                        <StyledEntry
+                            onDblClick={ () => enterDirectory(directory.name) }
+                            isRecognized
+                        >
+                            📁 { directory.name }/
+                        </StyledEntry>
+                    }
+                </Solid.For>
+
+                <Solid.For each={ directoryEntry()?.childFiles }>
+                    { (file) =>
+                        <StyledEntry
+                            //onDblClick={ () => Editors.openEditorByFile(file.rootRelativePath) }
+                            isRecognized={ Filesystem.isRecognizedFile(file.rootRelativePath) }
+                        >
+                            { Filesystem.getFileDisplayName(file.name) }
+                        </StyledEntry>
+                    }
+                </Solid.For>
+
+            </StyledTree>
+
+        </StyledRoot>
+    </Solid.Show>
 }
 
 

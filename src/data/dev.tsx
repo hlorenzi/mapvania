@@ -1,6 +1,6 @@
 import * as ID from "./id"
 import * as Filesystem from "./filesystem"
-import { global } from "../global"
+//import { global } from "../global"
 
 
 export function getCurrentWriteDevFile(): boolean

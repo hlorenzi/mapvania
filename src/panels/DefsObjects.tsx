@@ -203,7 +203,7 @@ export function DefsObjects(props: {
 
                     <UI.Cell justifyStretch>
                         <UI.Input
-                            value={ curObject.name }
+                            valueSignal={ curObject.name }
                             onChange={ (value) => set({ ...curObject, name: value }) }
                             fullWidth
                         />
@@ -215,7 +215,7 @@ export function DefsObjects(props: {
 
                     <UI.Cell justifyStretch>
                         <UI.Input
-                            value={ Hierarchy.stringifyFolder(curObject.folder) }
+                            valueSignal={ Hierarchy.stringifyFolder(curObject.folder) }
                             onChange={ (value) => set({ ...curObject, folder: Hierarchy.parseFolder(value) }) }
                             fullWidth
                         />
@@ -251,26 +251,26 @@ export function DefsObjects(props: {
                     <UI.Cell>
                         <UI.Input
                             number
-                            value={ curObject.imageRect.x }
+                            valueSignal={ curObject.imageRect.x }
                             onChangeNumber={ (value) => set({ ...curObject, imageRect: { ...curObject.imageRect, x: value } }) }
                         />
                         { " × " }
                         <UI.Input
                             number
-                            value={ curObject.imageRect.y }
+                            valueSignal={ curObject.imageRect.y }
                             onChangeNumber={ (value) => set({ ...curObject, imageRect: { ...curObject.imageRect, y: value } }) }
                         />
                         { " px (x, y)" }
                         <br/>
                         <UI.Input
                             number
-                            value={ curObject.imageRect.width }
+                            valueSignal={ curObject.imageRect.width }
                             onChangeNumber={ (value) => set({ ...curObject, imageRect: { ...curObject.imageRect, width: value } }) }
                         />
                         { " × " }
                         <UI.Input
                             number
-                            value={ curObject.imageRect.height }
+                            valueSignal={ curObject.imageRect.height }
                             onChangeNumber={ (value) => set({ ...curObject, imageRect: { ...curObject.imageRect, height: value } }) }
                         />
                         { " px (size)" }
@@ -285,13 +285,13 @@ export function DefsObjects(props: {
                     <UI.Cell>
                         <UI.Input
                             number
-                            value={ curObject.pivotPercent.x * 100 }
+                            valueSignal={ curObject.pivotPercent.x * 100 }
                             onChangeNumber={ (value) => set({ ...curObject, pivotPercent: { ...curObject.pivotPercent, x: value / 100 } }) }
                         />
                         { " × " }
                         <UI.Input
                             number
-                            value={ curObject.pivotPercent.y * 100 }
+                            valueSignal={ curObject.pivotPercent.y * 100 }
                             onChangeNumber={ (value) => set({ ...curObject, pivotPercent: { ...curObject.pivotPercent, y: value / 100 } }) }
                         />
                         { " % of size" }
@@ -304,26 +304,26 @@ export function DefsObjects(props: {
                     <UI.Cell>
                         <UI.Input
                             number
-                            value={ curObject.interactionRect.x }
+                            valueSignal={ curObject.interactionRect.x }
                             onChangeNumber={ (value) => set({ ...curObject, interactionRect: { ...curObject.interactionRect, x: value } }) }
                         />
                         { " × " }
                         <UI.Input
                             number
-                            value={ curObject.interactionRect.y }
+                            valueSignal={ curObject.interactionRect.y }
                             onChangeNumber={ (value) => set({ ...curObject, interactionRect: { ...curObject.interactionRect, y: value } }) }
                         />
                         { " px (x, y)" }
                         <br/>
                         <UI.Input
                             number
-                            value={ curObject.interactionRect.width }
+                            valueSignal={ curObject.interactionRect.width }
                             onChangeNumber={ (value) => set({ ...curObject, interactionRect: { ...curObject.interactionRect, width: value } }) }
                         />
                         { " × " }
                         <UI.Input
                             number
-                            value={ curObject.interactionRect.height }
+                            valueSignal={ curObject.interactionRect.height }
                             onChangeNumber={ (value) => set({ ...curObject, interactionRect: { ...curObject.interactionRect, height: value } }) }
                         />
                         { " px (size)" }

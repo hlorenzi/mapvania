@@ -219,7 +219,7 @@ export function FieldString(props: {
                     width: "100%",
                 }}>
                     <UI.Input
-                        value={ !props.enabled ? " " : value ?? "" }
+                        valueSignal={ !props.enabled ? " " : value ?? "" }
                         placeholder={ value === null ? "- multiple values -" : "" }
                         onChange={ modify }
                         disabled={ !props.enabled || hasNewlines }
@@ -286,7 +286,7 @@ export function FieldNumber(props: {
         <UI.Cell justifyStretch>
             <UI.Input
                 number
-                value={ !props.enabled ? " " : value ?? "" }
+                valueSignal={ !props.enabled ? " " : value ?? "" }
                 placeholder={ value === null ? "- multiple values -" : "" }
                 onChangeNumber={ modify }
                 disabled={ !props.enabled }
@@ -346,7 +346,7 @@ export function FieldPoint(props: {
         <UI.Cell justifyStart>
             <UI.Input
                 number
-                value={ !props.enabled ? " " : valueX ?? "" }
+                valueSignal={ !props.enabled ? " " : valueX ?? "" }
                 placeholder={ valueX === null ? "- multiple values -" : "" }
                 onChangeNumber={ modifyX }
                 disabled={ !props.enabled }
@@ -354,7 +354,7 @@ export function FieldPoint(props: {
             { " × " }
             <UI.Input
                 number
-                value={ !props.enabled ? " " : valueY ?? "" }
+                valueSignal={ !props.enabled ? " " : valueY ?? "" }
                 placeholder={ valueY === null ? "- multiple values -" : "" }
                 onChangeNumber={ modifyY }
                 disabled={ !props.enabled }
@@ -451,7 +451,7 @@ export function FieldRect(props: {
         <UI.Cell justifyStart>
             <UI.Input
                 number
-                value={ !props.enabled ? " " : valueX ?? "" }
+                valueSignal={ !props.enabled ? " " : valueX ?? "" }
                 placeholder={ valueX === null ? "- multiple values -" : "" }
                 onChangeNumber={ modifyX }
                 disabled={ !props.enabled }
@@ -459,7 +459,7 @@ export function FieldRect(props: {
             { " × " }
             <UI.Input
                 number
-                value={ !props.enabled ? " " : valueY ?? "" }
+                valueSignal={ !props.enabled ? " " : valueY ?? "" }
                 placeholder={ valueY === null ? "- multiple values -" : "" }
                 onChangeNumber={ modifyY }
                 disabled={ !props.enabled }
@@ -467,7 +467,7 @@ export function FieldRect(props: {
             <br/>
             <UI.Input
                 number
-                value={ !props.enabled ? " " : valueW ?? "" }
+                valueSignal={ !props.enabled ? " " : valueW ?? "" }
                 placeholder={ valueW === null ? "- multiple values -" : "" }
                 onChangeNumber={ modifyW }
                 disabled={ !props.enabled }
@@ -475,7 +475,7 @@ export function FieldRect(props: {
             { " × " }
             <UI.Input
                 number
-                value={ !props.enabled ? " " : valueH ?? "" }
+                valueSignal={ !props.enabled ? " " : valueH ?? "" }
                 placeholder={ valueH === null ? "- multiple values -" : "" }
                 onChangeNumber={ modifyH }
                 disabled={ !props.enabled }

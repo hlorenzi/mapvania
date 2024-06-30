@@ -1,9 +1,8 @@
-import * as React from "react"
-import styled from "styled-components"
+import * as Solid from "solid-js"
+import { styled } from "solid-styled-components"
 
 
-const StyledCheckbox = styled.input<{
-}>`
+const StyledCheckbox = styled.input`
     font-size: 1em;
     font-family: inherit;
     color: inherit;
@@ -34,26 +33,20 @@ const LabelCheckbox = styled.label`
 `
 
 
-let checkboxId = 1
-
-
 export function Checkbox(props: {
-    label?: React.ReactNode,
-    children?: React.ReactNode,
+    label?: Solid.JSX.Element,
+    children?: Solid.JSX.Element,
     labelBefore?: boolean,
-    value?: boolean,
+    initialValue?: boolean,
     onChange?: (value: boolean) => void,
-    onMouseDown?: React.MouseEventHandler<HTMLInputElement>,
+    onMouseDown?: any,//React.MouseEventHandler<HTMLInputElement>,
     disabled?: boolean,
-    style?: React.CSSProperties,
+    style?: Solid.JSX.CSSProperties,
 })
 {
-    const [labelId,] = React.useState(() => { return (checkboxId++).toString() })
+    const labelId = Solid.createUniqueId()
 
-    const value = props.value
-
-    const onChange = (ev: React.ChangeEvent<HTMLInputElement>) =>
-    {
+    const onChange = (ev: any) => {
         const newValue = ev.target.checked
         //console.log("onChange", newValue)
 
@@ -62,33 +55,32 @@ export function Checkbox(props: {
     }
 
 
-    const label = props.children || props.label
-
+    const label = props.children ?? props.label
 
 	return <>
-        { !label || !props.labelBefore ? null :
+        <Solid.Show when={ label && props.labelBefore }>
             <LabelCheckbox
-                htmlFor={ labelId }
+                html-for={ labelId }
             >
                 { label }
             </LabelCheckbox>
-        }
+        </Solid.Show>
         
         <StyledCheckbox
             id={ labelId }
             type="checkbox"
-            checked={ value }
+            checked={ props.initialValue }
             onChange={ onChange }
             disabled={ props.disabled }
             style={ props.style }
         />
 
-        { !label ? null :
+        <Solid.Show when={ label && !props.labelBefore }>
             <LabelCheckbox
-                htmlFor={ labelId }
+                html-for={ labelId }
             >
                 { label }
             </LabelCheckbox>
-        }
+        </Solid.Show>
 	</>
 }

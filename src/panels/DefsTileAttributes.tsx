@@ -76,7 +76,7 @@ export function DefsTileAttributes(props: {
 
             <UI.Cell justifyStretch>
                 <UI.Input
-                    value={ curTileAttrb.name }
+                    valueSignal={ curTileAttrb.name }
                     onChange={ (value) => set({ ...curTileAttrb, name: value }) }
                     fullWidth
                 />
@@ -98,7 +98,7 @@ export function DefsTileAttributes(props: {
 
             <UI.Cell justifyStretch>
                 <UI.Input
-                    value={ curTileAttrb.label }
+                    valueSignal={ curTileAttrb.label }
                     onChange={ (value) => set({ ...curTileAttrb, label: value }) }
                     fullWidth
                 />

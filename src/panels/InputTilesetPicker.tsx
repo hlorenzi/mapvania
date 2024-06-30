@@ -75,7 +75,7 @@ export function InputTilesetPicker(props: {
         <div>ID:</div>
 
         <UI.Input
-            value={ props.value }
+            valueSignal={ props.value }
             onChange={ props.onChange }
             fullWidth
         />

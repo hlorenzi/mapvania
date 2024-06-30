@@ -1,21 +1,22 @@
-import * as React from "react"
-import styled from "styled-components"
-import { global } from "../global"
-import { Tabs } from "./Tabs"
-import { EditorEmpty } from "./EditorEmpty"
-import { EditorDefs } from "./EditorDefs"
-import { EditorMap } from "./EditorMap"
+import * as Solid from "solid-js"
+import { styled } from "solid-styled-components"
+import { Tabs } from "./Tabs.tsx"
+import { EditorEmpty } from "./EditorEmpty.tsx"
+import { EditorDefs } from "./EditorDefs.tsx"
+import { EditorMap } from "./EditorMap.tsx"
 
 
 export function EditorRoot()
 {
-    const currentEditor =
-        global.editors.currentEditor < 0 ? undefined :
-        global.editors.editors[global.editors.currentEditor]
+    //const currentEditor =
+    //    global.editors.currentEditor < 0 ? undefined :
+    //    global.editors.editors[global.editors.currentEditor]
 
     return <StyledEditorRoot>
 
-        <Tabs/>
+        <EditorEmpty/>
+
+        {/*<Tabs/>
 
         { !currentEditor && <EditorEmpty/> }
 
@@ -31,7 +32,7 @@ export function EditorRoot()
                 key={ global.editors.currentEditor }
                 editorIndex={ global.editors.currentEditor }
             />
-        }
+        }*/}
 
     </StyledEditorRoot>
 }

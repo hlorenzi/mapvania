@@ -223,7 +223,7 @@ export function DefsTilesets(props: {
 
                 <UI.Cell justifyStretch>
                     <UI.Input
-                        value={ curTileset.name }
+                        valueSignal={ curTileset.name }
                         onChange={ (value) => set({ ...curTileset, name: value }) }
                         fullWidth
                     />
@@ -235,7 +235,7 @@ export function DefsTilesets(props: {
 
                 <UI.Cell justifyStretch>
                     <UI.Input
-                        value={ Hierarchy.stringifyFolder(curTileset.folder) }
+                        valueSignal={ Hierarchy.stringifyFolder(curTileset.folder) }
                         onChange={ (value) => set({ ...curTileset, folder: Hierarchy.parseFolder(value) }) }
                         fullWidth
                     />
@@ -271,13 +271,13 @@ export function DefsTilesets(props: {
                 <UI.Cell>
                     <UI.Input
                         number
-                        value={ curTileset.gridCellWidth }
+                        valueSignal={ curTileset.gridCellWidth }
                         onChangeNumber={ (value) => set({ ...curTileset, gridCellWidth: value }) }
                     />
                     { " × " }
                     <UI.Input
                         number
-                        value={ curTileset.gridCellHeight }
+                        valueSignal={ curTileset.gridCellHeight }
                         onChangeNumber={ (value) => set({ ...curTileset, gridCellHeight: value }) }
                     />
                     { " px" }
@@ -290,13 +290,13 @@ export function DefsTilesets(props: {
                 <UI.Cell>
                     <UI.Input
                         number
-                        value={ curTileset.gridGapX }
+                        valueSignal={ curTileset.gridGapX }
                         onChangeNumber={ (value) => set({ ...curTileset, gridGapX: value }) }
                     />
                     { " × " }
                     <UI.Input
                         number
-                        value={ curTileset.gridGapY }
+                        valueSignal={ curTileset.gridGapY }
                         onChangeNumber={ (value) => set({ ...curTileset, gridGapY: value }) }
                     />
                     { " px" }
@@ -310,13 +310,13 @@ export function DefsTilesets(props: {
                 <UI.Cell>
                     <UI.Input
                         number
-                        value={ curTileset.gridOffsetX }
+                        valueSignal={ curTileset.gridOffsetX }
                         onChangeNumber={ (value) => set({ ...curTileset, gridOffsetX: value }) }
                     />
                     { " × " }
                     <UI.Input
                         number
-                        value={ curTileset.gridOffsetY }
+                        valueSignal={ curTileset.gridOffsetY }
                         onChangeNumber={ (value) => set({ ...curTileset, gridOffsetY: value }) }
                     />
                     { " px" }

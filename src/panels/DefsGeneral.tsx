@@ -38,13 +38,13 @@ export function DefsGeneral(props: {
         <UI.Cell>
             <UI.Input
                 number
-                value={ defs.generalDefs.roomWidthMultiple }
+                valueSignal={ defs.generalDefs.roomWidthMultiple }
                 onChangeNumber={ (value) => set(d => ({ ...d, roomWidthMultiple: value })) }
             />
             { " × " }
             <UI.Input
                 number
-                value={ defs.generalDefs.roomHeightMultiple }
+                valueSignal={ defs.generalDefs.roomHeightMultiple }
                 onChangeNumber={ (value) => set(d => ({ ...d, roomHeightMultiple: value })) }
             />
             { " px" }
@@ -59,14 +59,14 @@ export function DefsGeneral(props: {
             <UI.Input
                 number
                 disabled={ !defs.generalDefs.displayGrid.enabled }
-                value={ defs.generalDefs.displayGrid.width }
+                valueSignal={ defs.generalDefs.displayGrid.width }
                 onChangeNumber={ (value) => set(d => ({ ...d, displayGrid: { ...defs.generalDefs.displayGrid, width: value } })) }
             />
             { " × " }
             <UI.Input
                 number
                 disabled={ !defs.generalDefs.displayGrid.enabled }
-                value={ defs.generalDefs.displayGrid.height }
+                valueSignal={ defs.generalDefs.displayGrid.height }
                 onChangeNumber={ (value) => set(d => ({ ...d, displayGrid: { ...defs.generalDefs.displayGrid, height: value } })) }
             />
             { " px " }

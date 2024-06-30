@@ -293,7 +293,7 @@ export function DefsTileBrushes(props: {
 
                 <UI.Cell justifyStretch>
                     <UI.Input
-                        value={ curBrush.name }
+                        valueSignal={ curBrush.name }
                         onChange={ (value) => setBrush({ ...curBrush, name: value }) }
                         fullWidth
                     />
@@ -305,7 +305,7 @@ export function DefsTileBrushes(props: {
 
                 <UI.Cell justifyStretch>
                     <UI.Input
-                        value={ Hierarchy.stringifyFolder(curBrush.folder) }
+                        valueSignal={ Hierarchy.stringifyFolder(curBrush.folder) }
                         onChange={ (value) => setBrush({ ...curBrush, folder: Hierarchy.parseFolder(value) }) }
                         fullWidth
                     />

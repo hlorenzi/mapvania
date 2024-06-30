@@ -1,10 +1,10 @@
-import * as React from "react"
-import styled from "styled-components"
-import { global } from "../global"
-import * as Filesystem from "../data/filesystem"
-import * as Dev from "../data/dev"
-import * as ID from "../data/id"
-import * as UI from "../ui"
+import * as Solid from "solid-js"
+import { styled } from "solid-styled-components"
+import * as Global from "../global.ts"
+import * as Filesystem from "../data/filesystem.ts"
+import * as Dev from "../data/dev.ts"
+import * as ID from "../data/id.ts"
+import * as UI from "../ui/index.ts"
 
 
 const githubRepoHref = "https://github.com/hlorenzi/mapvania"
@@ -50,46 +50,46 @@ function decodeVersionData(str: string): VersionData
 
 export function EditorEmpty()
 {
-    const [ready, setReady] = React.useState(false)
+    const filesystem = Global.useFilesystem()
 
-    const [refresh, setRefresh] = React.useState(0)
-    const [hasCachedFolder, setHasCachedFolder] = React.useState(false)
+    const [ready, setReady] = Solid.createSignal(false)
+
+    const [hasCachedFolder, setHasCachedFolder] = Solid.createSignal(false)
     
-    const [versionDataStr, setVersionDataStr] = React.useState("")
-    const versionData = decodeVersionData(versionDataStr)
+    const [versionDataStr, setVersionDataStr] = Solid.createSignal("")
+    const versionData = Solid.createMemo(
+        () => decodeVersionData(versionDataStr()))
 
-    document.title = `Mapvania ${ versionData.displayStr }`
+    Solid.createComputed(() => {
+        document.title = `Mapvania ${ versionData().displayStr }`
+        return versionData()
+    })
 
-
-    React.useEffect(() =>
+    window.requestAnimationFrame(async () =>
     {
-        window.requestAnimationFrame(async () =>
+        try
         {
-            try
-            {
-                if (await Filesystem.retrieveCachedRootFolder())
-                    setHasCachedFolder(true)
-                
-                const versionFile = await fetch("build/version.txt")
-                const versionStr = await versionFile.text()
-                setVersionDataStr(versionStr.trim())
-            }
-            finally
-            {
-                setReady(true)
-            }
-        })
-
-    }, [])
+            if (await Filesystem.retrieveCachedRootFolder())
+                setHasCachedFolder(true)
+            
+            const versionFile = await fetch("build/version.txt")
+            const versionStr = await versionFile.text()
+            setVersionDataStr(versionStr.trim())
+        }
+        finally
+        {
+            setReady(true)
+        }
+    })
 
 
     return <StyledEditorEmpty>
 
-        { ready && !global.filesystem.root.handle &&
-            <>
+        <Solid.Show when={ ready() && !filesystem[0]().root.handle }>
+
             <div>
                 <span style={{
-                    fontSize: "5em",
+                    "font-size": "5em",
                 }}>
                     Mapvania
                 </span>
@@ -97,10 +97,10 @@ export function EditorEmpty()
                 <span style={{
                     position: "relative",
                     top: "0.25em",
-                    marginLeft: "0.5em",
+                    "margin-left": "0.5em",
                     opacity: 0.85,
                 }}>
-                    v{ versionData.major }.{ versionData.minor }
+                    v{ versionData().major }.{ versionData().minor }
                 </span>
     
                 <br/>
@@ -115,9 +115,9 @@ export function EditorEmpty()
                     { " — " }
     
                     Git: <a
-                        href={ githubHashTreeHref + versionData.hash }
+                        href={ githubHashTreeHref + versionData().hash }
                     >
-                        { versionData.hash }
+                        { versionData().hash }
                     </a>
                 </span>
             </div>
@@ -128,22 +128,20 @@ export function EditorEmpty()
             <br/>
 
             <UI.Button
-                onClick={ Filesystem.openRootDirectory }
+                onClick={ () => Filesystem.openRootDirectory(filesystem) }
             >
                 📁 Open project folder...
             </UI.Button>
 
-            { hasCachedFolder &&
-                <>
+            <Solid.Show when={ hasCachedFolder() }>
                 <br/>
                 <br/>
                 <UI.Button
-                    onClick={ Filesystem.setRootDirectoryFromCache }
+                    onClick={ () => Filesystem.setRootDirectoryFromCache(filesystem) }
                 >
                     🔁 Reopen previous project folder
                 </UI.Button>
-                </>
-            }
+            </Solid.Show>
 
             <br/>
             <br/>
@@ -160,11 +158,8 @@ export function EditorEmpty()
             <br/>
 
             My ID Prefix: <UI.Input
-                value={ ID.getCurrentPrefix() }
-                onChange={ value => {
-                    ID.setCurrentPrefix(value)
-                    setRefresh(r => r + 1)
-                }}
+                initialValue={ ID.getCurrentPrefix() }
+                onChange={ value => ID.setCurrentPrefix(value) }
             />
             
             <br/>
@@ -180,14 +175,11 @@ export function EditorEmpty()
 
             <UI.Checkbox
                 label={ `Write ${ Filesystem.DEV_FILENAME } file` }
-                value={ Dev.getCurrentWriteDevFile() }
-                onChange={ value => {
-                    Dev.setCurrentWriteDevFile(value)
-                    setRefresh(r => r + 1)
-                }}
+                initialValue={ Dev.getCurrentWriteDevFile() }
+                onChange={ value => Dev.setCurrentWriteDevFile(value) }
             />
-            </>
-        }
+
+        </Solid.Show>
 
     </StyledEditorEmpty>
 }

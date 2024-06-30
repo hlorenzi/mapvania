@@ -1,11 +1,10 @@
-import { RefreshToken } from "../util/refreshToken"
-import { global } from "../global"
+import * as Solid from "solid-js"
 import * as IndexedDBKeyVal from "idb-keyval"
-import * as Defs from "../data/defs"
-import * as DefsSerialization from "../data/defs_serialization"
-import * as Map from "../data/map"
-import * as MapSerialization from "../data/map_serialization"
-import * as Editors from "../data/editors"
+//import * as Defs from "../data/defs"
+//import * as DefsSerialization from "../data/defs_serialization"
+//import * as Map from "../data/map"
+//import * as MapSerialization from "../data/map_serialization"
+//import * as Editors from "../data/editors"
 
 
 export const DIRECTORY_SEPARATOR = "/"
@@ -28,9 +27,8 @@ export const noDefsFileFoundMessage =
     "Please create a defs file first."
 
 
-export interface Global
+export interface Filesystem
 {
-    refreshToken: RefreshToken
     root: Directory
 }
 
@@ -54,10 +52,9 @@ export interface File
 }
 
 
-export function makeNew(refreshToken: RefreshToken): Global
+export function makeNew(): Filesystem
 {
     return {
-        refreshToken,
         root: {
             rootRelativePath: PROJECT_ROOT_PATH,
             name: "",
@@ -70,11 +67,12 @@ export function makeNew(refreshToken: RefreshToken): Global
 }
 
 
-export async function openRootDirectory()
+export async function openRootDirectory(
+    filesystemSignal: Solid.Signal<Filesystem>)
 {
     if (!("showOpenFilePicker" in window))
     {
-        window.alert(
+        (window as Window).alert(
             "Your browser does not support the File System Access API!\n\n" +
             "It's currently supported in Chrome, Edge, and Safari.")
     }
@@ -83,33 +81,37 @@ export async function openRootDirectory()
     if (!handle)
         return
 
-    await setRootDirectory(handle)
+    await setRootDirectory(filesystemSignal, handle)
 }
 
 
-export async function setRootDirectory(handle: FileSystemDirectoryHandle)
+export async function setRootDirectory(
+    [filesystem, setFilesystem]: Solid.Signal<Filesystem>,
+    handle: FileSystemDirectoryHandle)
 {
-    global.filesystem.root.handle = handle
-    await refreshEntries()
-    await cacheRootDirectory()
-    global.filesystem.refreshToken.commit()
+    filesystem().root.handle = handle
+    await refreshEntries(filesystem())
+    await cacheRootDirectory(filesystem())
+    setFilesystem(fs => ({ ...fs }))
 }
 
 
-export async function setRootDirectoryFromCache()
+export async function setRootDirectoryFromCache(
+    filesystemSignal: Solid.Signal<Filesystem>)
 {
     const cachedRootDirectory = await retrieveCachedRootFolder()
     if (cachedRootDirectory)
     {
         await (cachedRootDirectory as any).requestPermission()
-        await setRootDirectory(cachedRootDirectory)
+        await setRootDirectory(filesystemSignal, cachedRootDirectory)
     }
 }
 
 
-export async function cacheRootDirectory()
+export async function cacheRootDirectory(
+    filesystem: Filesystem)
 {
-    await IndexedDBKeyVal.set("rootDirectoryHandle", global.filesystem.root.handle)
+    await IndexedDBKeyVal.set("rootDirectoryHandle", filesystem.root.handle)
 }
 
 
@@ -122,27 +124,30 @@ export async function retrieveCachedRootFolder()
 }
 
 
-export async function refreshEntries()
+export async function refreshEntries(
+    filesystem: Filesystem)
 {
-    if (!global.filesystem.root.handle)
+    if (!filesystem.root.handle)
         throw "invalid global folder handle"
 
-    global.filesystem.root = {
+    filesystem.root = {
         rootRelativePath: PROJECT_ROOT_PATH,
         name: "",
-        handle: global.filesystem.root.handle,
+        handle: filesystem.root.handle,
         parentDirectory: null,
         childDirectories: [],
         childFiles: [],
     }
 
     await refreshDirectory(
-        global.filesystem.root,
-        global.filesystem.root.rootRelativePath)
+        filesystem.root,
+        filesystem.root.rootRelativePath)
 }
 
 
-export async function refreshDirectory(directory: Directory, path: string)
+export async function refreshDirectory(
+    directory: Directory,
+    path: string)
 {
     directory.childDirectories = []
     directory.childFiles = []
@@ -191,6 +196,7 @@ export function isIgnorableFile(rootRelativePath: string)
 
 
 export function findDirectory(
+    filesystem: Filesystem,
     rootPath: string)
     : Directory | undefined
 {
@@ -199,7 +205,10 @@ export function findDirectory(
         .filter(d => !!d)
         .filter(d => d !== ".")
 
-    let currentDirectory = global.filesystem.root
+    let currentDirectory = filesystem.root
+    if (!currentDirectory)
+        return undefined
+
     while (rootComponents.length > 1)
     {
         const nextDirectory = currentDirectory.childDirectories
@@ -223,6 +232,7 @@ export function findDirectory(
 
 
 export async function findFile(
+    filesystem: Filesystem,
     rootRelativePath: string,
     create?: boolean)
 {
@@ -230,7 +240,7 @@ export async function findFile(
 
     pathComponents = pathComponents.slice(1)
 
-    let currentDirectory = global.filesystem.root
+    let currentDirectory = filesystem.root
     while (pathComponents.length > 1)
     {
         const nextDirectory = currentDirectory.childDirectories
@@ -265,10 +275,14 @@ export async function findFile(
 
 
 export async function findNearestDefsFile(
+    filesystem: Filesystem,
     startingFromRootRelativePath: string)
     : Promise<File | null>
 {
-    const startingDirectory = findDirectory(startingFromRootRelativePath)
+    const startingDirectory = findDirectory(
+        filesystem,
+        startingFromRootRelativePath)
+    
     if (!startingDirectory)
         return null
 
@@ -409,18 +423,26 @@ export function resolveRelativePath(
 }
 
 
-export async function readFileText(rootRelativePath: string)
+export async function readFileText(
+    filesystem: Filesystem,
+    rootRelativePath: string)
 {
-    const file = await findFile(rootRelativePath)
+    const file = await findFile(filesystem, rootRelativePath)
     const fileData = await file.handle.getFile()
     const text = await fileData.text()
     return text
 }
 
 
-export async function writeFileText(rootRelativePath: string, data: string)
+export async function writeFileText(
+    filesystem: Filesystem,
+    rootRelativePath: string,
+    data: string)
 {
-    const file = await findFile(rootRelativePath, true)
+    const file = await findFile(
+        filesystem,
+        rootRelativePath,
+        true)
     
     const writable = await (file.handle as any).createWritable()
     await writable.write(data)
@@ -428,9 +450,12 @@ export async function writeFileText(rootRelativePath: string, data: string)
 }
 
 
-export async function getRootRelativePath(fileHandle: FileSystemFileHandle): Promise<string | undefined>
+export async function getRootRelativePath(
+    filesystem: Filesystem,
+    fileHandle: FileSystemFileHandle)
+    : Promise<string | undefined>
 {
-    const resolved = await global.filesystem.root.handle!.resolve(fileHandle)
+    const resolved = await filesystem.root.handle!.resolve(fileHandle)
     if (!resolved)
         return undefined
 
@@ -438,7 +463,9 @@ export async function getRootRelativePath(fileHandle: FileSystemFileHandle): Pro
 }
 
 
-export async function showNewDefsFilePicker(startIn?: FileSystemHandle)
+export async function showNewDefsFilePicker(
+    filesystem: Filesystem,
+    startIn?: FileSystemHandle)
 {
     const handle = await window.showSaveFilePicker({
         suggestedName: DEFS_DEFAULT_FILENAME,
@@ -458,7 +485,7 @@ export async function showNewDefsFilePicker(startIn?: FileSystemHandle)
 
     try
     {
-        const rootRelativePath = await getRootRelativePath(handle)
+        const rootRelativePath = await getRootRelativePath(filesystem, handle)
         if (!rootRelativePath)
         {
             window.alert(fileNotContainedInRootFolderMessage)
@@ -473,7 +500,7 @@ export async function showNewDefsFilePicker(startIn?: FileSystemHandle)
         await writable.write(serDefsText)
         await writable.close()
 
-        await refreshEntries()
+        await refreshEntries(filesystem)
 
         await Editors.openEditorDefs(rootRelativePath)
     }
@@ -485,7 +512,9 @@ export async function showNewDefsFilePicker(startIn?: FileSystemHandle)
 }
 
 
-export async function showNewMapFilePicker(startIn?: FileSystemHandle)
+export async function showNewMapFilePicker(
+    filesystem: Filesystem,
+    startIn?: FileSystemHandle)
 {
     const handle = await window.showSaveFilePicker({
         suggestedName: MAP_DEFAULT_FILENAME,
@@ -505,21 +534,21 @@ export async function showNewMapFilePicker(startIn?: FileSystemHandle)
 
     try
     {
-        const rootRelativePath = await getRootRelativePath(handle)
+        const rootRelativePath = await getRootRelativePath(filesystem, handle)
         if (!rootRelativePath)
         {
             window.alert(fileNotContainedInRootFolderMessage)
             return
         }
 
-        const defsFile = await findNearestDefsFile(rootRelativePath)
+        const defsFile = await findNearestDefsFile(filesystem, rootRelativePath)
         if (!defsFile)
         {
             window.alert(noDefsFileFoundMessage)
             return
         }
         
-        const serDefsText = await readFileText(defsFile.rootRelativePath)
+        const serDefsText = await readFileText(filesystem, defsFile.rootRelativePath)
         const serDefs = DefsSerialization.parse(serDefsText)
         const defs = DefsSerialization.deserialize(serDefs)
     
@@ -531,7 +560,7 @@ export async function showNewMapFilePicker(startIn?: FileSystemHandle)
         await writable.write(serMapText)
         await writable.close()
 
-        await refreshEntries()
+        await refreshEntries(filesystem)
 
         await Editors.openEditorMap(rootRelativePath)
     }
@@ -544,6 +573,7 @@ export async function showNewMapFilePicker(startIn?: FileSystemHandle)
 
 
 export async function showImagePicker(
+    filesystem: Filesystem,
     basePath: string)
     : Promise<string | undefined>
 {
@@ -560,7 +590,7 @@ export async function showImagePicker(
     if (!handle)
         return undefined
 
-    const imageRootPath = await getRootRelativePath(handle)
+    const imageRootPath = await getRootRelativePath(filesystem, handle)
     if (!imageRootPath)
     {
         window.alert(fileNotContainedInRootFolderMessage)
@@ -570,11 +600,11 @@ export async function showImagePicker(
     // Refresh entries in case the file is not yet cached
     try
     {
-        await findFile(imageRootPath)
+        await findFile(filesystem, imageRootPath)
     }
     catch
     {
-        await refreshEntries()
+        await refreshEntries(filesystem)
     }
 
     return makeRelativePath(basePath, imageRootPath)

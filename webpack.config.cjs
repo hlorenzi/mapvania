@@ -1,31 +1,23 @@
 const path = require("path")
 
 
-module.exports =
-{
+module.exports = {
 	mode: "production",
 	devtool: "source-map",
-	entry:
-	{
+
+	entry: {
 		main: path.resolve(__dirname, "src/main.tsx"),
 	},
 	
-	output:
-	{
+	output: {
 		filename: "[name].js",
 		path: path.resolve(__dirname, "build")
 	},
 	
-    resolve: {
-		extensions: [".ts", ".tsx", ".js", ".json"]
-	},
-	
-	module:
-	{
-		rules:
-		[
+	module: {
+		rules: [
 			{
-				test: /\.(js|jsx|ts|tsx)$/,
+				test: /\.(ts|tsx)$/,
 				exclude: /node_modules/,
 				use:
 				{
@@ -34,7 +26,7 @@ module.exports =
 						presets: [
 							"@babel/preset-typescript",
 							"@babel/preset-env",
-							"@babel/preset-react",
+                            "babel-preset-solid"
 						]
 					}
 				}
