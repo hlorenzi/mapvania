@@ -26,7 +26,7 @@ export function endMouseCapture()
 
 function handleFocusChange(ev: FocusEvent)
 {
-    Editors.handleExternalFileChanges()
+    Editors.runAsyncWork(Editors.handleExternalFileChanges)
 }
 
 
@@ -56,7 +56,7 @@ export function useKeyboardShortcuts()
                     if (ev.ctrlKey)
                     {
                         ev.preventDefault()
-                        Editors.saveCurrentEditor()
+                        Editors.runAsyncWork(Editors.saveCurrentEditor)
                     }
                     return
             }

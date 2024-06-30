@@ -42,12 +42,12 @@ export function ProjectTree()
             { " " }
 
             <UI.Button
-                onClick={ async () => {
+                onClick={ () => Editors.runAsyncWork(async () => {
                     await Filesystem.refreshEntries()
                     await Editors.refreshDefsForOpenEditors()
                     Images.invalidateImages()
                     global.editors.refreshToken.commit()
-                }}
+                })}
             >
                 🔁 Refresh
             </UI.Button>
@@ -55,13 +55,17 @@ export function ProjectTree()
             <UI.HorizontalBar/>
 
             <UI.Button
-                onClick={ () => Filesystem.showNewDefsFilePicker(directoryEntry?.handle) }
+                onClick={ () => Editors.runAsyncWork(async () =>
+                    Filesystem.showNewDefsFilePicker(directoryEntry?.handle))
+                }
             >
                 ➕&#xFE0E; Defs
             </UI.Button>
 
             <UI.Button
-                onClick={ () => Filesystem.showNewMapFilePicker(directoryEntry?.handle) }
+                onClick={ () => Editors.runAsyncWork(async () =>
+                    Filesystem.showNewMapFilePicker(directoryEntry?.handle))
+                }
             >
                 ➕&#xFE0E; Map
             </UI.Button>
@@ -96,7 +100,9 @@ export function ProjectTree()
             { directoryEntry.childFiles.map((file, i) =>
                 <StyledEntry
                     key={ i }
-                    onDoubleClick={ () => Editors.openEditorByFile(file.rootRelativePath) }
+                    onDoubleClick={ () => Editors.runAsyncWork(() =>
+                        Editors.openEditorByFile(file.rootRelativePath))
+                    }
                     isRecognized={ Filesystem.isRecognizedFile(file.rootRelativePath) }
                 >
                     { Filesystem.getFileDisplayName(file.name) }

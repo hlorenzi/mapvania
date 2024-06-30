@@ -2,6 +2,7 @@ import * as React from "react"
 import styled from "styled-components"
 import { global } from "../global"
 import * as Filesystem from "../data/filesystem"
+import * as Editors from "../data/editors"
 import * as Dev from "../data/dev"
 import * as ID from "../data/id"
 import * as UI from "../ui"
@@ -128,7 +129,7 @@ export function EditorEmpty()
             <br/>
 
             <UI.Button
-                onClick={ Filesystem.openRootDirectory }
+                onClick={ () => Editors.runAsyncWork(Filesystem.openRootDirectory) }
             >
                 📁 Open project folder...
             </UI.Button>
@@ -138,7 +139,7 @@ export function EditorEmpty()
                 <br/>
                 <br/>
                 <UI.Button
-                    onClick={ Filesystem.setRootDirectoryFromCache }
+                    onClick={ () => Editors.runAsyncWork(Filesystem.setRootDirectoryFromCache) }
                 >
                     🔁 Reopen previous project folder
                 </UI.Button>

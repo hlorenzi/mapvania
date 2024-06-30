@@ -5,6 +5,7 @@ import * as Events from "./events"
 import { useRefreshToken } from "./util/refreshToken"
 import { EditorRoot } from "./panels/EditorRoot"
 import { ProjectTree } from "./panels/ProjectTree"
+import { OverlayLoadingBar } from "./ui/OverlayLoadingBar"
 import * as Filesystem from "./data/filesystem"
 import * as Editors from "./data/editors"
 
@@ -44,6 +45,8 @@ function App()
         <ProjectTree/>
 
         <EditorRoot/>
+
+        <OverlayLoadingBar show={ global.editors.asyncWorkCounter > 0 }/>
 
     </div>
 }

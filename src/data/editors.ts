@@ -15,6 +15,7 @@ export interface Global
     refreshToken: RefreshToken
     editors: Editor[]
     currentEditor: number
+    asyncWorkCounter: number
 
     mapEditing:
     {
@@ -117,6 +118,7 @@ export function makeNew(refreshToken: RefreshToken): Global
         refreshToken,
         editors: [],
         currentEditor: -1,
+        asyncWorkCounter: 0,
 
         mapEditing: {
             layerDefId: LAYERDEF_ID_MAP,
@@ -163,6 +165,27 @@ export function assignEditorDefs(
     ]
     historyAdd(editorIndex)
     global.editors.refreshToken.commit()
+}
+
+
+export function setAsyncWork(increment: boolean)
+{
+    global.editors.asyncWorkCounter += (increment ? 1 : -1)
+    global.editors.refreshToken.commit()
+}
+
+
+export async function runAsyncWork(fn: () => Promise<void>)
+{
+    setAsyncWork(true)
+    try
+    {
+        await fn()
+    }
+    finally
+    {
+        setAsyncWork(false)
+    }
 }
 
 
