@@ -47,6 +47,9 @@ export interface Global
 export const LAYERDEF_ID_MAP = "world"
 
 
+export const DATE_TOLERANCE_MS = 250
+
+
 export type Tool =
     "move" |
     "draw" |
@@ -73,6 +76,7 @@ export interface EditorDefs extends EditorCommon
 {
     type: "defs"
     defs: Defs.Defs
+    lastSavedDefsDate: number
     lastSavedDefsSerialized: string
     lastSavedDefs: Defs.Defs
 
@@ -92,10 +96,12 @@ export interface EditorMap extends EditorCommon
 {
     type: "map"
     defs: Defs.Defs
+    lastSavedDefsDate: number
     lastSavedDefsSerialized: string
     defsRootPath: string
     defsBasePath: string
     map: Map.Map
+    lastSavedMapDate: number
     lastSavedMapSerialized: string
     lastSavedMap: Map.Map
     mapEditor: MapEditor.State
@@ -324,6 +330,7 @@ export async function openEditorDefs(rootRelativePath: string)
             rootPath: rootRelativePath,
             basePath: Filesystem.removeLastPathComponent(rootRelativePath),
             defs: null!,
+            lastSavedDefsDate: 0,
             lastSavedDefsSerialized: null!,
             lastSavedDefs: null!,
             history: [],
@@ -345,6 +352,10 @@ export async function openEditorDefs(rootRelativePath: string)
 
 export async function loadEditorDefs(editor: EditorDefs)
 {
+    const serDefsDate = await Filesystem.readFileLastModified(editor.rootPath)
+    if (serDefsDate < editor.lastSavedDefsDate + DATE_TOLERANCE_MS)
+        return true
+
     let serDefsText = await Filesystem.readFileText(editor.rootPath)
     if (serDefsText.length === 0)
     {
@@ -355,7 +366,7 @@ export async function loadEditorDefs(editor: EditorDefs)
             DefsSerialization.serialize(
                 Defs.makeNew()))
     }
-
+    
     if (serDefsText === editor.lastSavedDefsSerialized)
         return true
 
@@ -387,6 +398,7 @@ export async function saveEditorDefs(editorIndex: number)
         await writable.write(serDefsText)
         await writable.close()
 
+        editorData.lastSavedDefsDate = Date.now()
         editorData.lastSavedDefsSerialized = serDefsText
         editorData.lastSavedDefs = editorData.defs
 
@@ -412,10 +424,12 @@ export async function openEditorMap(rootRelativePath: string)
             rootPath: rootRelativePath,
             basePath: Filesystem.removeLastPathComponent(rootRelativePath),
             defs: null!,
+            lastSavedDefsDate: 0,
             lastSavedDefsSerialized: null!,
             defsRootPath: null!,
             defsBasePath: null!,
             map: null!,
+            lastSavedMapDate: 0,
             lastSavedMapSerialized: null!,
             lastSavedMap: null!,
             mapEditor: null!,
@@ -450,6 +464,12 @@ export async function loadEditorMap(editor: EditorMap)
         return false
     }
     
+    const serDefsDate = await Filesystem.readFileLastModified(defsFile.rootRelativePath)
+    const serMapDate = await Filesystem.readFileLastModified(editor.rootPath)
+    if (serDefsDate < editor.lastSavedDefsDate + DATE_TOLERANCE_MS &&
+        serMapDate < editor.lastSavedMapDate + DATE_TOLERANCE_MS)
+        return true
+
     const serDefsText = await Filesystem.readFileText(defsFile.rootRelativePath)
     const serDefs = DefsSerialization.parse(serDefsText)
     const defs = DefsSerialization.deserialize(serDefs)
@@ -473,10 +493,12 @@ export async function loadEditorMap(editor: EditorMap)
     const map = MapSerialization.deserialize(defs, serMap)
 
     editor.defs = defs
+    editor.lastSavedDefsDate = Date.now()
     editor.lastSavedDefsSerialized = serDefsText,
     editor.defsRootPath = defsFile.rootRelativePath,
     editor.defsBasePath = Filesystem.removeLastPathComponent(defsFile.rootRelativePath),
     editor.map = map
+    editor.lastSavedMapDate = Date.now()
     editor.lastSavedMapSerialized = serMapText
     editor.lastSavedMap = map
 
@@ -501,6 +523,8 @@ export async function saveEditorMap(editorIndex: number)
         await writable.write(serMapText)
         await writable.close()
 
+        editorData.lastSavedDefsDate = Date.now()
+        editorData.lastSavedMapDate = Date.now()
         editorData.lastSavedMapSerialized = serMapText
         editorData.lastSavedMap = editorData.map
         global.editors.refreshToken.commit()
@@ -569,7 +593,7 @@ export async function refreshDefsForOpenEditors()
 
 export async function handleExternalFileChanges()
 {
-    await Filesystem.refreshEntries()
+    //await Filesystem.refreshEntries()
 
     for (let i = 0; i < global.editors.editors.length; i++)
     {

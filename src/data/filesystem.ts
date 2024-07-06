@@ -409,6 +409,14 @@ export function resolveRelativePath(
 }
 
 
+export async function readFileLastModified(rootRelativePath: string)
+{
+    const file = await findFile(rootRelativePath)
+    const fileData = await file.handle.getFile()
+    return fileData.lastModified
+}
+
+
 export async function readFileText(rootRelativePath: string)
 {
     const file = await findFile(rootRelativePath)
