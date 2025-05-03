@@ -465,7 +465,8 @@ export function HierarchicalList<T extends Hierarchy.Item>(props: {
         { !!props.disallowFolders ||
             (!props.setItems &&
             state.currentFolder.length === 0 &&
-            !("isFolder" in currentItemsAndSubfolders[0])) ?
+            (currentItemsAndSubfolders.length === 0 ||
+                !("isFolder" in currentItemsAndSubfolders[0]))) ?
             <div/>
         :
             <StyledHeader>
