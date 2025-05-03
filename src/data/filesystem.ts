@@ -181,6 +181,9 @@ export async function refreshDirectory(directory: Directory, path: string)
                 path + name + DIRECTORY_SEPARATOR)
         }
     }
+
+    directory.childFiles.sort((a, b) => a.name.localeCompare(b.name))
+    directory.childDirectories.sort((a, b) => a.name.localeCompare(b.name))
 }
 
 
