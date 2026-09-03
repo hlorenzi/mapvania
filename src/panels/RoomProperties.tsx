@@ -82,7 +82,7 @@ export function RoomProperties(props: {
                     <UI.Cell span={ 2 } justifyStart>
 
                         { rooms.length == 1 ?
-                            "ID: " + rooms[0].id :
+                            <UI.Id id={ rooms[0].id }/> :
                             rooms.length + " rooms selected"
                         }
 

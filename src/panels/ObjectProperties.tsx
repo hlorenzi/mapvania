@@ -124,7 +124,7 @@ export function ObjectProperties(props: {
                         }
 
                         { objectSelection.length == 1 ?
-                            "ID: " + objectSelection[0] :
+                            <UI.Id id={ objectSelection[0] }/> :
                             objectSelection.length + " objects selected"
                         }
 
