@@ -3,8 +3,6 @@
       "sourceMap": true,
       "target": "esnext",
       "module": "esnext",
-      "moduleResolution": "node",
-      "baseUrl": "./src",
       "strict": true,
       "jsx": "preserve"
     }
