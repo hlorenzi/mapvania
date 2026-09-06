@@ -2,8 +2,7 @@ import * as React from "react"
 import styled from "styled-components"
 
 
-const StyledBar = styled.hr<{
-}>`
+const StyledBar = styled.hr`
     border: 0;
     border-bottom: 1px solid #444;
 `

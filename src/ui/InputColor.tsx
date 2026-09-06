@@ -3,7 +3,7 @@ import styled from "styled-components"
 
 
 const StyledInputColor = styled.input<{
-    fullWidth: boolean,
+    $fullWidth: boolean,
 }>`
     font-size: 1em;
     font-family: inherit;
@@ -12,7 +12,7 @@ const StyledInputColor = styled.input<{
 
     justify-self: stretch;
 
-    ${ props => props.fullWidth ? "width: 100%;" : "" }
+    ${ props => props.$fullWidth ? "width: 100%;" : "" }
     min-width: 1em;
 
     background-color: transparent;
@@ -65,7 +65,7 @@ export function InputColor(props: {
         value={ value }
         onChange={ onChange }
         disabled={ props.disabled }
-        fullWidth={ !!props.fullWidth }
+        $fullWidth={ !!props.fullWidth }
         style={ props.style }
     />
 }

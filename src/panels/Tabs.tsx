@@ -27,7 +27,7 @@ export function Tabs()
             { global.editors.editors.map((editor, i) =>
                 <StyledTab
                     key={ i }
-                    selected={ global.editors.currentEditor === i }
+                    $selected={ global.editors.currentEditor === i }
                     onClick={ () => changeCurrentEditor(i) }
                 >
                     { editor.name }
@@ -72,7 +72,7 @@ const StyledScroll = styled.div`
 
 
 const StyledTab = styled.div<{
-    selected: boolean,
+    $selected: boolean,
 }>`
     display: inline-block;
 
@@ -83,9 +83,9 @@ const StyledTab = styled.div<{
     
     cursor: pointer;
 
-    background-color: ${ props => props.selected ? "#1e1e1e" : "#2d2d2d" };
+    background-color: ${ props => props.$selected ? "#1e1e1e" : "#2d2d2d" };
 
-    ${ props => props.selected ? "" : `
+    ${ props => props.$selected ? "" : `
         &:hover
         {
             background-color: #333333;

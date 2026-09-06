@@ -35,8 +35,8 @@ const StyledHeader = styled.div`
 
 
 const StyledList = styled.div<{
-    is2D: boolean,
-    singleLine: boolean,
+    $is2D: boolean,
+    $singleLine: boolean,
 }>`
     font-size: 1em;
     font-family: inherit;
@@ -44,16 +44,16 @@ const StyledList = styled.div<{
     background-color: #242424;
 
     width: 100%;
-    height: ${ props => props.singleLine ? "6.15em" : "100%" };
+    height: ${ props => props.$singleLine ? "6.15em" : "100%" };
 
     overflow-x: hidden;
-    overflow-y: ${ props => props.singleLine ? "hidden" : "scroll" };
+    overflow-y: ${ props => props.$singleLine ? "hidden" : "scroll" };
 
     box-sizing: border-box;
     outline: none;
     border-radius: 0;
 
-    ${ props => !props.is2D ? "" : `
+    ${ props => !props.$is2D ? "" : `
         display: grid;
         grid-template: auto / repeat(5, 1fr);
         align-content: start;
@@ -65,10 +65,10 @@ const StyledList = styled.div<{
 
 
 const StyledListItem = styled.button<{
-    is2D: boolean,
-    selected: boolean,
-    dragOver: boolean,
-    dragOverAfter: boolean,
+    $is2D: boolean,
+    $selected: boolean,
+    $dragOver: boolean,
+    $dragOverAfter: boolean,
 }>`
     display: block;
     width: 100%;
@@ -76,10 +76,10 @@ const StyledListItem = styled.button<{
     border: 0;
     border-top: 2px solid transparent;
     border-bottom: 2px solid transparent;
-    ${ props => !props.dragOver ? "" : `
+    ${ props => !props.$dragOver ? "" : `
         border-top: 2px solid #0088ff;
     `}
-    ${ props => !props.dragOverAfter ? "" : `
+    ${ props => !props.$dragOverAfter ? "" : `
         border-bottom: 2px solid #0088ff;
     `}
 
@@ -87,7 +87,7 @@ const StyledListItem = styled.button<{
     
     appearance: button;
     color: inherit;
-    background-color: ${ props => props.selected ? "#373737" : "transparent" };
+    background-color: ${ props => props.$selected ? "#373737" : "transparent" };
     text-decoration: none;
     text-align: left;
     cursor: pointer;
@@ -100,7 +100,7 @@ const StyledListItem = styled.button<{
     font-weight: inherit;
     font-size: 1em;
 
-    ${ props => !props.is2D ? "" : `
+    ${ props => !props.$is2D ? "" : `
         width: 5.7em;
         height: 6em;
         flex-grow: 1;
@@ -111,7 +111,7 @@ const StyledListItem = styled.button<{
 
     &:hover
     {
-        background-color: ${ props => props.selected ? "#373737" : "#2d2d2d" };
+        background-color: ${ props => props.$selected ? "#373737" : "#2d2d2d" };
     }
 
     &:focus
@@ -124,7 +124,7 @@ const StyledListItem = styled.button<{
 
 
 const StyledListInner = styled.div<{
-    is2D: boolean,
+    $is2D: boolean,
 }>`
     display: grid;
     grid-template: auto / auto auto;
@@ -136,7 +136,7 @@ const StyledListInner = styled.div<{
     align-items: center;
     user-select: none;
 
-    ${ props => !props.is2D ? "" : `
+    ${ props => !props.$is2D ? "" : `
         grid-template: 1fr auto / 1fr;
         width: 100%;
         height: 100%;
@@ -486,8 +486,8 @@ export function HierarchicalList<T extends Hierarchy.Item>(props: {
         }
 
         <StyledList
-            is2D={ !!props.is2D }
-            singleLine={ !!props.singleLine }
+            $is2D={ !!props.is2D }
+            $singleLine={ !!props.singleLine }
             ref={ scrollParentRef }
             onDragOver={ ev => onDragOver(ev, DRAGOVER_ID_LAST) }
             onDrop={ ev => onDrop(ev, DRAGOVER_ID_LAST) }
@@ -499,15 +499,15 @@ export function HierarchicalList<T extends Hierarchy.Item>(props: {
                 {
                     return <StyledListItem
                         key={ item.folder.join("/") }
-                        is2D={ !!props.is2D }
+                        $is2D={ !!props.is2D }
                         onClick={ ev => onSelectItem(item.id, ev.ctrlKey, ev.shiftKey) }
                         onDoubleClick={ () => onEnterFolder(item.folder) }
                         onDragOver={ ev => onDragOver(ev, item.id) }
-                        selected={ state.selectedIds.has(item.id) }
-                        dragOver={ curDragOverId === item.id }
-                        dragOverAfter={ curDragOverId === DRAGOVER_ID_LAST && item === currentItemsAndSubfolders[currentItemsAndSubfolders.length - 1] }
+                        $selected={ state.selectedIds.has(item.id) }
+                        $dragOver={ curDragOverId === item.id }
+                        $dragOverAfter={ curDragOverId === DRAGOVER_ID_LAST && item === currentItemsAndSubfolders[currentItemsAndSubfolders.length - 1] }
                     >
-                        <StyledListInner is2D={ !!props.is2D }>
+                        <StyledListInner $is2D={ !!props.is2D }>
                             <div>📁</div>
                             <StyledListLabel>
                                 { item.folder[item.folder.length - 1] + "/" }
@@ -520,17 +520,17 @@ export function HierarchicalList<T extends Hierarchy.Item>(props: {
                     return <StyledListItem
                         key={ item.id }
                         title={ props.getItemLabel(item) }
-                        is2D={ !!props.is2D }
+                        $is2D={ !!props.is2D }
                         onClick={ ev => onSelectItem(item.id, ev.ctrlKey, ev.shiftKey) }
                         draggable="true"
                         onDragStart={ ev => onDragStart(ev, item.id) }
                         onDragOver={ ev => onDragOver(ev, item.id) }
                         onDrop={ ev => onDrop(ev, item.id) }
-                        selected={ state.selectedIds.has(item.id) }
-                        dragOver={ curDragOverId === item.id }
-                        dragOverAfter={ curDragOverId === DRAGOVER_ID_LAST && item === currentItemsAndSubfolders[currentItemsAndSubfolders.length - 1] }
+                        $selected={ state.selectedIds.has(item.id) }
+                        $dragOver={ curDragOverId === item.id }
+                        $dragOverAfter={ curDragOverId === DRAGOVER_ID_LAST && item === currentItemsAndSubfolders[currentItemsAndSubfolders.length - 1] }
                     >
-                        <StyledListInner is2D={ !!props.is2D }>
+                        <StyledListInner $is2D={ !!props.is2D }>
                             <div>{ props.getItemIcon(item) }</div>
                             <StyledListLabel>
                                 { props.getItemLabel(item) }

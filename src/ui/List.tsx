@@ -22,7 +22,7 @@ const StyledList = styled.div`
 
 
 const StyledListItem = styled.button<{
-    selected: boolean,
+    $selected: boolean,
 }>`
     display: block;
     width: 100%;
@@ -32,7 +32,7 @@ const StyledListItem = styled.button<{
     
     appearance: button;
     color: inherit;
-    background-color: ${ props => props.selected ? "#373737" : "transparent" };
+    background-color: ${ props => props.$selected ? "#373737" : "transparent" };
     text-decoration: none;
     text-align: left;
     cursor: pointer;
@@ -46,7 +46,7 @@ const StyledListItem = styled.button<{
 
     &:hover
     {
-        background-color: ${ props => props.selected ? "#373737" : "#2d2d2d" };
+        background-color: ${ props => props.$selected ? "#373737" : "#2d2d2d" };
     }
 `
 
@@ -78,7 +78,7 @@ const StyledList2D = styled.div`
 
 
 const StyledList2DItem = styled.button<{
-    selected: boolean,
+    $selected: boolean,
 }>`
     display: block;
     width: 5.7em;
@@ -90,7 +90,7 @@ const StyledList2DItem = styled.button<{
     
     appearance: button;
     color: inherit;
-    background-color: ${ props => props.selected ? "#373737" : "transparent" };
+    background-color: ${ props => props.$selected ? "#373737" : "transparent" };
     text-decoration: none;
     text-align: center;
     cursor: pointer;
@@ -104,7 +104,7 @@ const StyledList2DItem = styled.button<{
 
     &:hover
     {
-        background-color: ${ props => props.selected ? "#373737" : "#2d2d2d" };
+        background-color: ${ props => props.$selected ? "#373737" : "#2d2d2d" };
     }
 `
 
@@ -177,7 +177,7 @@ export function List(props: {
                     key={ item.id }
                     onMouseDown={ () => onChange(item.id) }
                     onClick={ () => onChange(item.id) }
-                    selected={ props.value === item.id }
+                    $selected={ props.value === item.id }
                 >
                     <StyledList2DInner>
                         { item.icon }
@@ -200,7 +200,7 @@ export function List(props: {
                 key={ item.id }
                 onMouseDown={ () => onChange(item.id) }
                 onClick={ () => onChange(item.id) }
-                selected={ props.value === item.id }
+                $selected={ props.value === item.id }
             >
                 <StyledListInner>
                     { item.icon }

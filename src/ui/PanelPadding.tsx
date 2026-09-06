@@ -3,13 +3,13 @@ import styled from "styled-components"
 
 
 const StyledPanelPadding = styled.div<{
-    noOverflow: boolean,
+    $noOverflow: boolean,
 }>`
     width: 100%;
     height: 100%;
     padding: 0.5em;
     overflow-x: hidden;
-    overflow-y: ${ props => props.noOverflow ? "hidden" : "auto" };
+    overflow-y: ${ props => props.$noOverflow ? "hidden" : "auto" };
 `
 
 
@@ -19,7 +19,7 @@ export function PanelPadding(props: {
 })
 {
     return <StyledPanelPadding
-        noOverflow={ !!props.noOverflow }
+        $noOverflow={ !!props.noOverflow }
     >
         { props.children }
     </StyledPanelPadding>

@@ -91,7 +91,7 @@ export function ProjectTree()
                 <StyledEntry
                     key={ i }
                     onDoubleClick={ () => enterDirectory(directory.name) }
-                    isRecognized
+                    $isRecognized
                 >
                     📁 { directory.name }/
                 </StyledEntry>
@@ -103,7 +103,7 @@ export function ProjectTree()
                     onDoubleClick={ () => Editors.runAsyncWork(() =>
                         Editors.openEditorByFile(file.rootRelativePath))
                     }
-                    isRecognized={ Filesystem.isRecognizedFile(file.rootRelativePath) }
+                    $isRecognized={ Filesystem.isRecognizedFile(file.rootRelativePath) }
                 >
                     { Filesystem.getFileDisplayName(file.name) }
                 </StyledEntry>
@@ -144,7 +144,7 @@ const StyledTree = styled.div`
 
 
 const StyledEntry = styled.button<{
-    isRecognized: boolean,
+    $isRecognized: boolean,
 }>`
     display: block;
     border: 0;
@@ -161,7 +161,7 @@ const StyledEntry = styled.button<{
 
     color: inherit;
     background-color: transparent;
-    opacity: ${ props => props.isRecognized ? "1" : "0.6" };
+    opacity: ${ props => props.$isRecognized ? "1" : "0.6" };
     text-align: left;
 
     &:hover

@@ -3,35 +3,35 @@ import styled from "styled-components"
 
 
 const StyledGrid = styled.div<{
-    cols?: number,
-    template?: string,
-    templateRows: string,
-    alignItems: string,
-    maxWidth?: string,
-    fullHeight: boolean,
+    $cols?: number,
+    $template?: string,
+    $templateRows: string,
+    $alignItems: string,
+    $maxWidth?: string,
+    $fullHeight: boolean,
 }>`
     width: 100%;
     min-height: 0;
     display: grid;
 
-    ${ props => props.maxWidth ? `max-width: ${ props.maxWidth };` : `` }
+    ${ props => props.$maxWidth ? `max-width: ${ props.$maxWidth };` : `` }
 
-    ${ props => props.fullHeight ?
+    ${ props => props.$fullHeight ?
         `
             height: 100%;
             max-height: 100%;
             
         ` : `` }
 
-    grid-template-rows: ${ props => props.templateRows };
+    grid-template-rows: ${ props => props.$templateRows };
 
-    ${ props => props.template ?
+    ${ props => props.$template ?
         `
-            grid-template-columns: ${ props.template } [main-end];
+            grid-template-columns: ${ props.$template } [main-end];
         `
         :
         `
-            grid-template-columns: repeat(${ props.cols }, 1fr) [main-end];
+            grid-template-columns: repeat(${ props.$cols }, 1fr) [main-end];
         `
     }
 
@@ -41,7 +41,7 @@ const StyledGrid = styled.div<{
     justify-items: start;
     justify-content: stretch;
     justify-self: stretch;
-    align-items: ${ props => props.alignItems };
+    align-items: ${ props => props.$alignItems };
     align-content: start;
 `
 
@@ -59,16 +59,16 @@ export function Grid(props: {
 })
 {
     return <StyledGrid
-        cols={ props.cols }
-        template={ props.template }
-        templateRows={ props.templateRows ?? "auto" }
-        alignItems={
+        $cols={ props.cols }
+        $template={ props.template }
+        $templateRows={ props.templateRows ?? "auto" }
+        $alignItems={
             props.alignStart ? "start" :
             props.alignCenter ? "center" :
             "baseline"
         }
-        fullHeight={ !!props.fullHeight }
-        maxWidth={ props.maxWidth }
+        $fullHeight={ !!props.fullHeight }
+        $maxWidth={ props.maxWidth }
         style={ props.style }
     >
         { props.children }
@@ -77,19 +77,19 @@ export function Grid(props: {
 
 
 const StyledCell = styled.div<{
-    span: number | string,
-    justifySelf: string,
-    alignSelf: string,
-    textAlign: string,
-    fullHeight: boolean,
+    $span: number | string,
+    $justifySelf: string,
+    $alignSelf: string,
+    $textAlign: string,
+    $fullHeight: boolean,
 }>`
     grid-column-start: auto;
-    grid-column-end: span ${ props => props.span };
-    justify-self: ${ props => props.justifySelf };
-    align-self: ${ props => props.alignSelf };
-    text-align: ${ props => props.textAlign };
+    grid-column-end: span ${ props => props.$span };
+    justify-self: ${ props => props.$justifySelf };
+    align-self: ${ props => props.$alignSelf };
+    text-align: ${ props => props.$textAlign };
 
-    ${ props => props.fullHeight ?
+    ${ props => props.$fullHeight ?
         `
             height: 100%;
             max-height: 100%;
@@ -137,11 +137,11 @@ export function Cell(props: {
         "inherit"
 
     return <StyledCell
-        span={ props.span ?? (!!props.fill ? "main-end" : 1) }
-        justifySelf={ justifySelf }
-        alignSelf={ alignSelf }
-        textAlign={ textAlign }
-        fullHeight={ !!props.fullHeight }
+        $span={ props.span ?? (!!props.fill ? "main-end" : 1) }
+        $justifySelf={ justifySelf }
+        $alignSelf={ alignSelf }
+        $textAlign={ textAlign }
+        $fullHeight={ !!props.fullHeight }
         style={ props.style }
     >
         { props.children }

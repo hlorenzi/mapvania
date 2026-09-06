@@ -3,7 +3,7 @@ import styled from "styled-components"
 
 
 const StyledInput = styled.input<{
-    fullWidth: boolean,
+    $fullWidth: boolean,
 }>`
     font-size: 1em;
     font-family: inherit;
@@ -13,7 +13,7 @@ const StyledInput = styled.input<{
     justify-self: stretch;
     width: 4em;
 
-    ${ props => props.fullWidth ? "width: 100%;" : "" }
+    ${ props => props.$fullWidth ? "width: 100%;" : "" }
 
     box-sizing: border-box;
     border: 1px solid var(--dockable-panelInactiveBorder);
@@ -141,7 +141,7 @@ export function Input(props: {
         autoCorrect={ props.autoCorrect }
         autoCapitalize={ props.autoCapitalize }
         spellCheck={ props.spellCheck }
-        fullWidth={ !!props.fullWidth }
+        $fullWidth={ !!props.fullWidth }
         style={ props.style }
     />
 }

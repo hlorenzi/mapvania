@@ -13,7 +13,7 @@ const StyledTabGroupLayout = styled.div`
 
 
 const StyledTab = styled.button<{
-    selected: boolean,
+    $selected: boolean,
 }>`
     display: inline-block;
 
@@ -21,8 +21,8 @@ const StyledTab = styled.button<{
     
     appearance: button;
     display: inline-block;
-    color: ${ props => props.selected ? "inherit" : "#545454" };
-    text-decoration: ${ props => props.selected ? "underline" : "none" };
+    color: ${ props => props.$selected ? "inherit" : "#545454" };
+    text-decoration: ${ props => props.$selected ? "underline" : "none" };
     background-color: transparent;
     cursor: pointer;
     box-sizing: border-box;
@@ -57,7 +57,7 @@ export function TabGroup(props: {
         { props.labels.map((label, i) =>
             <StyledTab
                 key={ i }
-                selected={ i === indexSelected }
+                $selected={ i === indexSelected }
                 onClick={ () => onChange(i) }
             >
                 { label }

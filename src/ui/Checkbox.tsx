@@ -2,8 +2,7 @@ import * as React from "react"
 import styled from "styled-components"
 
 
-const StyledCheckbox = styled.input<{
-}>`
+const StyledCheckbox = styled.input`
     font-size: 1em;
     font-family: inherit;
     color: inherit;
