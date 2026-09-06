@@ -147,6 +147,22 @@ export function useKeyboardShortcuts()
                     if (global.editors.editors.length > 4)
                         Editors.setCurrentEditor(4)
                     break
+
+                case "q":
+                {
+                    const nextLayerDefId = Editors.getNextLayer(global.editors.currentEditor, true)
+                    if (nextLayerDefId !== undefined)
+                        Editors.setCurrentLayer(global.editors.currentEditor, nextLayerDefId)
+                    break
+                }
+
+                case "w":
+                {
+                    const nextLayerDefId = Editors.getNextLayer(global.editors.currentEditor, false)
+                    if (nextLayerDefId !== undefined)
+                        Editors.setCurrentLayer(global.editors.currentEditor, nextLayerDefId)
+                    break
+                }
             }
         }
 

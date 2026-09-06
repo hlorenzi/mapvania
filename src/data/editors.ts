@@ -698,6 +698,65 @@ export function redo(editorIndex: number)
 }
 
 
+export function setCurrentLayer(editorIndex: number, layerDefId: ID.ID)
+{
+    const editor = global.editors.editors[editorIndex]
+    
+    const prevLayerDef = Defs.getLayerDef(editor.defs, global.editors.mapEditing.layerDefId)
+    const newLayerDef = Defs.getLayerDef(editor.defs, layerDefId)
+
+    global.editors.mapEditing.layerDefId = layerDefId
+
+    if (!prevLayerDef || !newLayerDef ||
+        prevLayerDef.type !== newLayerDef.type)
+    {
+        global.editors.mapEditing.tool = "move"
+    }
+
+    if (editor.type === "map")
+    {
+        editor.mapEditor.roomSelection.clear()
+        editor.mapEditor.objectSelection.clear()
+    }
+    
+    global.editors.refreshToken.commit()
+}
+
+
+export function getNextLayer(editorIndex: number, backward: boolean): ID.ID | undefined
+{
+    const editor = global.editors.editors[editorIndex]
+    if (editor.type !== "map")
+        return undefined
+
+    const isMapLayer = global.editors.mapEditing.layerDefId === LAYERDEF_ID_MAP
+
+    if (isMapLayer)
+    {
+        if (backward)
+            return undefined
+        else if (editor.defs.layerDefs.length === 0)
+            return undefined
+        else
+            return editor.defs.layerDefs[0].id
+    }
+
+    const layerDefIndex = editor.defs.layerDefs
+        .findIndex(l => l.id === global.editors.mapEditing.layerDefId)
+
+    if (layerDefIndex < 0)
+        return undefined
+
+    if (backward && layerDefIndex - 1 < 0)
+        return LAYERDEF_ID_MAP
+
+    if (!backward && layerDefIndex + 1 >= editor.defs.layerDefs.length)
+        return undefined
+
+    return editor.defs.layerDefs[layerDefIndex + (backward ? -1 : 1)].id        
+}
+
+
 export function clearCache(editorIndex: number)
 {
     const editor = global.editors.editors[editorIndex]
