@@ -153,6 +153,16 @@ export function EditorMap(props: {
         Editors.render(props.editorIndex)
     }
 
+    const flipHorizontal = () =>
+    {
+        MapEditor.flip(editor.mapEditor, false)
+    }
+
+    const flipVertical = () =>
+    {
+        MapEditor.flip(editor.mapEditor, true)
+    }
+
     const capture = () =>
     {
         MapEditor.screenshotRoomSelection(editor.mapEditor, true)
@@ -327,6 +337,18 @@ export function EditorMap(props: {
             borderRadius: "0.25em",
             contain: "paint",
         }}>
+            <UI.Button
+                label="↔️ Mirror (H)"
+                onClick={ flipHorizontal }
+            />
+
+            <UI.Button
+                label="↕️ Flip (V)"
+                onClick={ flipVertical }
+            />
+
+            <br/>
+
             <UI.Button
                 label="📷 Capture (F2)"
                 onClick={ capture }

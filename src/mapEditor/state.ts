@@ -875,6 +875,17 @@ export function onKey(state: State, ev: KeyboardEvent, down: boolean)
                 Editors.historyAdd(state.editorIndex)
                 MapEditor.render(state)
             }
+            else if (down)
+            {
+                flip(state, true)
+            }
+            break
+
+        case "h":
+            if (down)
+            {
+                flip(state, false)
+            }
             break
     
         case "d":
@@ -1530,4 +1541,65 @@ export function screenshotRoomSelection(
         })
     },
     "image/png")
+}
+
+
+export function flip(
+    state: State,
+    vertical: boolean)
+{
+    const editor = (global.editors.editors[state.editorIndex] as Editors.EditorMap)
+
+    let roomSet = state.roomSelection
+
+    if (global.editors.mapEditing.layerDefId !== Editors.LAYERDEF_ID_MAP)
+    {
+        if (state.roomId === "")
+            return
+
+        roomSet = new Set()
+        roomSet.add(state.roomId)
+    }
+
+    let newMap = { ...editor.map }
+
+    let xMin = Infinity
+    let xMax = -Infinity
+    let yMin = Infinity
+    let yMax = -Infinity
+
+    for (const roomId of roomSet)
+    {
+        const room = Map.getRoom(newMap, roomId)
+        if (!room)
+            continue
+
+        newMap = Map.flipRoom(editor.defs, newMap, room.id, vertical)
+
+        xMin = Math.min(xMin, room.x)
+        yMin = Math.min(yMin, room.y)
+        xMax = Math.max(xMax, room.x + room.width)
+        yMax = Math.max(yMax, room.y + room.height)
+    }
+
+    for (const roomId of roomSet)
+    {
+        const room = Map.getRoom(newMap, roomId)
+        if (!room)
+            continue
+
+        const newRoom = {
+            ...room,
+            x:  vertical ? room.x : xMax - room.width  - (room.x - xMin),
+            y: !vertical ? room.y : yMax - room.height - (room.y - yMin),
+        }
+
+        newMap = Map.setRoom(newMap, roomId, newRoom)
+    }
+
+    editor.map = newMap
+    Editors.historyAdd(state.editorIndex)
+    Editors.clearCacheAll()
+    MapEditor.render(state)
+    global.editors.refreshToken.commit()
 }

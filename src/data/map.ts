@@ -969,3 +969,82 @@ export function resizeRoom(
 }
 
 
+export function flipRoom(
+    defs: Defs.Defs,
+    map: Map,
+    roomId: ID.ID,
+    vertical: boolean)
+    : Map
+{
+    const room = getRoom(map, roomId)
+    if (!room)
+        return map
+
+    const newLayers: typeof room.layers = {}
+
+    for (const layer of Object.values(room.layers))
+    {
+        if (layer.type === "tile")
+        {
+            const newTileField = {
+                ...layer.tileField,
+                tiles: [...layer.tileField.tiles],
+            }
+
+            for (let y = 0; y < newTileField.height; y++)
+            {
+                for (let x = 0; x < newTileField.width; x++)
+                {
+                    const srcCell = vertical ?
+                        { x, y: newTileField.height - 1 - y } :
+                        { x: newTileField.width - 1 - x, y }
+
+                    const srcIndex = getTileFieldCellIndexForCell(newTileField, srcCell)!
+                    const destIndex = getTileFieldCellIndexForCell(newTileField, { x, y })!
+
+                    newTileField.tiles[destIndex] = layer.tileField.tiles[srcIndex]
+                }
+            }
+
+            newLayers[layer.layerDefId] = {
+                ...layer,
+                tileField: newTileField,
+            }
+        }
+        else if (layer.type === "object")
+        {
+            const newObjects: typeof layer.objects = {}
+
+            for (const objId of Object.keys(layer.objects))
+            {
+                const obj = layer.objects[objId]
+                const objDef = Defs.getObjectDef(defs, obj.objectDefId)
+                if (!objDef)
+                    continue
+
+                const xPivot = obj.x - obj.width  * objDef.pivotPercent.x
+                const yPivot = obj.y - obj.height * objDef.pivotPercent.y
+
+                const newObj = {
+                    ...obj,
+                    x:  vertical ? obj.x : room.width  - obj.width  - xPivot + obj.width  * objDef.pivotPercent.x,
+                    y: !vertical ? obj.y : room.height - obj.height - yPivot + obj.height * objDef.pivotPercent.y,
+                }
+
+                newObjects[objId] = newObj
+            }
+
+            newLayers[layer.layerDefId] = {
+                ...layer,
+                objects: newObjects,
+            }
+        }
+    }
+
+    const newRoom: Room = {
+        ...room,
+        layers: newLayers,
+    }
+
+    return setRoom(map, roomId, newRoom)
+}
